@@ -17,8 +17,8 @@ A pnpm workspace with three packages:
 - `docs/` — documentation site (Fumadocs / Next.js).
 
 > An earlier version of Spotnote was a server + dashboard + AI-agent product.
-> That `server/` package and its root docs were removed; the history is at
-> commit `f630394` if you ever need it.
+> That history was pruned, but the full snapshot is preserved under the tag
+> `archive/server-product` (commit `f630394`) if you ever need it.
 
 ## Quick reference
 
