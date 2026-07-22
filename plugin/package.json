@@ -1,0 +1,20 @@
+{
+  "name": "spotnote",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Click a UI element in your Vite dev server, write a note, and copy an AI-agent-ready prompt with the exact source location.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "dependencies": {
+    "@babel/core": "^7.26.0"
+  }
+}
