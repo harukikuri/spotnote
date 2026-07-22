@@ -1,3 +1,6 @@
 .next/
 .source/
 node_modules/
+
+# pnpm workspace — no npm lockfile here
+package-lock.json
