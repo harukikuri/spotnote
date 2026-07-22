@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.spotnote/
+
+# Test
+test-results/
+.playwright-mcp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+*.pem
+
+# Build artifacts
+*.png
+*.tsbuildinfo
