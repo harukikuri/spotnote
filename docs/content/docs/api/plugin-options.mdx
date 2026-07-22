@@ -1,0 +1,58 @@
+---
+title: Plugin Options
+description: Configuration options for the Spotnote Vite plugin
+---
+
+## `spotnote(options?)`
+
+The main Vite plugin. Import from `spotnote`.
+
+```ts
+import spotnote from 'spotnote';
+
+spotnote();
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `enabled` | `boolean \| (mode: string) => boolean` | `true` | Whether the plugin is active. Use a function to enable based on Vite mode. |
+| `allowedExtensions` | `string[]` | — | File extensions to process. By default all supported extensions are included. |
+
+
+## `spotnoteBabel(options?)`
+
+Babel transform for React/JSX projects. Import from `spotnote`.
+
+```ts
+import spotnote, { spotnoteBabel } from 'spotnote';
+
+spotnoteBabel({ root: __dirname });
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `root` | `string` | `process.cwd()` | Project root directory. Used to compute relative file paths for `data-spotnote-id`. |
+| `manifestFile` | `string` | `".spotnote/manifest.json"` | Path to write the manifest file (hash to source location map). Relative to root. |
+| `enabled` | `boolean \| (mode: string) => boolean` | `true` | Whether the transform is active. |
+
+This is a standalone Vite plugin (`enforce: "pre"`) that runs before `@vitejs/plugin-react`. It works independently of whether the React plugin uses Babel or Oxc internally.
+
+## `spotnoteVue()`
+
+Vue compiler NodeTransform. Import from `spotnote`.
+
+```ts
+import spotnote, { spotnoteVue } from 'spotnote';
+```
+
+No options. Pass it to `vue()` plugin's `template.compilerOptions.nodeTransforms` array.
+
+## `spotnoteSvelte()`
+
+Svelte markup preprocessor. Import from `spotnote`.
+
+```ts
+import spotnote, { spotnoteSvelte } from 'spotnote';
+```
+
+No options. Pass it to the `svelte()` plugin's `preprocess` array.

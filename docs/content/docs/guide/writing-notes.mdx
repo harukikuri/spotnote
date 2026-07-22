@@ -1,0 +1,39 @@
+---
+title: Writing Notes
+description: Create, edit, and manage notes
+---
+
+## Creating a note
+
+1. Click the **Select element** button in the Spotnote panel
+2. Click an element on the page (hold **Shift** to multi-select)
+3. Type your feedback in the note panel — it saves automatically to localStorage
+
+## Editing a note
+
+Click on an existing note marker to open it. Edit the text directly — changes save automatically.
+
+## Deleting a note
+
+Open a note and click the delete button to remove it. This action cannot be undone.
+
+## Storage
+
+All notes are stored in your browser's localStorage under the key `spotnote-notes`. They persist across page reloads and browser restarts, but are local to your browser — they won't sync across devices or team members.
+
+When you copy a note, the clipboard content is formatted as markdown:
+
+````markdown
+## Feedback [git:a1b2c3d] [route:/]
+
+Make this title bigger
+
+### Selected Elements
+
+#### Element
+- **File**: `src/components/Hero.tsx` (line 12)
+
+```html
+<h1 class="text-3xl font-bold">
+```
+````

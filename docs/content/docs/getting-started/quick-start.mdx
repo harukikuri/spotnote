@@ -1,0 +1,87 @@
+---
+title: Quick Start
+description: Add Spotnote to your Vite project in under a minute
+---
+
+## 1. Add the plugin to your Vite config
+
+Choose your framework:
+
+```ts tab="React" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import spotnote, { spotnoteBabel } from 'spotnote'; // [!code highlight]
+
+const isProduction = process.env.NODE_ENV === 'production'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [
+    spotnote({ enabled: !isProduction }), // [!code highlight]
+    spotnoteBabel({ enabled: !isProduction }), // [!code highlight]
+    react(),
+  ],
+});
+```
+
+```ts tab="Vue" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import spotnote, { spotnoteVue } from 'spotnote'; // [!code highlight]
+
+const isProduction = process.env.NODE_ENV === 'production'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [
+    spotnote({ enabled: !isProduction }), // [!code highlight]
+    vue({
+      template: {
+        compilerOptions: {
+          nodeTransforms: [spotnoteVue()], // [!code highlight]
+        },
+      },
+    }),
+  ],
+});
+```
+
+```ts tab="Svelte" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import spotnote, { spotnoteSvelte } from 'spotnote'; // [!code highlight]
+
+const isProduction = process.env.NODE_ENV === 'production'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [
+    spotnote({ enabled: !isProduction }), // [!code highlight]
+    svelte({
+      preprocess: [spotnoteSvelte()], // [!code highlight]
+    }),
+  ],
+});
+```
+
+## 2. Build and deploy
+
+```bash
+pnpm build
+```
+
+Build your app and deploy it to your staging or QA environment. During the build, Spotnote injects `data-spotnote-id` attributes into your components and writes a manifest file (`.spotnote/manifest.json`) that maps each element back to its source file and line number.
+
+<Callout type="warn" title="Don't include Spotnote in production">
+  Use the `enabled` option to disable Spotnote for production builds. See [Plugin Options](/docs/api/plugin-options) for details.
+</Callout>
+
+## 3. Create a note
+
+Once you open up the deployed app, you can see the Spotnote panel. Click any element and leave a note.
+
+<BrowserFrame url="your-app.staging.com">
+  <SpotnoteDemo />
+</BrowserFrame>
+
+## Next steps
+
+- [How it works](/docs/getting-started/how-it-works) for the technical details
+- [Selecting elements](/docs/guide/selecting-elements) for advanced selection

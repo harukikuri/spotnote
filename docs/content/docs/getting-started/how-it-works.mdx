@@ -1,0 +1,54 @@
+---
+title: How It Works
+description: About Spotnote's element tracking
+---
+
+## Overview
+
+At build time, the plugin injects `data-spotnote-id` attributes into your components and generates a manifest that maps each ID back to its source location, element fingerprint, and git commit. At runtime, the browser UI lets users click elements and leave notes — each note carries the source file, line number, and git hash, so every note comes with full code context that AI agents can act on.
+
+## Build time
+
+<BuildChart />
+
+During the build, Spotnote uses framework-specific transforms — Babel for React, NodeTransform for Vue, and a preprocessor for Svelte — to walk the component AST and inject a `data-spotnote-id` attribute onto each element.
+
+Each ID is a hash of the element's source location (e.g., `sha256("src/App.tsx:12:4")`), truncated to 10 hex characters. This keeps IDs short while remaining unique across the codebase.
+
+The plugin writes `.spotnote/manifest.json` on `pnpm build`, mapping every hash back to its source location and element fingerprint:
+
+```json
+{
+  "gitHash": "a1b2c3d",
+  "entries": {
+    "f8c2a91d3e": {
+      "loc": "src/components/Button.tsx:12:4",
+      "tag": "button",
+      "attrs": "className=\"btn-primary\""
+    },
+    "b7d4e60a12": {
+      "loc": "src/pages/Home.tsx:28:6",
+      "tag": "h1",
+      "attrs": "className=\"text-3xl font-bold\""
+    }
+  }
+}
+```
+
+The `gitHash` records which commit the build was generated from. The element fingerprint (`tag` + `attrs`) enables cross-build note survival — when a new deploy shifts line numbers but the element itself hasn't changed, Spotnote can remap notes to the new IDs.
+
+<Callout type="info" title="Git is required">
+  Spotnote requires a Git repository. The git hash is included in every note and manifest so that AI agents can resolve the exact source code version the note was created against.
+</Callout>
+
+## Runtime
+
+The plugin only activates when `.spotnote/manifest.json` exists. The Vite plugin serves a browser UI bundle that enables element selection and note creation directly on the page.
+
+When a user clicks an element, the UI reads its `data-spotnote-id`, looks up the manifest for the source location, and stores both with the note along with the current git hash. This anchors every note to a specific element in the source code — not just a position on the screen.
+
+Notes automatically hide when their anchor element leaves the DOM — for example, on route changes — and reappear when it returns.
+
+## Cross-build note survival
+
+When a new version is deployed, line numbers may shift but elements often stay the same. Spotnote compares the old and new manifests by element fingerprint (tag + attributes) and remaps note anchors to the new IDs automatically. Notes only break when the element itself is changed or removed.

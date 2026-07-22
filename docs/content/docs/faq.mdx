@@ -1,0 +1,35 @@
+---
+title: FAQ
+description: Frequently asked questions about Spotnote
+---
+
+## Where are notes stored?
+
+All notes are stored in your browser's localStorage. They persist across page reloads and browser restarts, but are local to your browser — they won't sync across devices or team members.
+
+## Do notes survive across deploys?
+
+Yes — when a new build shifts line numbers but the elements themselves haven't changed, Spotnote compares the old and new manifests by element fingerprint (tag + attributes) and remaps note anchors automatically. Notes only break when the element itself is changed or removed.
+
+## Can I use Spotnote in production?
+
+No — Spotnote is designed for staging and QA environments. Use the `enabled` option to disable it for production builds. See [Plugin Options](/docs/api/plugin-options).
+
+## Which frameworks are supported?
+
+Spotnote supports **React**, **Vue**, and **Svelte** — any framework that runs on Vite. Each uses a framework-specific transform to inject `data-spotnote-id` attributes at build time.
+
+## Does Spotnote affect my bundle size?
+
+No. When `enabled` is set to `false`, Spotnote skips all transforms and does not inject any attributes or UI code into your build.
+
+## Does Spotnote work with SSR / SSG?
+
+Yes. The transforms run at compile time and inject `data-spotnote-id` attributes into the component output regardless of rendering strategy. The browser UI activates at runtime in the client.
+
+## What are the prerequisites?
+
+- **Vite** 5.0 or later
+- **Git** — required for commit tracking. The git hash is included in every note so AI agents can resolve the exact source code version.
+- **Node.js** 22 or later
+- One of: React, Vue, or Svelte

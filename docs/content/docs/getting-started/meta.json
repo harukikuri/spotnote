@@ -1,0 +1,9 @@
+{
+  "title": "Getting Started",
+  "defaultOpen": true,
+  "pages": [
+    "installation",
+    "quick-start",
+    "how-it-works"
+  ]
+}

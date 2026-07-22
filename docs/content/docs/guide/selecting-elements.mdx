@@ -1,0 +1,32 @@
+---
+title: Selecting Elements
+description: How to select elements and create notes
+---
+
+## Interact mode
+
+Click the **Select element** button in the Spotnote panel to enter interact mode. An overlay appears and elements highlight as you hover over them. Click an element to select it and open the note panel. Press **Escape** to cancel without selecting.
+
+## Multi-select
+
+Hold **Shift** while clicking to select multiple elements without leaving interact mode. Each selected element gets its own anchor point within the same note.
+
+## Selection persistence
+
+Notes are anchored to elements using `data-spotnote-id` attributes that the Spotnote transforms inject at compile time. This means:
+
+- Notes survive page reloads
+- Notes survive route changes (they hide when their element leaves the DOM and reappear when it returns)
+- Notes are tied to source locations, not runtime DOM positions
+
+## Dynamic elements
+
+Elements rendered in loops or conditional blocks are handled differently:
+
+| Element type | Attributes | Restoration |
+| --- | --- | --- |
+| Static | `data-spotnote-id` | Restored by ID |
+| Dynamic with key | `data-spotnote-id` + `data-spotnote-key` | Restored by ID + key |
+| Dynamic without key | `data-spotnote-id` + `data-spotnote-dynamic` | Not restored (warning shown) |
+
+For reliable note anchoring in lists, always provide a `key` prop.

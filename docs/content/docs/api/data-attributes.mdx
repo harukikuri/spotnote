@@ -1,0 +1,38 @@
+---
+title: Data Attributes
+description: HTML attributes injected by Spotnote transforms
+---
+
+Spotnote transforms inject the following `data-spotnote-*` attributes onto elements at compile time.
+
+## `data-spotnote-id`
+
+The primary anchor attribute. Contains a source location string (e.g., `src/App.tsx:12:4`) that uniquely identifies the element in your codebase.
+
+Every element that Spotnote can track receives this attribute.
+
+## `data-spotnote-key`
+
+Added to elements inside loops that have a `key` prop. The value matches the runtime key, allowing Spotnote to distinguish between different iterations of the same component.
+
+Example: in a list of items with `key={item.id}`, each element gets `data-spotnote-key` set to the item's ID.
+
+## `data-spotnote-dynamic`
+
+Added to elements inside loops that **do not** have a `key` prop. This is a marker indicating the element cannot be reliably restored — Spotnote will show a warning badge on notes anchored to these elements.
+
+## Restoration priority
+
+Notes are anchored to elements using `data-spotnote-id` attributes injected at build time. Each ID maps to a specific source location, so notes reattach to the correct element after a reload — they're tied to your code, not the runtime DOM.
+
+When you navigate to a different route, notes automatically hide when their anchor element leaves the DOM and reappear when it returns.
+
+| Element type | Attributes | Restoration |
+| --- | --- | --- |
+| Static | `data-spotnote-id` | Restored by ID |
+| Dynamic with key | `data-spotnote-id` + `data-spotnote-key` | Restored by ID + key |
+| Dynamic without key | `data-spotnote-id` + `data-spotnote-dynamic` | Not restored (warning shown) |
+
+<Callout type="warn" title="Always provide a key prop">
+  For reliable note anchoring in lists, always provide a `key` prop. Elements without keys cannot be uniquely identified and notes attached to them will not be restored.
+</Callout>
