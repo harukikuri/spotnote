@@ -1,0 +1,617 @@
+// Framework-agnostic client picker for `data-spotnote`.
+// - Inspect via the launcher toggle OR by holding Alt; hover highlights the
+//   nearest data-spotnote element, click opens a selection panel.
+// - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
+//   location + element + styles + your note) to the clipboard, and drops a pin.
+// - After each HMR update the selection/pins re-bind by exact data-spotnote.
+import { T, createButton, createIconBtn, ICONS } from "./ui.js";
+import { mountLauncher } from "./launcher.js";
+
+const ACTIVATE_KEY = "Alt";
+const ACCENT = T.accent;
+const ACCENT_RGB = T.accentRgb;
+const FONT = T.font;
+const MONO = T.mono;
+
+let active = false; // effective inspect state
+let sticky = false; // toggled from the launcher
+let altHeld = false; // momentary via Alt
+let hoverBox = null;
+let hoverLabel = null;
+let selectBox = null;
+let selectedEl = null;
+let selectedLoc = null;
+let selectedIndex = 0; // occurrence index among same-loc siblings (.map() items)
+let panel = null;
+let panelTarget = null; // element the open panel is anchored to
+let launcher = null;
+const pins = new Map(); // refKey (loc@index) -> { loc, index, note, marker }
+
+const changeCbs = [];
+function notify() {
+  for (const cb of changeCbs) cb();
+}
+
+const controller = {
+  toggleInspect() {
+    sticky = !sticky;
+    syncActive();
+    notify();
+  },
+  isInspecting: () => active,
+  isSticky: () => sticky,
+  selection: () =>
+    selectedLoc ? { loc: selectedLoc, tag: selectedEl ? selectedEl.tagName.toLowerCase() : "" } : null,
+  notes: () => [...pins.entries()].map(([key, p]) => ({ key, loc: p.loc, index: p.index, note: p.note })),
+  openNote: (key) => {
+    const p = pins.get(key);
+    if (!p) return;
+    const el = resolveRef(p.loc, p.index);
+    if (el) openPanel(el, p.note);
+  },
+  onChange(cb) {
+    changeCbs.push(cb);
+    return () => {
+      const i = changeCbs.indexOf(cb);
+      if (i >= 0) changeCbs.splice(i, 1);
+    };
+  },
+};
+
+export function initInspector() {
+  injectStyles();
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === ACTIVATE_KEY) {
+      altHeld = true;
+      syncActive();
+    }
+  });
+  window.addEventListener("keyup", (e) => {
+    if (e.key === ACTIVATE_KEY) {
+      altHeld = false;
+      syncActive();
+    }
+  });
+  // Esc exits selection mode (closes the panel + turns off inspect) and is
+  // consumed (capture) so it can't cascade — but only when something is active,
+  // so a bare Esc still reaches the page.
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key !== "Escape") return;
+      if (!panel && !active) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      if (panel) closePanel();
+      sticky = false;
+      syncActive();
+    },
+    true,
+  );
+  window.addEventListener("scroll", reposition, true);
+  window.addEventListener("resize", reposition);
+
+  if (import.meta.hot) {
+    import.meta.hot.on("vite:afterUpdate", () => {
+      rebindSelection();
+      repositionPins();
+    });
+  }
+
+  launcher = mountLauncher(controller);
+}
+
+// ── Inspect mode ──────────────────────────────────────────────────────
+let pointerBound = false;
+
+function bindPointer(on) {
+  if (on === pointerBound) return;
+  pointerBound = on;
+  if (on) {
+    document.addEventListener("mousemove", onMove, true);
+    document.addEventListener("click", onClick, true);
+  } else {
+    document.removeEventListener("mousemove", onMove, true);
+    document.removeEventListener("click", onClick, true);
+    removeHover();
+  }
+}
+
+// Picking is live only while inspecting AND no panel is open.
+function refreshPointer() {
+  const on = active && !panel;
+  bindPointer(on);
+  document.body.style.cursor = on ? "crosshair" : "";
+}
+
+function syncActive() {
+  const want = sticky || altHeld;
+  if (want && !active) enter();
+  else if (!want && active) leave();
+}
+
+function enter() {
+  active = true;
+  refreshPointer();
+  notify();
+}
+
+function leave() {
+  active = false;
+  refreshPointer();
+  notify();
+}
+
+// ── Pointer -> nearest data-spotnote element ───────────────────────────────
+function targetAt(x, y) {
+  const els = document.elementsFromPoint(x, y);
+  for (const el of els) {
+    if (el.closest("[data-spotnote-ui]")) continue; // skip our own overlay/UI
+    const hit = el.closest("[data-spotnote]"); // walk up to nearest annotated node
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function onMove(e) {
+  const el = targetAt(e.clientX, e.clientY);
+  if (!el) return removeHover();
+  drawHover(el);
+}
+
+function onClick(e) {
+  if (panel) return; // a selection is already active
+  const el = targetAt(e.clientX, e.clientY);
+  if (!el) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  selectedEl = el;
+  const occ = occInfo(el);
+  selectedLoc = occ.loc;
+  selectedIndex = occ.index;
+  drawSelect(el);
+  notify();
+
+  console.log("[spotnote] selected:", parseLoc(selectedLoc));
+  openPanel(el);
+}
+
+// "src/App.jsx:12:4" -> {file, line, column}  (split from the RIGHT: path may contain ':')
+function parseLoc(s) {
+  const i = s.lastIndexOf(":");
+  const j = s.lastIndexOf(":", i - 1);
+  return { file: s.slice(0, j), line: Number(s.slice(j + 1, i)), column: Number(s.slice(i + 1)) };
+}
+
+// Identity for a picked element: data-spotnote + occurrence index among same-loc
+// siblings, so identical .map() items (e.g. <li>) can be told apart.
+function occInfo(el) {
+  const loc = el.getAttribute("data-spotnote");
+  const same = [...document.querySelectorAll(`[data-spotnote="${loc}"]`)];
+  const index = same.indexOf(el);
+  return { loc, index: index < 0 ? 0 : index, total: same.length };
+}
+function refKey(loc, index) {
+  return `${loc}@${index}`;
+}
+function resolveRef(loc, index) {
+  return document.querySelectorAll(`[data-spotnote="${loc}"]`)[index] || null;
+}
+
+// A ready-to-paste prompt: request first, then precise target + context, in a
+// labeled/structured layout that's easy for a coding agent to act on.
+function buildPrompt(el, note) {
+  const l = parseLoc(el.getAttribute("data-spotnote"));
+  const occ = occInfo(el);
+  const tag = el.tagName.toLowerCase();
+  const cls =
+    typeof el.className === "string" && el.className.trim() ? ` class="${el.className.trim()}"` : "";
+  const id = el.id ? ` id="${el.id}"` : "";
+  const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60);
+  const cs = getComputedStyle(el);
+  const round = (v) => v.replace(/(\d+\.\d{2})\d+/g, "$1"); // trim fractional px
+  const styles = [
+    ["padding", "padding"],
+    ["margin", "margin"],
+    ["color", "color"],
+    ["background", "background-color"],
+    ["font-size", "font-size"],
+    ["font-weight", "font-weight"],
+    ["border-radius", "border-radius"],
+  ]
+    .map(([label, prop]) => `  ${label}: ${round(cs.getPropertyValue(prop))}`)
+    .join("\n");
+
+  return [
+    "Edit the source for the UI element below to apply the request.",
+    "",
+    `## Request`,
+    note,
+    "",
+    `## Target`,
+    `- file: ${l.file}`,
+    `- line: ${l.line}, column: ${l.column}`,
+    `- element: <${tag}${id}${cls}>`,
+    text ? `- text: "${text}"` : null,
+    occ.total > 1
+      ? `- instance: ${occ.index + 1} of ${occ.total} rendered from this line (by DOM order) — target the one matching the text above`
+      : null,
+    "",
+    `## Current computed styles`,
+    styles,
+  ]
+    .filter((x) => x !== null)
+    .join("\n");
+}
+
+// ── Keep the selection across HMR ─────────────────────────────────────
+function rebindSelection() {
+  if (!selectedLoc) return;
+  const el = resolveRef(selectedLoc, selectedIndex);
+  if (el) {
+    selectedEl = el;
+    drawSelect(el);
+    console.log("[spotnote] selection re-bound after edit:", selectedLoc);
+  } else {
+    console.warn("[spotnote] selection lost after edit (data-spotnote changed):", selectedLoc);
+    removeSelect();
+    selectedEl = null;
+    selectedLoc = null;
+  }
+  notify();
+}
+
+// ── Overlay UI (design language referenced from the Spotnote plugin) ──
+function injectStyles() {
+  if (document.getElementById("data-spotnote-style")) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap";
+  document.head.appendChild(link);
+  const style = document.createElement("style");
+  style.id = "data-spotnote-style";
+  style.textContent = "@keyframes dl-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}";
+  document.head.appendChild(style);
+}
+
+function mkBox(dashed) {
+  const box = document.createElement("div");
+  box.setAttribute("data-spotnote-ui", "");
+  box.style.cssText =
+    "position:fixed;pointer-events:none;z-index:2147483646;box-sizing:border-box;border-radius:3px;" +
+    `border:2px ${dashed ? "dashed" : "solid"} ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
+  return box;
+}
+
+function mkLabel() {
+  const l = document.createElement("div");
+  l.setAttribute("data-spotnote-ui", "");
+  l.style.cssText =
+    "position:fixed;pointer-events:none;z-index:2147483647;display:flex;gap:6px;align-items:center;" +
+    `background:${ACCENT};color:#fff;font-family:${FONT};font-size:12px;font-weight:600;` +
+    "padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)";
+  return l;
+}
+
+// tag (strong) + .class (muted) + (file:line) (muted mono).
+function setLabel(labelEl, el) {
+  labelEl.textContent = "";
+  const tag = document.createElement("span");
+  tag.textContent = el.tagName.toLowerCase();
+  labelEl.appendChild(tag);
+
+  const cls =
+    typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
+  if (cls) {
+    const c = document.createElement("span");
+    c.style.color = "rgba(255,255,255,0.6)";
+    c.textContent = "." + cls;
+    labelEl.appendChild(c);
+  }
+
+  const loc = document.createElement("span");
+  loc.style.cssText = `color:rgba(255,255,255,0.8);font-family:${MONO};font-weight:400`;
+  const l = parseLoc(el.getAttribute("data-spotnote"));
+  loc.textContent = `(${l.file.split("/").pop()}:${l.line})`;
+  labelEl.appendChild(loc);
+}
+
+function place(box, target) {
+  const r = target.getBoundingClientRect();
+  box.style.left = r.left + "px";
+  box.style.top = r.top + "px";
+  box.style.width = r.width + "px";
+  box.style.height = r.height + "px";
+}
+
+function drawHover(target) {
+  if (!hoverBox) {
+    hoverBox = mkBox(true);
+    hoverLabel = mkLabel();
+    document.body.append(hoverBox, hoverLabel);
+  }
+  place(hoverBox, target);
+  setLabel(hoverLabel, target);
+  const r = target.getBoundingClientRect();
+  hoverLabel.style.left = r.left + "px";
+  hoverLabel.style.top = Math.max(0, r.top - 24) + "px";
+}
+
+function removeHover() {
+  hoverBox?.remove();
+  hoverLabel?.remove();
+  hoverBox = null;
+  hoverLabel = null;
+}
+
+function drawSelect(target) {
+  if (!selectBox) {
+    selectBox = mkBox(false);
+    document.body.append(selectBox);
+  }
+  place(selectBox, target);
+}
+
+function removeSelect() {
+  selectBox?.remove();
+  selectBox = null;
+}
+
+function repositionSelect() {
+  if (selectBox && selectedEl && selectedEl.isConnected) place(selectBox, selectedEl);
+}
+
+// ── Selection panel (note input + actions) ────────────────────────────
+function ensurePlaceholderStyle() {
+  if (document.getElementById("data-spotnote-ph")) return;
+  const s = document.createElement("style");
+  s.id = "data-spotnote-ph";
+  s.textContent =
+    "[data-spotnote-input]:empty::before{content:attr(data-placeholder);color:#666;pointer-events:none}";
+  document.head.append(s);
+}
+
+function panelLabel(el) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;gap:6px;align-items:baseline;min-width:0;flex:1";
+
+  const tag = document.createElement("span");
+  tag.style.cssText = `color:${T.text};font-weight:600;font-size:13px`;
+  tag.textContent = el.tagName.toLowerCase();
+  wrap.append(tag);
+
+  const cls =
+    typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
+  if (cls) {
+    const c = document.createElement("span");
+    c.style.cssText = `color:${T.textMuted};font-size:12px`;
+    c.textContent = "." + cls;
+    wrap.append(c);
+  }
+
+  const l = parseLoc(el.getAttribute("data-spotnote"));
+  const loc = document.createElement("span");
+  loc.style.cssText = `color:${T.textMuted};font-family:${MONO};font-size:11px;white-space:nowrap`;
+  loc.textContent = `(${l.file.split("/").pop()}:${l.line})`;
+  wrap.append(loc);
+  return wrap;
+}
+
+function openPanel(target, prefillNote) {
+  closePanel();
+  ensurePlaceholderStyle();
+  const locStr = target.getAttribute("data-spotnote");
+  const occ = occInfo(target);
+  const key = refKey(occ.loc, occ.index);
+  const isEdit = pins.has(key); // reopened an existing note
+  panelTarget = target;
+
+  panel = document.createElement("div");
+  panel.setAttribute("data-spotnote-ui", "");
+  panel.style.cssText = [
+    "position:fixed", "z-index:2147483647", "width:300px",
+    `background:${T.bg}`, `border:1px solid ${T.border}`, "border-radius:10px",
+    "box-shadow:0 12px 32px rgba(0,0,0,0.5)", "overflow:hidden",
+    `font-family:${FONT}`, "animation:dl-fade .15s ease",
+  ].join(";");
+
+  // Header: label + icon buttons
+  const header = document.createElement("div");
+  header.style.cssText = `display:flex;align-items:center;gap:4px;padding:7px 7px 7px 12px;border-bottom:1px solid ${T.borderSubtle}`;
+  header.append(panelLabel(target));
+  if (isEdit) {
+    const copyBtn = createIconBtn({
+      svg: ICONS.copy,
+      title: "Copy source path",
+      parent: header,
+      onClick: () => {
+        navigator.clipboard?.writeText(locStr);
+        copyBtn.innerHTML = ICONS.check; // green tick feedback, then revert
+        clearTimeout(copyBtn._t);
+        copyBtn._t = setTimeout(() => {
+          copyBtn.innerHTML = ICONS.copy;
+        }, 1200);
+      },
+    });
+    createIconBtn({
+      svg: ICONS.trash,
+      title: "Remove note",
+      parent: header,
+      onClick: () => {
+        deletePin(key);
+        closePanel();
+      },
+    });
+  }
+  createIconBtn({ svg: ICONS.close, title: "Close", parent: header, onClick: closePanel });
+  panel.append(header);
+
+  // Note input
+  const inputWrap = document.createElement("div");
+  inputWrap.style.cssText = "padding:10px 12px";
+  const input = document.createElement("div");
+  input.contentEditable = "true";
+  input.spellcheck = false;
+  input.setAttribute("data-spotnote-input", "1");
+  input.setAttribute("data-placeholder", "Describe the change for the agent…");
+  input.style.cssText = `min-height:20px;max-height:120px;overflow-y:auto;color:${T.text};font-size:13px;line-height:18px;outline:none;white-space:pre-wrap;word-break:break-word`;
+  if (prefillNote) input.textContent = prefillNote;
+  inputWrap.append(input);
+  panel.append(inputWrap);
+
+  function doSend() {
+    const note = (input.textContent || "").trim();
+    if (!note) return;
+    const prompt = buildPrompt(target, note);
+    navigator.clipboard?.writeText(prompt).catch(() => {});
+    console.log("[spotnote] copied prompt:\n" + prompt);
+    upsertPin(occ, note); // leave a marker on the element
+    closePanel();
+    sticky = false; // exit selection mode
+    syncActive();
+    launcher?.flash("copied ✓");
+  }
+
+  // Footer: Cancel + Add (creation) / Update (edit).
+  const footer = document.createElement("div");
+  footer.style.cssText = `display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-top:1px solid ${T.borderSubtle}`;
+  createButton({ label: "Cancel", variant: "secondary", parent: footer, onClick: closePanel });
+  const send = createButton({ label: isEdit ? "Update" : "Add", variant: "primary", parent: footer, onClick: doSend });
+  panel.append(footer);
+  const updateSend = () => {
+    const has = (input.textContent || "").trim().length > 0;
+    send.disabled = !has;
+    send.style.opacity = has ? "1" : "0.4";
+    send.style.cursor = has ? "pointer" : "default";
+  };
+  input.addEventListener("input", updateSend);
+  updateSend();
+
+  input.addEventListener("keydown", (e) => {
+    // Keep keystrokes in the note input from leaking to the page; Enter adds.
+    e.stopPropagation();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      doSend();
+    }
+    // Esc handled by the capture-phase window listener (closes + consumes).
+  });
+
+  document.body.append(panel);
+  positionPanel(target);
+  refreshPointer(); // pause picking while the panel is open
+  setTimeout(() => {
+    input.focus();
+    // With a prefilled note, drop the caret at the END so editing continues
+    // naturally (browsers otherwise place it at the start).
+    if (prefillNote && input.firstChild) {
+      const range = document.createRange();
+      range.selectNodeContents(input);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }, 50);
+  setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
+}
+
+function positionPanel(target) {
+  const r = target.getBoundingClientRect();
+  const pr = panel.getBoundingClientRect();
+  const gap = 8;
+  let top = r.bottom + gap;
+  if (top + pr.height > window.innerHeight - 8) top = Math.max(8, r.top - pr.height - gap);
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - pr.width - 8));
+  panel.style.left = left + "px";
+  panel.style.top = top + "px";
+}
+
+function onDocDown(e) {
+  if (!panel) return;
+  if (panel.contains(e.target)) return;
+  if (selectedEl && selectedEl.contains(e.target)) return;
+  closePanel();
+}
+
+function closePanel() {
+  if (!panel) return;
+  document.removeEventListener("mousedown", onDocDown, true);
+  panel.remove();
+  panel = null;
+  panelTarget = null;
+  // A closed panel ends the transient selection (pins persist separately).
+  removeSelect();
+  selectedEl = null;
+  selectedLoc = null;
+  selectedIndex = 0;
+  notify();
+  // Deferred so the click that dismissed the panel can't immediately re-select.
+  setTimeout(refreshPointer, 0);
+}
+
+// ── Pins: persistent markers left on elements that have a note ────────
+function makePinEl() {
+  const m = document.createElement("div");
+  m.setAttribute("data-spotnote-ui", "");
+  m.style.cssText =
+    "position:fixed;z-index:2147483645;cursor:pointer;width:22px;height:22px;border-radius:50%;" +
+    `background:${ACCENT};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)`;
+  m.innerHTML =
+    '<svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:block" ' +
+    'width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round">' +
+    '<line x1="6" y1="10" x2="18" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg>';
+  return m;
+}
+
+function upsertPin(occ, note) {
+  const key = refKey(occ.loc, occ.index);
+  let pin = pins.get(key);
+  if (!pin) {
+    const marker = makePinEl();
+    marker.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = pins.get(key);
+      const el = resolveRef(occ.loc, occ.index);
+      if (el && p) openPanel(el, p.note);
+    });
+    document.body.append(marker);
+    pin = { loc: occ.loc, index: occ.index, note, marker };
+    pins.set(key, pin);
+  } else {
+    pin.note = note;
+  }
+  repositionPins();
+  notify();
+}
+
+function deletePin(key) {
+  const pin = pins.get(key);
+  if (!pin) return;
+  pin.marker.remove();
+  pins.delete(key);
+}
+
+function repositionPins() {
+  for (const [, pin] of pins) {
+    const el = resolveRef(pin.loc, pin.index);
+    if (el && el.isConnected) {
+      const r = el.getBoundingClientRect();
+      pin.marker.style.display = "";
+      pin.marker.style.left = r.left - 11 + "px";
+      pin.marker.style.top = r.top - 11 + "px";
+    } else {
+      pin.marker.style.display = "none";
+    }
+  }
+}
+
+function reposition() {
+  repositionSelect();
+  repositionPins();
+  if (panel && panelTarget && panelTarget.isConnected) positionPanel(panelTarget);
+}
