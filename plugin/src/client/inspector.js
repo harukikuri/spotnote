@@ -100,6 +100,11 @@ export function initInspector() {
   );
   window.addEventListener("scroll", scheduleReposition, true);
   window.addEventListener("resize", scheduleReposition);
+  // Route changes / conditional renders move or remove pinned elements without
+  // firing scroll — watch the DOM so pins re-anchor (or hide) right away. The
+  // callback is rAF-coalesced, and it only sets styles (no node changes), so it
+  // can't retrigger the observer.
+  new MutationObserver(scheduleReposition).observe(document.body, { childList: true, subtree: true });
 
   if (import.meta.hot) {
     import.meta.hot.on("vite:afterUpdate", () => {
