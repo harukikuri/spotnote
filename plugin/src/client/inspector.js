@@ -27,6 +27,7 @@ let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let launcher = null;
 const pins = new Map(); // refKey (loc@index) -> { loc, index, note, marker }
+let pinsVisible = true; // hidden while the launcher is minimized
 
 const changeCbs = [];
 function notify() {
@@ -40,6 +41,12 @@ const controller = {
     notify();
   },
   isInspecting: () => active,
+  // Launcher minimized → hide the pins (and their panel) with it.
+  setPinsVisible(visible) {
+    pinsVisible = visible;
+    if (!visible && panel) closePanel();
+    repositionPins();
+  },
   notes: () => [...pins.entries()].map(([key, p]) => ({ key, loc: p.loc, index: p.index, note: p.note })),
   openNote: (key) => {
     const p = pins.get(key);
@@ -652,7 +659,7 @@ function deletePin(key) {
 function repositionPins() {
   for (const [, pin] of pins) {
     const el = resolveRef(pin.loc, pin.index);
-    if (el && el.isConnected) {
+    if (pinsVisible && el && el.isConnected) {
       const r = el.getBoundingClientRect();
       pin.marker.style.display = "";
       pin.marker.style.left = r.left - 11 + "px";

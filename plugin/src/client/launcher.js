@@ -4,7 +4,7 @@
 // Smooth collapse/expand, draggable, position persisted.
 //
 // Driven by a controller from the inspector:
-//   { toggleInspect, isInspecting, notes, openNote, onChange }
+//   { toggleInspect, isInspecting, setPinsVisible, notes, openNote, onChange }
 import { T, createIconBtn } from "./ui.js";
 
 const POS_KEY = "data-spotnote-launcher-pos";
@@ -105,6 +105,7 @@ export function mountLauncher(ctrl) {
   function setMin(v) {
     minimized = v;
     localStorage.setItem(MIN_KEY, v ? "1" : "0");
+    ctrl.setPinsVisible(!v); // minimized launcher hides the pins too
     if (v) {
       popover = null;
       tools.style.maxHeight = "0";
