@@ -84,19 +84,19 @@ export function StampFlow() {
   return (
     <div className="not-prose my-6 overflow-x-auto rounded-xl border bg-fd-card p-6">
       <div className="flex items-center justify-between min-w-fit">
-        {/* Source files */}
+        {/* Source frameworks */}
         <div className="flex flex-col gap-2">
           <FlowBox>
             <SiReact size={16} color="#61dafb" />
-            .jsx / .tsx
+            React
           </FlowBox>
           <FlowBox>
             <SiSolid size={16} color="#4f88c6" />
-            .jsx / .tsx
+            Solid
           </FlowBox>
           <FlowBox>
             <SiVuedotjs size={16} color="#4fc08d" />
-            .vue
+            Vue
           </FlowBox>
         </div>
 
@@ -116,7 +116,7 @@ export function StampFlow() {
           }}
         >
           {/* Vite label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#bd93f9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#bd93f9', whiteSpace: 'nowrap' }}>
             <SiVite size={14} color="#bd93f9" />
             Vite dev server
             <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.7 }}>· enforce: pre</span>
