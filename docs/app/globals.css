@@ -20,3 +20,9 @@
     margin-top: 2.5rem;
   }
 }
+
+/* Hide the sidebar's title-link header — it's redundant with our top Header
+   (the built-in navbar is disabled), so it renders as an empty padded block. */
+#nd-sidebar > div:first-child {
+  display: none;
+}
