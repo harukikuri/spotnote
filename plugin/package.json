@@ -5,11 +5,16 @@
   "type": "module",
   "description": "Click a UI element in your Vite dev server, write a note, and copy an AI-agent-ready prompt with the exact source location.",
   "main": "src/index.js",
+  "types": "index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./src/index.js"
+    }
   },
   "files": [
-    "src"
+    "src",
+    "index.d.ts"
   ],
   "peerDependencies": {
     "vite": ">=5"
