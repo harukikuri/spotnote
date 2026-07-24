@@ -24,6 +24,7 @@ let selectedLoc = null;
 let selectedIndex = 0; // occurrence index among same-loc siblings (.map() items)
 let panel = null;
 let panelTarget = null; // element the open panel is anchored to
+let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let launcher = null;
 const pins = new Map(); // refKey (loc@index) -> { loc, index, note, marker }
 
@@ -39,9 +40,6 @@ const controller = {
     notify();
   },
   isInspecting: () => active,
-  isSticky: () => sticky,
-  selection: () =>
-    selectedLoc ? { loc: selectedLoc, tag: selectedEl ? selectedEl.tagName.toLowerCase() : "" } : null,
   notes: () => [...pins.entries()].map(([key, p]) => ({ key, loc: p.loc, index: p.index, note: p.note })),
   openNote: (key) => {
     const p = pins.get(key);
@@ -59,6 +57,8 @@ const controller = {
 };
 
 export function initInspector() {
+  if (window.__spotnote) return; // already booted — guard against a double inject
+  window.__spotnote = true;
   injectStyles();
 
   window.addEventListener("keydown", (e) => {
@@ -69,6 +69,14 @@ export function initInspector() {
   });
   window.addEventListener("keyup", (e) => {
     if (e.key === ACTIVATE_KEY) {
+      altHeld = false;
+      syncActive();
+    }
+  });
+  // If focus leaves the window while Alt is down (Alt+Tab / app switch), the
+  // keyup never arrives — clear it so a stranded Alt can't pin inspect mode on.
+  window.addEventListener("blur", () => {
+    if (altHeld) {
       altHeld = false;
       syncActive();
     }
@@ -90,8 +98,8 @@ export function initInspector() {
     },
     true,
   );
-  window.addEventListener("scroll", reposition, true);
-  window.addEventListener("resize", reposition);
+  window.addEventListener("scroll", scheduleReposition, true);
+  window.addEventListener("resize", scheduleReposition);
 
   if (import.meta.hot) {
     import.meta.hot.on("vite:afterUpdate", () => {
@@ -155,7 +163,15 @@ function targetAt(x, y) {
   return null;
 }
 
+// A click/hover on our own UI (launcher, panel, pins) must reach that UI — not
+// get resolved "through" it to a page element behind, which would swallow the
+// event and, e.g., stop the Inspect toggle from turning off.
+function overOwnUI(e) {
+  return e.target instanceof Element && e.target.closest("[data-spotnote-ui]");
+}
+
 function onMove(e) {
+  if (overOwnUI(e)) return removeHover();
   const el = targetAt(e.clientX, e.clientY);
   if (!el) return removeHover();
   drawHover(el);
@@ -163,6 +179,7 @@ function onMove(e) {
 
 function onClick(e) {
   if (panel) return; // a selection is already active
+  if (overOwnUI(e)) return; // let our own UI handle its own clicks
   const el = targetAt(e.clientX, e.clientY);
   if (!el) return;
   e.preventDefault();
@@ -267,10 +284,6 @@ function rebindSelection() {
 // ── Overlay UI (design language referenced from the Spotnote plugin) ──
 function injectStyles() {
   if (document.getElementById("data-spotnote-style")) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap";
-  document.head.appendChild(link);
   const style = document.createElement("style");
   style.id = "data-spotnote-style";
   style.textContent = "@keyframes dl-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}";
@@ -408,6 +421,7 @@ function openPanel(target, prefillNote) {
   const key = refKey(occ.loc, occ.index);
   const isEdit = pins.has(key); // reopened an existing note
   panelTarget = target;
+  panelDragged = false;
 
   panel = document.createElement("div");
   panel.setAttribute("data-spotnote-ui", "");
@@ -420,7 +434,7 @@ function openPanel(target, prefillNote) {
 
   // Header: label + icon buttons
   const header = document.createElement("div");
-  header.style.cssText = `display:flex;align-items:center;gap:4px;padding:7px 7px 7px 12px;border-bottom:1px solid ${T.borderSubtle}`;
+  header.style.cssText = `display:flex;align-items:center;gap:4px;padding:7px 7px 7px 12px;border-bottom:1px solid ${T.borderSubtle};cursor:move`;
   header.append(panelLabel(target));
   if (isEdit) {
     const copyBtn = createIconBtn({
@@ -502,6 +516,7 @@ function openPanel(target, prefillNote) {
 
   document.body.append(panel);
   positionPanel(target);
+  enablePanelDrag(panel);
   refreshPointer(); // pause picking while the panel is open
   setTimeout(() => {
     input.focus();
@@ -517,6 +532,39 @@ function openPanel(target, prefillNote) {
     }
   }, 50);
   setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
+}
+
+// Drag the panel from anywhere on it — except the note input (typing / caret /
+// text selection) and buttons (their own clicks). Once moved, it stays put
+// instead of snapping back to the target on scroll.
+function enablePanelDrag(panelEl) {
+  panelEl.addEventListener("mousedown", (e) => {
+    if (
+      !(e.target instanceof Element) ||
+      e.target.closest("[data-spotnote-input]") ||
+      e.target.closest("button")
+    )
+      return;
+    e.preventDefault(); // no text selection while dragging
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const r = panelEl.getBoundingClientRect();
+    const ox = r.left;
+    const oy = r.top;
+    panelDragged = true;
+    const onMove = (ev) => {
+      const left = Math.max(8, Math.min(ox + (ev.clientX - startX), window.innerWidth - panelEl.offsetWidth - 8));
+      const top = Math.max(8, Math.min(oy + (ev.clientY - startY), window.innerHeight - panelEl.offsetHeight - 8));
+      panelEl.style.left = left + "px";
+      panelEl.style.top = top + "px";
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove, true);
+      document.removeEventListener("mouseup", onUp, true);
+    };
+    document.addEventListener("mousemove", onMove, true);
+    document.addEventListener("mouseup", onUp, true);
+  });
 }
 
 function positionPanel(target) {
@@ -613,5 +661,16 @@ function repositionPins() {
 function reposition() {
   repositionSelect();
   repositionPins();
-  if (panel && panelTarget && panelTarget.isConnected) positionPanel(panelTarget);
+  if (panel && panelTarget && panelTarget.isConnected && !panelDragged) positionPanel(panelTarget);
+}
+
+// Scroll fires rapidly; coalesce repositions into one per animation frame.
+let repoScheduled = false;
+function scheduleReposition() {
+  if (repoScheduled) return;
+  repoScheduled = true;
+  requestAnimationFrame(() => {
+    repoScheduled = false;
+    reposition();
+  });
 }

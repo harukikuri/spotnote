@@ -1,10 +1,10 @@
 // Launcher — matches the Spotnote toolbar spec: a compact vertical icon rail
 // (radius 10, padding 4, #444 dividers, 32px round #999 buttons) with
-// minimize · inspect · notes · settings. Notes/Settings open as popovers.
+// minimize · inspect · notes. Notes opens as a popover.
 // Smooth collapse/expand, draggable, position persisted.
 //
 // Driven by a controller from the inspector:
-//   { toggleInspect, isInspecting, isSticky, selection, notes, openNote, onChange }
+//   { toggleInspect, isInspecting, notes, openNote, onChange }
 import { T, createIconBtn } from "./ui.js";
 
 const POS_KEY = "data-spotnote-launcher-pos";
@@ -19,8 +19,6 @@ const LI = {
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>',
   list:
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-  gear:
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
 };
 
 function d(parent, css, text) {
@@ -50,7 +48,7 @@ export function mountLauncher(ctrl) {
     wrap.style.left = "16px";
   }
 
-  let popover = null; // "notes" | "settings" | null
+  let popover = null; // "notes" | null
   let minimized = false;
 
   // ── Rail (spec styling) ──
@@ -77,7 +75,7 @@ export function mountLauncher(ctrl) {
   const inspectBtn = railBtn(tools, LI.inspect, "Inspect mode (or hold Alt)", () => ctrl.toggleInspect());
   const notesBtn = railBtn(tools, LI.list, "Notes", () => togglePop("notes"));
 
-  // ── Popover (notes / settings) ──
+  // ── Popover (notes) ──
   const pop = d(
     wrap,
     "position:absolute;left:100%;bottom:0;margin-left:10px;width:220px;overflow:hidden;" +
@@ -195,26 +193,45 @@ export function mountLauncher(ctrl) {
 }
 
 function makeDraggable(target, handle, onEnd) {
-  let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+  // Grab anywhere on the rail — buttons included. A press only becomes a drag
+  // once the pointer moves past a small threshold; below it, the button click
+  // fires as normal. A real drag swallows the trailing click so it can't
+  // trigger the control it started on.
+  const THRESH = 4;
+  let sx = 0, sy = 0, ox = 0, oy = 0, armed = false, dragging = false;
   handle.addEventListener("mousedown", (e) => {
-    if (e.target.closest("button")) return; // don't drag when hitting a control
-    dragging = true;
+    if (e.button !== 0) return;
     const r = target.getBoundingClientRect();
     sx = e.clientX;
     sy = e.clientY;
     ox = r.left;
     oy = r.top;
-    e.preventDefault();
+    armed = true;
+    dragging = false;
   });
   document.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
+    if (!armed) return;
+    if (!dragging) {
+      if (Math.abs(e.clientX - sx) < THRESH && Math.abs(e.clientY - sy) < THRESH) return;
+      dragging = true; // threshold crossed → this is a drag, not a click
+    }
+    e.preventDefault();
     target.style.bottom = ""; // switch from the default bottom-anchor to top/left
     target.style.left = ox + (e.clientX - sx) + "px";
     target.style.top = oy + (e.clientY - sy) + "px";
   });
   document.addEventListener("mouseup", () => {
-    if (!dragging) return;
+    if (!armed) return;
+    armed = false;
+    if (!dragging) return; // no movement → let the button's click through
     dragging = false;
+    // Swallow the click that follows this drag so it doesn't hit the control.
+    const swallow = (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+    };
+    document.addEventListener("click", swallow, true);
+    setTimeout(() => document.removeEventListener("click", swallow, true), 0);
     if (onEnd) onEnd();
   });
 }
