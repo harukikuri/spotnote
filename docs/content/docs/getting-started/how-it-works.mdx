@@ -22,12 +22,6 @@ The value is the element's source position relative to the project root, for exa
 
 The plugin also serves a virtual module and injects it via `transformIndexHtml`, so the picker client boots automatically — you never import it.
 
-<Callout type="info" title="No manifest, no Git">
-  Earlier versions wrote a `.spotnote/manifest.json` and embedded a git hash.
-  The current tool needs neither: the source location is carried directly on the
-  element, resolved live in the browser.
-</Callout>
-
 ## Runtime
 
 <PickFlow />

@@ -48,7 +48,3 @@ plugins: [react(), spotnote()]  // React (either order works)
 | Solid / Preact / Qwik (Vite) | Same Babel JSX pass |
 | Vue (Vite) | Your app's `vue/compiler-sfc`, template elements |
 | Next.js | Not Vite — on the roadmap |
-
-## Migrating from the old API
-
-Earlier versions exposed `spotnote({ enabled })` plus `spotnoteBabel`, `spotnoteVue`, and `spotnoteSvelte`, and wrote a manifest at build time. All of that is gone. Replace any of those with a single `spotnote()` call and drop the manifest/`enabled` wiring — dev-gating is built in via `apply: "serve"`.

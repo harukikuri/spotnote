@@ -118,8 +118,7 @@ export function StampFlow() {
           {/* Vite label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#bd93f9', whiteSpace: 'nowrap' }}>
             <SiVite size={14} color="#bd93f9" />
-            Vite dev server
-            <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.7 }}>· enforce: pre</span>
+            Vite
           </div>
           {/* Stamp passes inside Vite */}
           <div className="flex flex-col gap-1.5">
