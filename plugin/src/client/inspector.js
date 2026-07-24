@@ -302,11 +302,14 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
-function mkBox(dashed) {
+// `absolute` = document coordinates (rides page scroll natively, no lag) for the
+// persistent selection box; `fixed` (default) for the transient hover box, which
+// is redrawn on mousemove.
+function mkBox(dashed, absolute) {
   const box = document.createElement("div");
   box.setAttribute("data-spotnote-ui", "");
   box.style.cssText =
-    "position:fixed;pointer-events:none;z-index:2147483646;box-sizing:border-box;border-radius:3px;" +
+    `position:${absolute ? "absolute" : "fixed"};pointer-events:none;z-index:2147483646;box-sizing:border-box;border-radius:3px;` +
     `border:2px ${dashed ? "dashed" : "solid"} ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
   return box;
 }
@@ -344,10 +347,22 @@ function setLabel(labelEl, el) {
   labelEl.appendChild(loc);
 }
 
+// Viewport coords — for the transient (fixed) hover box.
 function place(box, target) {
   const r = target.getBoundingClientRect();
   box.style.left = r.left + "px";
   box.style.top = r.top + "px";
+  box.style.width = r.width + "px";
+  box.style.height = r.height + "px";
+}
+
+// Document coords — for absolute overlays that scroll with the page. During a
+// page scroll (rect.top + scrollY) is constant, so the reposition is a no-op and
+// the overlay tracks smoothly; it only recomputes for nested scroll / layout.
+function placeAbs(box, target) {
+  const r = target.getBoundingClientRect();
+  box.style.left = r.left + window.scrollX + "px";
+  box.style.top = r.top + window.scrollY + "px";
   box.style.width = r.width + "px";
   box.style.height = r.height + "px";
 }
@@ -374,10 +389,10 @@ function removeHover() {
 
 function drawSelect(target) {
   if (!selectBox) {
-    selectBox = mkBox(false);
+    selectBox = mkBox(false, true); // absolute — rides page scroll
     document.body.append(selectBox);
   }
-  place(selectBox, target);
+  placeAbs(selectBox, target);
 }
 
 function removeSelect() {
@@ -386,7 +401,7 @@ function removeSelect() {
 }
 
 function repositionSelect() {
-  if (selectBox && selectedEl && selectedEl.isConnected) place(selectBox, selectedEl);
+  if (selectBox && selectedEl && selectedEl.isConnected) placeAbs(selectBox, selectedEl);
 }
 
 // ── Selection panel (note input + actions) ────────────────────────────
@@ -618,7 +633,7 @@ function makePinEl() {
   const m = document.createElement("div");
   m.setAttribute("data-spotnote-ui", "");
   m.style.cssText =
-    "position:fixed;z-index:2147483645;cursor:pointer;width:22px;height:22px;border-radius:50%;" +
+    "position:absolute;z-index:2147483645;cursor:pointer;width:22px;height:22px;border-radius:50%;" +
     `background:${ACCENT};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)`;
   m.innerHTML =
     '<svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:block" ' +
@@ -662,8 +677,8 @@ function repositionPins() {
     if (pinsVisible && el && el.isConnected) {
       const r = el.getBoundingClientRect();
       pin.marker.style.display = "";
-      pin.marker.style.left = r.left - 11 + "px";
-      pin.marker.style.top = r.top - 11 + "px";
+      pin.marker.style.left = r.left + window.scrollX - 11 + "px";
+      pin.marker.style.top = r.top + window.scrollY - 11 + "px";
     } else {
       pin.marker.style.display = "none";
     }
