@@ -1,39 +1,49 @@
 ---
 title: Writing Notes
-description: Create, edit, and manage notes
+description: Create, edit, copy, and manage notes
 ---
 
 ## Creating a note
 
-1. Click the **Select element** button in the Spotnote panel
-2. Click an element on the page (hold **Shift** to multi-select)
-3. Type your feedback in the note panel — it saves automatically to localStorage
+1. Enter inspect mode (**hold `Alt`** or toggle Inspect in the launcher).
+2. **Click** an element — a pin drops and the note panel opens.
+3. Type an instruction and click **Add** (or press `Enter`).
+
+The note is saved and its pin stays on the element. Adding a note copies the agent-ready prompt to your clipboard right away.
 
 ## Editing a note
 
-Click on an existing note marker to open it. Edit the text directly — changes save automatically.
+Click an existing pin to reopen it. The panel shows a **copy** button (top-right), your note text prefilled, and **Cancel** / **Update** in the footer. The copy button turns into a green check when the prompt is on your clipboard.
 
 ## Deleting a note
 
-Open a note and click the delete button to remove it. This action cannot be undone.
+Open the note and click the **trash** button. This removes the pin and its note.
 
 ## Storage
 
-All notes are stored in your browser's localStorage under the key `spotnote-notes`. They persist across page reloads and browser restarts, but are local to your browser — they won't sync across devices or team members.
+Notes and pins are stored in your browser's `localStorage` for the dev session. They persist across reloads but are local to your browser — nothing syncs across devices or teammates, and there's no server.
 
-When you copy a note, the clipboard content is formatted as markdown:
+## The copied prompt
+
+Copying a note produces a framework-neutral, agent-ready markdown prompt:
 
 ````markdown
-## Feedback [git:a1b2c3d] [route:/]
+Edit the source for the UI element below to apply the request.
 
-Make this title bigger
+## Request
+make the padding bigger
 
-### Selected Elements
+## Target
+- file: pages/Products.jsx
+- line: 12, column: 4
+- element: <button class="chip">
+- text: "shoes"
+- instance: 2 of 6 rendered from this line (by DOM order) — target the one matching the text above
 
-#### Element
-- **File**: `src/components/Hero.tsx` (line 12)
-
-```html
-<h1 class="text-3xl font-bold">
-```
+## Current computed styles
+  padding: 6px 12px
+  font-size: 14px
+  …
 ````
+
+Paste it into Claude Code, Cursor, or Codex — it has the exact file/line, the element, and its computed styles, so the agent can make the edit without guessing. The `instance` line only appears when the element is one of several rendered from the same source line.

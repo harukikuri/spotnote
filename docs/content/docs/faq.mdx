@@ -5,31 +5,34 @@ description: Frequently asked questions about Spotnote
 
 ## Where are notes stored?
 
-All notes are stored in your browser's localStorage. They persist across page reloads and browser restarts, but are local to your browser — they won't sync across devices or team members.
+In your browser's `localStorage`, for the dev session. They persist across reloads but are local to your browser — nothing syncs across devices or teammates. There is no server and no database.
 
-## Do notes survive across deploys?
+## Is this for staging / teammate feedback?
 
-Yes — when a new build shifts line numbers but the elements themselves haven't changed, Spotnote compares the old and new manifests by element fingerprint (tag + attributes) and remaps note anchors automatically. Notes only break when the element itself is changed or removed.
+No. Spotnote is a **local dev-loop tool**: you run it against your own `vite dev` server to hand your coding agent an exact source location. It isn't meant to be deployed for others to leave feedback on.
 
 ## Can I use Spotnote in production?
 
-No — Spotnote is designed for staging and QA environments. Use the `enabled` option to disable it for production builds. See [Plugin Options](/docs/api/plugin-options).
+There's nothing to disable — the plugin is `apply: "serve"`, so `vite build` never runs it. Production bundles contain no `data-spotnote` attributes and no picker code.
+
+## Do notes survive across deploys?
+
+No, and that's by design. Spotnote doesn't track builds or Git commits. Pins re-anchor across Hot Module Replacement during a dev session; they aren't meant to persist across deploys.
 
 ## Which frameworks are supported?
 
-Spotnote supports **React**, **Vue**, and **Svelte** — any framework that runs on Vite. Each uses a framework-specific transform to inject `data-spotnote-id` attributes at build time.
+**React**, **Solid**, and **Vue** on Vite. JSX (`.jsx` / `.tsx`) is stamped by a standalone Babel pass; `.vue` templates are stamped via your app's `vue/compiler-sfc`. Next.js (non-Vite) is on the roadmap.
 
 ## Does Spotnote affect my bundle size?
 
-No. When `enabled` is set to `false`, Spotnote skips all transforms and does not inject any attributes or UI code into your build.
+No. It only runs in the dev server (`apply: "serve"`), so it adds nothing to production builds.
 
 ## Does Spotnote work with SSR / SSG?
 
-Yes. The transforms run at compile time and inject `data-spotnote-id` attributes into the component output regardless of rendering strategy. The browser UI activates at runtime in the client.
+Spotnote targets the Vite dev server, where it stamps elements and injects the picker client. It doesn't participate in production SSR/SSG output — there are no attributes or client code in your build.
 
 ## What are the prerequisites?
 
 - **Vite** 5.0 or later
-- **Git** — required for commit tracking. The git hash is included in every note so AI agents can resolve the exact source code version.
-- **Node.js** 22 or later
-- One of: React, Vue, or Svelte
+- **Node.js** 18 or later
+- One of: React, Solid, or Vue

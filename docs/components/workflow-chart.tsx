@@ -1,14 +1,14 @@
 import {
+  LuScanSearch,
   LuMousePointerClick,
   LuMessageSquare,
-  LuFileJson,
-  LuLink,
+  LuClipboardCopy,
   LuCodeXml,
 } from 'react-icons/lu';
-import { SiReact, SiVuedotjs, SiSvelte, SiVite } from 'react-icons/si';
+import { SiReact, SiSolid, SiVuedotjs, SiVite } from 'react-icons/si';
 import type { ReactNode } from 'react';
 
-// ── Build Time: data flow diagram ───────────────────────────────────
+// ── Dev time: how the stamp gets into the DOM ───────────────────────
 
 function FlowBox({ children, muted }: { children: ReactNode; muted?: boolean }) {
   return (
@@ -80,7 +80,7 @@ function ConvergeArrow() {
   );
 }
 
-export function BuildChart() {
+export function StampFlow() {
   return (
     <div className="not-prose my-6 overflow-x-auto rounded-xl border bg-fd-card p-6">
       <div className="flex items-center justify-between min-w-fit">
@@ -88,22 +88,22 @@ export function BuildChart() {
         <div className="flex flex-col gap-2">
           <FlowBox>
             <SiReact size={16} color="#61dafb" />
-            .tsx
+            .jsx / .tsx
+          </FlowBox>
+          <FlowBox>
+            <SiSolid size={16} color="#4f88c6" />
+            .jsx / .tsx
           </FlowBox>
           <FlowBox>
             <SiVuedotjs size={16} color="#4fc08d" />
             .vue
           </FlowBox>
-          <FlowBox>
-            <SiSvelte size={16} color="#ff3e00" />
-            .svelte
-          </FlowBox>
         </div>
 
-        {/* Converge into Vite */}
+        {/* Converge into the Vite dev server */}
         <ConvergeArrow />
 
-        {/* Vite build container */}
+        {/* Vite dev container (serve only) */}
         <div
           style={{
             border: '1.5px dashed rgba(189,147,249,0.4)',
@@ -118,46 +118,43 @@ export function BuildChart() {
           {/* Vite label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#bd93f9' }}>
             <SiVite size={14} color="#bd93f9" />
-            Vite Build
+            Vite dev server
+            <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.7 }}>· enforce: pre</span>
           </div>
-          {/* Transforms inside Vite */}
+          {/* Stamp passes inside Vite */}
           <div className="flex flex-col gap-1.5">
             <FlowBox muted>
               <SiReact size={16} color="#61dafb" />
-              Babel
+              Babel pass (JSX)
             </FlowBox>
             <FlowBox muted>
               <SiVuedotjs size={16} color="#4fc08d" />
-              NodeTransform
-            </FlowBox>
-            <FlowBox muted>
-              <SiSvelte size={16} color="#ff3e00" />
-              Preprocessor
+              compiler-sfc (.vue)
             </FlowBox>
           </div>
         </div>
 
         <Arrow />
 
-        {/* Output: data-spotnote-id */}
+        {/* Output: the stamped attribute */}
         <AccentBox>
           <LuCodeXml size={16} />
-          <code style={{ fontSize: 13 }}>data-spotnote-id</code>
+          <code style={{ fontSize: 13 }}>data-spotnote="file:line:col"</code>
         </AccentBox>
 
         <Arrow />
 
-        {/* Manifest */}
+        {/* Injected picker */}
         <AccentBox>
-          <LuFileJson size={16} />
-          manifest.json
+          <LuMousePointerClick size={16} />
+          picker client
         </AccentBox>
       </div>
     </div>
   );
 }
 
-// ── Runtime: step list ──────────────────────────────────────────────
+// ── The pick → note → copy loop ─────────────────────────────────────
 
 interface Step {
   icon: ReactNode;
@@ -165,18 +162,18 @@ interface Step {
   detail: string;
 }
 
-const runtimeSteps: Step[] = [
-  { icon: <LuMousePointerClick />, label: 'Click Element', detail: 'Select any element on the page' },
-  { icon: <LuMessageSquare />, label: 'Leave Note', detail: 'Write feedback for the element' },
-  { icon: <LuFileJson />, label: 'Lookup Manifest', detail: 'Resolves data-spotnote-id to source code location' },
-  { icon: <LuLink />, label: 'Code Context', detail: 'Notes come with code context' },
+const pickSteps: Step[] = [
+  { icon: <LuScanSearch />, label: 'Inspect', detail: 'Hold Alt (or toggle Inspect) — elements highlight as you hover' },
+  { icon: <LuMousePointerClick />, label: 'Click', detail: 'Reads the element’s data-spotnote, drops a pin, opens the note panel' },
+  { icon: <LuMessageSquare />, label: 'Note', detail: 'Write an instruction for your coding agent' },
+  { icon: <LuClipboardCopy />, label: 'Copy', detail: 'Clipboard gets an agent-ready prompt: exact file:line:col + element + computed styles' },
 ];
 
-export function RuntimeChart() {
+export function PickFlow() {
   return (
     <div className="not-prose my-6 overflow-hidden rounded-xl border bg-fd-card px-6 py-5">
       <div className="flex flex-col gap-5">
-        {runtimeSteps.map((step, i) => (
+        {pickSteps.map((step, i) => (
           <div key={step.label} className="flex items-start gap-3">
             <div
               className="flex items-center justify-center shrink-0"

@@ -1,54 +1,41 @@
 ---
 title: How It Works
-description: About Spotnote's element tracking
+description: How Spotnote stamps source locations and reads them back
 ---
 
 ## Overview
 
-At build time, the plugin injects `data-spotnote-id` attributes into your components and generates a manifest that maps each ID back to its source location, element fingerprint, and git commit. At runtime, the browser UI lets users click elements and leave notes — each note carries the source file, line number, and git hash, so every note comes with full code context that AI agents can act on.
+Spotnote has two halves. At **dev time** the Vite plugin stamps a `data-spotnote="file:line:column"` attribute onto each host element and auto-injects a small picker client. At **runtime** that client lets you click an element, read its stamp, and copy an agent-ready prompt — the exact source location plus the element's tag, text, and computed styles.
 
-## Build time
+There is no manifest, no server, and no Git dependency. Everything lives in the attribute.
 
-<BuildChart />
+## Dev time
 
-During the build, Spotnote uses framework-specific transforms — Babel for React, NodeTransform for Vue, and a preprocessor for Svelte — to walk the component AST and inject a `data-spotnote-id` attribute onto each element.
+<StampFlow />
 
-Each ID is a hash of the element's source location (e.g., `sha256("src/App.tsx:12:4")`), truncated to 10 hex characters. This keeps IDs short while remaining unique across the codebase.
+The plugin runs with `apply: "serve"` (dev only) and `enforce: "pre"` (before the framework compiler), so the stamp is in place by the time React/Solid/Vue process the code:
 
-The plugin writes `.spotnote/manifest.json` on `pnpm build`, mapping every hash back to its source location and element fingerprint:
+- **JSX (`.jsx` / `.tsx`)** — a standalone Babel pass walks the AST and adds `data-spotnote` to every host (lowercase) element. It has no React dependency, so it works for Solid and other JSX frameworks too.
+- **Vue (`.vue`)** — the plugin parses the SFC with your app's own `vue/compiler-sfc` and splices `data-spotnote` onto each native template element. No extra dependency of its own.
 
-```json
-{
-  "gitHash": "a1b2c3d",
-  "entries": {
-    "f8c2a91d3e": {
-      "loc": "src/components/Button.tsx:12:4",
-      "tag": "button",
-      "attrs": "className=\"btn-primary\""
-    },
-    "b7d4e60a12": {
-      "loc": "src/pages/Home.tsx:28:6",
-      "tag": "h1",
-      "attrs": "className=\"text-3xl font-bold\""
-    }
-  }
-}
-```
+The value is the element's source position relative to the project root, for example `pages/Products.jsx:12:4`.
 
-The `gitHash` records which commit the build was generated from. The element fingerprint (`tag` + `attrs`) enables cross-build note survival — when a new deploy shifts line numbers but the element itself hasn't changed, Spotnote can remap notes to the new IDs.
+The plugin also serves a virtual module and injects it via `transformIndexHtml`, so the picker client boots automatically — you never import it.
 
-<Callout type="info" title="Git is required">
-  Spotnote requires a Git repository. The git hash is included in every note and manifest so that AI agents can resolve the exact source code version the note was created against.
+<Callout type="info" title="No manifest, no Git">
+  Earlier versions wrote a `.spotnote/manifest.json` and embedded a git hash.
+  The current tool needs neither: the source location is carried directly on the
+  element, resolved live in the browser.
 </Callout>
 
 ## Runtime
 
-The plugin only activates when `.spotnote/manifest.json` exists. The Vite plugin serves a browser UI bundle that enables element selection and note creation directly on the page.
+<PickFlow />
 
-When a user clicks an element, the UI reads its `data-spotnote-id`, looks up the manifest for the source location, and stores both with the note along with the current git hash. This anchors every note to a specific element in the source code — not just a position on the screen.
+When you click an element, the picker reads `data-spotnote` off the nearest matching ancestor (`elementsFromPoint` + `closest('[data-spotnote]')`), opens a note panel, and — on copy — builds a prompt with the file/line, the element, its text, and its current computed styles.
 
-Notes automatically hide when their anchor element leaves the DOM — for example, on route changes — and reappear when it returns.
+Pins persist in `localStorage` for your dev session and re-anchor across Hot Module Replacement: after an edit, Spotnote rebinds each pin by its `data-spotnote` value. If the element moved or was removed, the pin is dropped cleanly rather than guessing.
 
-## Cross-build note survival
+## Repeated elements
 
-When a new version is deployed, line numbers may shift but elements often stay the same. Spotnote compares the old and new manifests by element fingerprint (tag + attributes) and remaps note anchors to the new IDs automatically. Notes only break when the element itself is changed or removed.
+Elements rendered from a loop (`items.map(...)`) all share the same source line, so they carry the **same** `data-spotnote` value. Spotnote disambiguates them by **occurrence index** — the element's position among all matches in DOM order — and names the exact instance in the copied prompt (e.g. "instance 2 of 6") so your agent edits the right one.

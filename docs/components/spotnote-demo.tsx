@@ -319,7 +319,7 @@ export function SpotnoteDemo() {
               minHeight: 18,
             }}
           >
-            {showPlaceholder ? 'Add feedback...' : popupText}
+            {showPlaceholder ? 'Add a note...' : popupText}
             {s.popup.text === 'typing' && (
               <span
                 style={{

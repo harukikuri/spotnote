@@ -360,7 +360,7 @@ export function SpotnoteFullDemo() {
           <div className="size-3 rounded-full bg-fd-muted-foreground/20" />
         </div>
         <div className="mx-2 flex-1 rounded-md bg-fd-background px-3 py-1 text-xs text-fd-muted-foreground">
-          your-app.staging.com
+          localhost:5173
         </div>
       </div>
 
@@ -424,7 +424,7 @@ export function SpotnoteFullDemo() {
         {s.popup && (
           <div ref={popupRef} className="absolute z-10" style={{ left: heroTitlePos.x - 20, top: heroTitlePos.y + 30, width: 240, background: '#1a1a1a', border: '1px solid #333', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', padding: '10px 12px', animation: 'fd-fade-in 0.18s ease' }}>
             <div style={{ color: showPlaceholder ? '#666' : '#ededed', fontSize: 13, fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', lineHeight: '18px', minHeight: 18 }}>
-              {showPlaceholder ? 'Add feedback...' : popupText}
+              {showPlaceholder ? 'Add a note...' : popupText}
               {s.popup.text === 'typing' && <span style={{ display: 'inline-block', width: 1, height: 14, background: '#ededed', marginLeft: 1, verticalAlign: 'text-bottom', animation: 'fd-blink 0.8s step-end infinite' }} />}
             </div>
             <div className="flex justify-end mt-2 gap-1.5">

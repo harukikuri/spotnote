@@ -2,10 +2,10 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import type { ReactNode } from 'react';
 import { CodeBlockTabsTrigger } from 'fumadocs-ui/components/codeblock';
-import { SiNpm, SiPnpm, SiYarn, SiReact, SiVuedotjs, SiSvelte } from 'react-icons/si';
+import { SiNpm, SiPnpm, SiYarn, SiReact, SiSolid, SiVuedotjs } from 'react-icons/si';
 import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
-import { BuildChart, RuntimeChart } from './workflow-chart';
+import { StampFlow, PickFlow } from './workflow-chart';
 import { SpotnoteFullDemo } from './spotnote-full-demo';
 
 const tabIcons: Record<string, ReactNode> = {
@@ -13,8 +13,8 @@ const tabIcons: Record<string, ReactNode> = {
   pnpm: <SiPnpm />,
   yarn: <SiYarn />,
   React: <SiReact />,
+  Solid: <SiSolid />,
   Vue: <SiVuedotjs />,
-  Svelte: <SiSvelte />,
 };
 
 function CustomCodeBlockTabsTrigger(
@@ -36,8 +36,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     CodeBlockTabsTrigger: CustomCodeBlockTabsTrigger,
     BrowserFrame,
     SpotnoteDemo,
-    BuildChart,
-    RuntimeChart,
+    StampFlow,
+    PickFlow,
     SpotnoteFullDemo,
     ...components,
   };

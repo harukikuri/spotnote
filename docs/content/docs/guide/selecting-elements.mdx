@@ -1,32 +1,39 @@
 ---
 title: Selecting Elements
-description: How to select elements and create notes
+description: Inspect mode, the launcher, and repeated elements
 ---
 
-## Interact mode
+## Inspect mode
 
-Click the **Select element** button in the Spotnote panel to enter interact mode. An overlay appears and elements highlight as you hover over them. Click an element to select it and open the note panel. Press **Escape** to cancel without selecting.
+Enter inspect mode two ways:
 
-## Multi-select
+- **Hold `Alt`** — a quick, momentary way to pick without leaving your flow, or
+- **Toggle Inspect** in the launcher (the compact rail in the bottom-left).
 
-Hold **Shift** while clicking to select multiple elements without leaving interact mode. Each selected element gets its own anchor point within the same note.
+An outline follows your cursor and a label shows `tag .class (file:line)` for whatever you're hovering. **Click** an element to select it — a pin drops and the note panel opens. Press **`Escape`** to leave inspect mode without selecting.
 
-## Selection persistence
+## The launcher
 
-Notes are anchored to elements using `data-spotnote-id` attributes that the Spotnote transforms inject at compile time. This means:
+The launcher is a small draggable rail. It lets you:
 
-- Notes survive page reloads
-- Notes survive route changes (they hide when their element leaves the DOM and reappear when it returns)
-- Notes are tied to source locations, not runtime DOM positions
+- toggle **Inspect** on and off,
+- open the **Notes** list of every pin you've dropped,
+- **minimize** it out of the way (the `+` ↔ `×` button).
 
-## Dynamic elements
+Drag it anywhere; its position is remembered for the session.
 
-Elements rendered in loops or conditional blocks are handled differently:
+## Pins persist across edits
 
-| Element type | Attributes | Restoration |
-| --- | --- | --- |
-| Static | `data-spotnote-id` | Restored by ID |
-| Dynamic with key | `data-spotnote-id` + `data-spotnote-key` | Restored by ID + key |
-| Dynamic without key | `data-spotnote-id` + `data-spotnote-dynamic` | Not restored (warning shown) |
+Each pin is anchored to its element's `data-spotnote` source location, so pins survive Hot Module Replacement while you work:
 
-For reliable note anchoring in lists, always provide a `key` prop.
+- Class-only or content edits keep the pin anchored — the opening tag doesn't move.
+- If an edit shifts the line, Spotnote rebinds the pin to the new location.
+- If the element is removed, the pin is dropped rather than reattached to the wrong node.
+
+Pins live in `localStorage` for your dev session. There's no server and nothing syncs across browsers or teammates — this is a local dev-loop tool.
+
+## Repeated elements
+
+Elements rendered in a loop share one source line, so they all carry the same `data-spotnote` value. Spotnote tells them apart by **occurrence index** — position in DOM order among the matches — and records which instance you picked. The copied prompt names it explicitly (e.g. "instance 2 of 6, target the one matching the text above") so your agent edits the right one.
+
+No `key` prop or extra attribute is required.

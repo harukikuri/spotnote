@@ -5,7 +5,7 @@ interface BrowserFrameProps {
   children: ReactNode;
 }
 
-export function BrowserFrame({ url = 'your-app.staging.com', children }: BrowserFrameProps) {
+export function BrowserFrame({ url = 'localhost:5173', children }: BrowserFrameProps) {
   return (
     <div className="my-6 overflow-hidden rounded-lg border border-fd-border shadow-sm">
       <div className="flex items-center gap-2 border-b border-fd-border bg-fd-muted px-4 py-2.5">

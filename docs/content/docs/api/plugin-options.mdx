@@ -1,58 +1,54 @@
 ---
 title: Plugin Options
-description: Configuration options for the Spotnote Vite plugin
+description: The Spotnote Vite plugin API
 ---
 
-## `spotnote(options?)`
+## `spotnote()`
 
-The main Vite plugin. Import from `spotnote`.
+The only export — a single, self-contained Vite plugin. Import it as the default and add it to your `plugins` array.
 
 ```ts
 import spotnote from 'spotnote';
 
-spotnote();
+export default defineConfig({
+  plugins: [react(), spotnote()],
+});
 ```
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `enabled` | `boolean \| (mode: string) => boolean` | `true` | Whether the plugin is active. Use a function to enable based on Vite mode. |
-| `allowedExtensions` | `string[]` | — | File extensions to process. By default all supported extensions are included. |
+It takes **no options**. One call does everything:
 
+- stamps `data-spotnote="file:line:column"` on host elements, and
+- auto-injects the picker client via `transformIndexHtml`.
 
-## `spotnoteBabel(options?)`
+There are no `spotnoteBabel` / `spotnoteVue` / `spotnoteSvelte` sub-exports and no `enabled` flag — see [Migrating](#migrating-from-the-old-api) below if you're coming from an older setup.
 
-Babel transform for React/JSX projects. Import from `spotnote`.
+## Behavior
+
+| Aspect | Value | Why |
+| --- | --- | --- |
+| `apply` | `"serve"` | Dev only — production builds are never touched, so nothing leaks into your bundle. |
+| `enforce` | `"pre"` | Runs before the framework compiler so the JSX/template stamp is in place first. |
+| Scope | host elements in `.jsx` / `.tsx` / `.vue` | Components (uppercase) are skipped. |
+
+## Plugin order
+
+For React the order is flexible, but for Solid and Vue put `spotnote()` **before** the framework plugin so its `enforce: "pre"` stamp runs before their compiler:
 
 ```ts
-import spotnote, { spotnoteBabel } from 'spotnote';
-
-spotnoteBabel({ root: __dirname });
+plugins: [spotnote(), solid()]  // Solid
+plugins: [spotnote(), vue()]    // Vue
+plugins: [react(), spotnote()]  // React (either order works)
 ```
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `root` | `string` | `process.cwd()` | Project root directory. Used to compute relative file paths for `data-spotnote-id`. |
-| `manifestFile` | `string` | `".spotnote/manifest.json"` | Path to write the manifest file (hash to source location map). Relative to root. |
-| `enabled` | `boolean \| (mode: string) => boolean` | `true` | Whether the transform is active. |
+## Framework support
 
-This is a standalone Vite plugin (`enforce: "pre"`) that runs before `@vitejs/plugin-react`. It works independently of whether the React plugin uses Babel or Oxc internally.
+| Framework | How the stamp is added |
+| --- | --- |
+| React (Vite) | Standalone Babel JSX pass |
+| Solid / Preact / Qwik (Vite) | Same Babel JSX pass |
+| Vue (Vite) | Your app's `vue/compiler-sfc`, template elements |
+| Next.js | Not Vite — on the roadmap |
 
-## `spotnoteVue()`
+## Migrating from the old API
 
-Vue compiler NodeTransform. Import from `spotnote`.
-
-```ts
-import spotnote, { spotnoteVue } from 'spotnote';
-```
-
-No options. Pass it to `vue()` plugin's `template.compilerOptions.nodeTransforms` array.
-
-## `spotnoteSvelte()`
-
-Svelte markup preprocessor. Import from `spotnote`.
-
-```ts
-import spotnote, { spotnoteSvelte } from 'spotnote';
-```
-
-No options. Pass it to the `svelte()` plugin's `preprocess` array.
+Earlier versions exposed `spotnote({ enabled })` plus `spotnoteBabel`, `spotnoteVue`, and `spotnoteSvelte`, and wrote a manifest at build time. All of that is gone. Replace any of those with a single `spotnote()` call and drop the manifest/`enabled` wiring — dev-gating is built in via `apply: "serve"`.

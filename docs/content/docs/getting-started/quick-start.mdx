@@ -5,83 +5,65 @@ description: Add Spotnote to your Vite project in under a minute
 
 ## 1. Add the plugin to your Vite config
 
-Choose your framework:
+`spotnote()` is the whole setup — no options, no client import, no Babel wiring. It's `apply: "serve"`, so it activates in `vite dev` and is a no-op in production builds.
 
 ```ts tab="React" title="vite.config.ts"
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import spotnote, { spotnoteBabel } from 'spotnote'; // [!code highlight]
-
-const isProduction = process.env.NODE_ENV === 'production'; // [!code highlight]
+import spotnote from 'spotnote'; // [!code highlight]
 
 export default defineConfig({
-  plugins: [
-    spotnote({ enabled: !isProduction }), // [!code highlight]
-    spotnoteBabel({ enabled: !isProduction }), // [!code highlight]
-    react(),
-  ],
+  plugins: [react(), spotnote()], // [!code highlight]
+});
+```
+
+```ts tab="Solid" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import solid from 'vite-plugin-solid';
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineConfig({
+  // spotnote() first — its enforce:"pre" stamp must run before Solid's compiler
+  plugins: [spotnote(), solid()], // [!code highlight]
 });
 ```
 
 ```ts tab="Vue" title="vite.config.ts"
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import spotnote, { spotnoteVue } from 'spotnote'; // [!code highlight]
-
-const isProduction = process.env.NODE_ENV === 'production'; // [!code highlight]
+import spotnote from 'spotnote'; // [!code highlight]
 
 export default defineConfig({
-  plugins: [
-    spotnote({ enabled: !isProduction }), // [!code highlight]
-    vue({
-      template: {
-        compilerOptions: {
-          nodeTransforms: [spotnoteVue()], // [!code highlight]
-        },
-      },
-    }),
-  ],
+  // spotnote() first — it stamps the .vue template before Vue compiles it
+  plugins: [spotnote(), vue()], // [!code highlight]
 });
 ```
 
-```ts tab="Svelte" title="vite.config.ts"
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import spotnote, { spotnoteSvelte } from 'spotnote'; // [!code highlight]
-
-const isProduction = process.env.NODE_ENV === 'production'; // [!code highlight]
-
-export default defineConfig({
-  plugins: [
-    spotnote({ enabled: !isProduction }), // [!code highlight]
-    svelte({
-      preprocess: [spotnoteSvelte()], // [!code highlight]
-    }),
-  ],
-});
-```
-
-## 2. Build and deploy
+## 2. Start the dev server
 
 ```bash
-pnpm build
+pnpm dev
 ```
 
-Build your app and deploy it to your staging or QA environment. During the build, Spotnote injects `data-spotnote-id` attributes into your components and writes a manifest file (`.spotnote/manifest.json`) that maps each element back to its source file and line number.
+That's it. Spotnote stamps a `data-spotnote="file:line:column"` attribute on your host elements and auto-injects the picker into the page — no changes to your app code.
 
-<Callout type="warn" title="Don't include Spotnote in production">
-  Use the `enabled` option to disable Spotnote for production builds. See [Plugin Options](/docs/api/plugin-options) for details.
+<Callout type="info" title="Production stays clean">
+  Because the plugin is `apply: "serve"`, `vite build` never sees it — no
+  `data-spotnote` attributes and no picker leak into your bundle.
 </Callout>
 
 ## 3. Create a note
 
-Once you open up the deployed app, you can see the Spotnote panel. Click any element and leave a note.
+Open the printed `localhost` URL. Toggle **Inspect** in the launcher (bottom-left) or hold **`Alt`**, then hover and click an element to open the note panel.
 
-<BrowserFrame url="your-app.staging.com">
+<BrowserFrame url="localhost:5173">
   <SpotnoteDemo />
 </BrowserFrame>
+
+Type an instruction and hit **Add** (or `Enter`) — Spotnote copies an agent-ready prompt to your clipboard and drops a pin. Paste it into Claude Code / Cursor / Codex.
 
 ## Next steps
 
 - [How it works](/docs/getting-started/how-it-works) for the technical details
-- [Selecting elements](/docs/guide/selecting-elements) for advanced selection
+- [Selecting elements](/docs/guide/selecting-elements) for inspect mode and repeated elements
+- [Writing notes](/docs/guide/writing-notes) for the copied prompt format
