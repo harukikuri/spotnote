@@ -48,34 +48,58 @@ const steps: Step[] = [
 
 const durations = [1200, 500, 400, 700, 300, 400, 1200, 400, 600, 500, 1400, 800];
 
-function ChatBubblePin({ x, y }: { x: number; y: number }) {
+function NotePin({ x, y }: { x: number; y: number }) {
   return (
     <div
-      className="absolute z-10"
+      className="absolute z-10 flex items-center justify-center"
       style={{
         left: x,
         top: y,
-        marginLeft: -14,
-        marginTop: -14,
-        width: 28,
-        height: 28,
-        filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.3))',
+        marginLeft: -11,
+        marginTop: -11,
+        width: 22,
+        height: 22,
+        borderRadius: '50%',
+        background: '#6366f1',
+        border: '2px solid #fff',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
         animation: 'fd-fade-in 0.15s ease',
       }}
     >
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
-          fill="#6366f1"
-          stroke="#6366f1"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="12" cy="11.5" r="1" fill="#fff" />
-        <circle cx="8" cy="11.5" r="1" fill="#fff" />
-        <circle cx="16" cy="11.5" r="1" fill="#fff" />
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round">
+        <line x1="6" y1="10" x2="18" y2="10" />
+        <line x1="6" y1="14" x2="18" y2="14" />
       </svg>
+    </div>
+  );
+}
+
+// The plugin's on-hover "tag (file:line)" badge.
+function HoverLabel({ x, y }: { x: number; y: number }) {
+  return (
+    <div
+      className="absolute z-20"
+      style={{
+        left: x,
+        top: y,
+        display: 'flex',
+        gap: 6,
+        alignItems: 'center',
+        background: '#6366f1',
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 600,
+        padding: '2px 8px',
+        borderRadius: 6,
+        whiteSpace: 'nowrap',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+        pointerEvents: 'none',
+      }}
+    >
+      <span>h1</span>
+      <span style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'ui-monospace, monospace', fontWeight: 400 }}>
+        (Hero.tsx:12)
+      </span>
     </div>
   );
 }
@@ -141,7 +165,7 @@ export function SpotnoteDemo() {
     const pRect = popup.getBoundingClientRect();
     return {
       x: pRect.left - cRect.left + pRect.width / 2,
-      y: pRect.top - cRect.top + 20,
+      y: pRect.top - cRect.top + 52, // below the header, over the note input
     };
   }, []);
 
@@ -185,6 +209,7 @@ export function SpotnoteDemo() {
   const popupText = s.popup ? (s.popup.text === 'typing' ? typingText : s.popup.text) : '';
   const showPlaceholder = s.popup !== null && popupText === '';
   const addDisabled = s.popup !== null && popupText === '';
+  const isHovering = s.highlight === 'hero' && s.interactActive; // dashed box + pill, pre-click
 
   return (
     <div ref={containerRef} className="relative select-none overflow-hidden" style={{ height: 300 }}>
@@ -207,7 +232,7 @@ export function SpotnoteDemo() {
         <div
           className="rounded-lg px-5 py-5 mb-5 transition-all duration-300"
           style={{
-            outline: s.highlight === 'hero' ? '2px solid #6366f1' : '2px solid transparent',
+            outline: s.highlight === 'hero' ? `2px ${isHovering ? 'dashed' : 'solid'} #6366f1` : '2px solid transparent',
             background: s.highlight === 'hero' ? 'rgba(99,102,241,0.04)' : 'transparent',
           }}
         >
@@ -237,7 +262,7 @@ export function SpotnoteDemo() {
       <div
         className="absolute flex flex-col items-center gap-0"
         style={{
-          top: 16,
+          bottom: 16,
           left: 16,
           background: '#1a1a1a',
           border: '1px solid #333',
@@ -246,14 +271,14 @@ export function SpotnoteDemo() {
           boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
         }}
       >
-        {/* Toggle (X) button */}
+        {/* Minimize button — a "+" rotated 45° to read as "×" while open */}
         <div
           className="flex items-center justify-center"
           style={{ width: 32, height: 32, borderRadius: '50%', color: '#999' }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transform: 'rotate(45deg)' }}>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </div>
         <div style={{ width: 20, height: 1, background: '#444', margin: '4px 0' }} />
@@ -290,10 +315,13 @@ export function SpotnoteDemo() {
         </div>
       </div>
 
-      {/* ── Chat bubble pin ── */}
-      {s.pin && <ChatBubblePin x={heroTitlePos.x} y={heroTitlePos.y} />}
+      {/* ── Hover label pill ── */}
+      {isHovering && <HoverLabel x={heroTitlePos.x - 104} y={heroTitlePos.y - 34} />}
 
-      {/* ── Note popup ── */}
+      {/* ── Note pin ── */}
+      {s.pin && <NotePin x={heroTitlePos.x} y={heroTitlePos.y} />}
+
+      {/* ── Note panel ── */}
       {s.popup && (
         <div
           ref={popupRef}
@@ -301,67 +329,68 @@ export function SpotnoteDemo() {
           style={{
             left: heroTitlePos.x - 20,
             top: heroTitlePos.y + 30,
-            width: 240,
+            width: 300,
             background: '#1a1a1a',
             border: '1px solid #333',
             borderRadius: 10,
             boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-            padding: '10px 12px',
+            overflow: 'hidden',
             animation: 'fd-fade-in 0.18s ease',
           }}
         >
-          <div
-            style={{
-              color: showPlaceholder ? '#666' : '#ededed',
-              fontSize: 13,
-              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              lineHeight: '18px',
-              minHeight: 18,
-            }}
-          >
-            {showPlaceholder ? 'Add a note...' : popupText}
-            {s.popup.text === 'typing' && (
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 1,
-                  height: 14,
-                  background: '#ededed',
-                  marginLeft: 1,
-                  verticalAlign: 'text-bottom',
-                  animation: 'fd-blink 0.8s step-end infinite',
-                }}
-              />
-            )}
+          {/* Header: element label + close */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 7px 7px 12px', borderBottom: '1px solid #262626' }}>
+            <span style={{ color: '#ededed', fontWeight: 600, fontSize: 13 }}>h1</span>
+            <span style={{ color: '#888', fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>(Hero.tsx:12)</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, color: '#999' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </div>
           </div>
-          <div className="flex justify-end mt-2 gap-1.5">
+          {/* Body: note input + actions */}
+          <div style={{ padding: '10px 12px' }}>
             <div
               style={{
-                height: 26,
-                padding: '0 10px',
-                borderRadius: 6,
-                background: '#333',
-                color: '#999',
-                fontSize: 11,
-                display: 'flex',
-                alignItems: 'center',
-                fontWeight: 500,
+                color: showPlaceholder ? '#666' : '#ededed',
+                fontSize: 13,
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                lineHeight: '18px',
+                minHeight: 18,
               }}
             >
+              {showPlaceholder ? 'Describe the change for the agent…' : popupText}
+              {s.popup.text === 'typing' && (
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 1,
+                    height: 14,
+                    background: '#ededed',
+                    marginLeft: 1,
+                    verticalAlign: 'text-bottom',
+                    animation: 'fd-blink 0.8s step-end infinite',
+                  }}
+                />
+              )}
+            </div>
+          </div>
+          {/* Footer: Cancel + Add */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '8px 12px', borderTop: '1px solid #262626' }}>
+            <div style={{ padding: '3px 9px', borderRadius: 6, background: 'none', color: '#888', fontSize: 12, display: 'flex', alignItems: 'center' }}>
               Cancel
             </div>
             <div
               ref={addBtnRef}
               style={{
-                height: 26,
-                padding: '0 10px',
+                padding: '3px 9px',
                 borderRadius: 6,
                 background: addDisabled ? '#4338ca44' : s.popup.addHighlight ? '#4f46e5' : '#6366f1',
                 color: addDisabled ? '#ffffff66' : '#fff',
-                fontSize: 11,
+                fontSize: 12,
                 display: 'flex',
                 alignItems: 'center',
-                fontWeight: 500,
                 transition: 'background 0.14s',
               }}
             >
