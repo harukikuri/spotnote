@@ -1,5 +1,5 @@
 ---
-title: Plugin Options
+title: API Reference
 description: The Spotnote Vite plugin API
 ---
 
@@ -19,16 +19,6 @@ It takes **no options**. One call does everything:
 
 - stamps `data-spotnote="file:line:column"` on host elements, and
 - auto-injects the picker client via `transformIndexHtml`.
-
-There are no `spotnoteBabel` / `spotnoteVue` / `spotnoteSvelte` sub-exports and no `enabled` flag — see [Migrating](#migrating-from-the-old-api) below if you're coming from an older setup.
-
-## Behavior
-
-| Aspect | Value | Why |
-| --- | --- | --- |
-| `apply` | `"serve"` | Dev only — production builds are never touched, so nothing leaks into your bundle. |
-| `enforce` | `"pre"` | Runs before the framework compiler so the JSX/template stamp is in place first. |
-| Scope | host elements in `.jsx` / `.tsx` / `.vue` | Components (uppercase) are skipped. |
 
 ## Plugin order
 
