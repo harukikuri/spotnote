@@ -82,8 +82,8 @@ function ConvergeArrow() {
 
 export function StampFlow() {
   return (
-    <div className="not-prose my-6 overflow-x-auto rounded-xl border bg-fd-card p-6">
-      <div className="flex items-center justify-between min-w-fit">
+    <div className="not-prose my-6 rounded-xl border bg-fd-card p-6">
+      <div className="flex items-center justify-center">
         {/* Source frameworks */}
         <div className="flex flex-col gap-2">
           <FlowBox>
@@ -139,14 +139,6 @@ export function StampFlow() {
         <AccentBox>
           <LuCodeXml size={16} />
           <code style={{ fontSize: 13 }}>data-spotnote="file:line:col"</code>
-        </AccentBox>
-
-        <Arrow />
-
-        {/* Injected picker */}
-        <AccentBox>
-          <LuMousePointerClick size={16} />
-          picker client
         </AccentBox>
       </div>
     </div>
