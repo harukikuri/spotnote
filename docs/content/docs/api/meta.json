@@ -1,7 +1,6 @@
 {
   "title": "API Reference",
   "pages": [
-    "plugin-options",
-    "data-attributes"
+    "plugin-options"
   ]
 }
