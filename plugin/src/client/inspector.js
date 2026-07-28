@@ -443,25 +443,27 @@ function ensurePlaceholderStyle() {
 
 function panelLabel(el) {
   const wrap = document.createElement("div");
-  wrap.style.cssText = "display:flex;gap:6px;align-items:baseline;min-width:0;flex:1";
+  wrap.style.cssText = "display:flex;gap:6px;align-items:baseline;min-width:0;flex:1;overflow:hidden";
 
   const tag = document.createElement("span");
-  tag.style.cssText = `color:${T.text};font-weight:600;font-size:13px`;
+  tag.style.cssText = `color:${T.text};font-weight:600;font-size:13px;flex-shrink:0`;
   tag.textContent = el.tagName.toLowerCase();
   wrap.append(tag);
 
   const cls =
     typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
   if (cls) {
+    // The class is the flexible bit — let it ellipsize so a long name can't
+    // push the file:line out of the panel.
     const c = document.createElement("span");
-    c.style.cssText = `color:${T.textMuted};font-size:12px`;
+    c.style.cssText = `color:${T.textMuted};font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap`;
     c.textContent = "." + cls;
     wrap.append(c);
   }
 
   const l = parseLoc(el.getAttribute("data-spotnote"));
   const loc = document.createElement("span");
-  loc.style.cssText = `color:${T.textMuted};font-family:${MONO};font-size:11px;white-space:nowrap`;
+  loc.style.cssText = `color:${T.textMuted};font-family:${MONO};font-size:11px;white-space:nowrap;flex-shrink:0`;
   loc.textContent = `(${l.file.split("/").pop()}:${l.line})`;
   wrap.append(loc);
   return wrap;
