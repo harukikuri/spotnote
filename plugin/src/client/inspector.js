@@ -282,8 +282,6 @@ function buildPrompt(el, note) {
     .join("\n");
 
   return [
-    "Edit the source for the UI element below to apply the request.",
-    "",
     `## Request`,
     note,
     "",

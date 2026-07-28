@@ -5,9 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const FULL_TEXT = 'Make this title bigger';
 
 // What the plugin actually copies to the clipboard (buildPrompt output).
-const NOTE_CONTEXT = `Edit the source for the UI element below to apply the request.
-
-## Request
+const NOTE_CONTEXT = `## Request
 Make this title bigger
 
 ## Target

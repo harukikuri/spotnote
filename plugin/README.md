@@ -44,8 +44,6 @@ That's the whole setup — no client import, no Babel wiring. `spotnote()` is
 3. **Type** an instruction → **Copy for agent** (or Enter) copies a prompt like:
 
    ```
-   Edit the source for the UI element below to apply the request.
-
    ## Request
    make the padding bigger
 
