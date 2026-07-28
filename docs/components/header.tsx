@@ -12,7 +12,7 @@ export function Header() {
         className="mx-auto flex h-full items-center px-4"
         style={{ maxWidth: 'var(--fd-layout-width, 97rem)' }}
       >
-        <Link href="/docs" className="font-semibold text-fd-foreground">
+        <Link href="/docs" className="font-semibold text-fd-foreground ps-3">
           Spotnote
         </Link>
         <div className="flex-1" />
