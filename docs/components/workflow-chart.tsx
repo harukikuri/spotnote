@@ -82,7 +82,7 @@ function ConvergeArrow() {
 
 export function StampFlow() {
   return (
-    <div className="not-prose my-6 rounded-xl border bg-fd-card p-6">
+    <div className="not-prose my-6 rounded-xl border p-6">
       <div className="flex items-center justify-center">
         {/* Source frameworks */}
         <div className="flex flex-col gap-2">
@@ -162,7 +162,7 @@ const pickSteps: Step[] = [
 
 export function PickFlow() {
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-xl border bg-fd-card px-6 py-5">
+    <div className="not-prose my-6 overflow-hidden rounded-xl border px-6 py-5">
       <div className="flex flex-col gap-5">
         {pickSteps.map((step, i) => (
           <div key={step.label} className="flex items-start gap-3">
