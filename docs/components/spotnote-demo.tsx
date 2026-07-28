@@ -378,17 +378,18 @@ export function SpotnoteDemo() {
           </div>
           {/* Footer: Cancel + Add */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '8px 12px', borderTop: '1px solid #262626' }}>
-            <div style={{ padding: '3px 9px', borderRadius: 6, background: 'none', color: '#888', fontSize: 12, display: 'flex', alignItems: 'center' }}>
+            <div style={{ padding: '5px 12px', borderRadius: 6, background: 'none', color: '#888', fontSize: 13, lineHeight: 'normal', display: 'flex', alignItems: 'center' }}>
               Cancel
             </div>
             <div
               ref={addBtnRef}
               style={{
-                padding: '3px 9px',
+                padding: '5px 12px',
                 borderRadius: 6,
                 background: addDisabled ? '#4338ca44' : s.popup.addHighlight ? '#4f46e5' : '#6366f1',
                 color: addDisabled ? '#ffffff66' : '#fff',
-                fontSize: 12,
+                fontSize: 13,
+                lineHeight: 'normal',
                 display: 'flex',
                 alignItems: 'center',
                 transition: 'background 0.14s',
