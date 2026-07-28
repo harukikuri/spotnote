@@ -27,6 +27,7 @@ let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let launcher = null;
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
+const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
 const pins = new Map(); // refKey (loc@index) -> { loc, index, note, url, marker }
 let pinsVisible = true; // hidden while the launcher is minimized
 
@@ -53,7 +54,20 @@ const controller = {
     const p = pins.get(key);
     if (!p) return;
     const el = resolveRef(p.loc, p.index);
-    if (el) openPanel(el, p.note);
+    if (el) {
+      el.scrollIntoView({ block: "center", inline: "nearest" });
+      openPanel(el, p.note);
+      return;
+    }
+    // Not on this page — navigate to where the note was made, then reopen it.
+    if (p.url && p.url !== pageUrl()) {
+      try {
+        sessionStorage.setItem(OPEN_KEY, key);
+      } catch {
+        /* ignore */
+      }
+      location.href = p.url;
+    }
   },
   onChange(cb) {
     changeCbs.push(cb);
@@ -123,6 +137,17 @@ export function initInspector() {
 
   restorePins(); // bring back notes saved on a previous visit to this page/app
   launcher = mountLauncher(controller);
+
+  // If we arrived here from a cross-page "open note", show it once it mounts.
+  try {
+    const openKey = sessionStorage.getItem(OPEN_KEY);
+    if (openKey) {
+      sessionStorage.removeItem(OPEN_KEY);
+      openNoteWhenReady(openKey);
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 // ── Inspect mode ──────────────────────────────────────────────────────
@@ -669,6 +694,15 @@ function restorePins() {
     pins.set(s.key, { loc: s.loc, index: s.index, note: s.note, url: s.url, marker });
   }
   repositionPins();
+}
+
+// After a cross-page jump the target element may not be mounted yet (frameworks
+// render async) — retry briefly until it appears, then open the note.
+function openNoteWhenReady(key, tries = 20) {
+  const p = pins.get(key);
+  if (!p) return;
+  if (resolveRef(p.loc, p.index)) controller.openNote(key);
+  else if (tries > 0) setTimeout(() => openNoteWhenReady(key, tries - 1), 100);
 }
 
 // Build a pin's DOM marker + its reopen-on-click handler.
