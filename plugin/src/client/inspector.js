@@ -26,7 +26,8 @@ let panel = null;
 let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let launcher = null;
-const pins = new Map(); // refKey (loc@index) -> { loc, index, note, marker }
+const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
+const pins = new Map(); // refKey (loc@index) -> { loc, index, note, url, marker }
 let pinsVisible = true; // hidden while the launcher is minimized
 
 const changeCbs = [];
@@ -120,6 +121,7 @@ export function initInspector() {
     });
   }
 
+  restorePins(); // bring back notes saved on a previous visit to this page/app
   launcher = mountLauncher(controller);
 }
 
@@ -642,24 +644,58 @@ function makePinEl() {
   return m;
 }
 
+// ── Persistence: notes survive reloads and page navigation ───────────
+function pageUrl() {
+  return location.pathname + location.search;
+}
+function savePins() {
+  try {
+    const data = [...pins.entries()].map(([key, p]) => ({ key, loc: p.loc, index: p.index, note: p.note, url: p.url }));
+    localStorage.setItem(PINS_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore quota / serialization errors */
+  }
+}
+function restorePins() {
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem(PINS_KEY) || "[]");
+  } catch {
+    saved = [];
+  }
+  for (const s of saved) {
+    if (!s || pins.has(s.key)) continue;
+    const marker = makePinMarker(s.key, s.loc, s.index);
+    pins.set(s.key, { loc: s.loc, index: s.index, note: s.note, url: s.url, marker });
+  }
+  repositionPins();
+}
+
+// Build a pin's DOM marker + its reopen-on-click handler.
+function makePinMarker(key, loc, index) {
+  const marker = makePinEl();
+  marker.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const p = pins.get(key);
+    const el = resolveRef(loc, index);
+    if (el && p) openPanel(el, p.note);
+  });
+  document.body.append(marker);
+  return marker;
+}
+
 function upsertPin(occ, note) {
   const key = refKey(occ.loc, occ.index);
   let pin = pins.get(key);
   if (!pin) {
-    const marker = makePinEl();
-    marker.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const p = pins.get(key);
-      const el = resolveRef(occ.loc, occ.index);
-      if (el && p) openPanel(el, p.note);
-    });
-    document.body.append(marker);
-    pin = { loc: occ.loc, index: occ.index, note, marker };
+    const marker = makePinMarker(key, occ.loc, occ.index);
+    pin = { loc: occ.loc, index: occ.index, note, url: pageUrl(), marker };
     pins.set(key, pin);
   } else {
     pin.note = note;
   }
+  savePins();
   repositionPins();
   notify();
 }
@@ -669,6 +705,7 @@ function deletePin(key) {
   if (!pin) return;
   pin.marker.remove();
   pins.delete(key);
+  savePins();
 }
 
 function repositionPins() {
