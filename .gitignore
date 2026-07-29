@@ -20,6 +20,9 @@ Thumbs.db
 .env
 *.pem
 
+# Local agent instructions — not versioned
+CLAUDE.md
+
 # Build artifacts
 *.png
 *.tsbuildinfo
