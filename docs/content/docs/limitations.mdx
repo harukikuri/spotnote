@@ -22,11 +22,21 @@ This is inherent to stamping static markup at build time: if the element isn't w
 
 ## Frameworks
 
-- **React / Solid** (Vite) — first-class; the standalone JSX Babel pass covers them.
-- **Vue** (Vite) — SFC `<template>` blocks only. Render functions and Vue-JSX aren't covered.
-- **Preact / Qwik** — share the JSX pass in principle but aren't verified; Qwik's optimizer in particular may not preserve the attribute.
-- **Svelte, Next.js** — not yet. Next isn't Vite (Webpack/Turbopack + SWC), so it needs a different adapter.
-- Only `.jsx` / `.tsx` / `.vue` files are processed — JSX authored in `.js` files isn't stamped.
+How the stamp is added, per framework:
+
+| Framework | How the stamp is added |
+| --- | --- |
+| React (Vite) | Standalone Babel JSX pass |
+| Solid / Preact / Qwik (Vite) | Same Babel JSX pass |
+| Vue (Vite) | Your app's `vue/compiler-sfc`, template elements |
+| Svelte (Vite) | _Roadmap_ — markup preprocessor via `svelte/compiler` |
+| Next.js | _Roadmap_ — not Vite (Webpack/Turbopack + SWC), needs a different adapter |
+
+Caveats:
+
+- **Vue** covers SFC `<template>` blocks only — render functions and Vue-JSX aren't stamped.
+- **Preact / Qwik** share the JSX pass but aren't verified; Qwik's optimizer in particular may not preserve the attribute.
+- Only `.jsx` / `.tsx` / `.vue` files are processed; JSX authored in `.js` files isn't stamped.
 
 ## Build & runtime
 

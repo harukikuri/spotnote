@@ -31,12 +31,3 @@ plugins: [vue(), spotnote()]    // Vue — either order works
 ```
 
 If a pre-compiling framework plugin is listed ahead of `spotnote()`, it warns in the dev console so the misorder isn't silent.
-
-## Framework support
-
-| Framework | How the stamp is added |
-| --- | --- |
-| React (Vite) | Standalone Babel JSX pass |
-| Solid / Preact / Qwik (Vite) | Same Babel JSX pass |
-| Vue (Vite) | Your app's `vue/compiler-sfc`, template elements |
-| Next.js | Not Vite — on the roadmap |
