@@ -695,7 +695,7 @@ function makePinEl() {
   const m = document.createElement("div");
   m.setAttribute("data-spotnote-ui", "");
   m.style.cssText =
-    "position:absolute;z-index:2147483645;cursor:pointer;width:22px;height:22px;border-radius:50%;" +
+    "position:absolute;z-index:2147483647;cursor:pointer;width:22px;height:22px;border-radius:50%;" +
     `background:${ACCENT};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)`;
   m.innerHTML =
     '<svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:block" ' +
