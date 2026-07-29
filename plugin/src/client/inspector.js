@@ -261,18 +261,20 @@ function resolveRef(loc, index) {
 
 // A ready-to-paste prompt: request first, then precise target + context, in a
 // labeled/structured layout that's easy for a coding agent to act on.
-// Walk up the DOM from `el`, collecting the distinct source files off the
-// data-spotnote stamps (outer → inner). Gives the agent the composition context
-// — e.g. App > Products > ProductCard — using only stamps already in the DOM.
+// Walk up the DOM from `el`, collecting the distinct owning components off the
+// data-spotnote stamps (outer → inner) — e.g. App > Products > ProductCard.
+// Uses the stamped component name when present, else the file's basename. Only
+// reads stamps already in the DOM, so it stays framework-agnostic.
 function sourcePath(el) {
   const up = []; // inner → outer
   for (let node = el; node; node = node.parentElement) {
     if (node.hasAttribute("data-spotnote-ui")) continue; // skip our own overlay
     const loc = node.getAttribute("data-spotnote");
     if (!loc) continue;
-    const { file, line } = parseLoc(loc);
-    const prev = up[up.length - 1];
-    if (!prev || prev.file !== file) up.push({ file, line }); // dedupe consecutive same-file
+    const label =
+      node.getAttribute("data-spotnote-name") ||
+      parseLoc(loc).file.split("/").pop().replace(/\.\w+$/, "");
+    if (up[up.length - 1] !== label) up.push(label); // dedupe consecutive same component
   }
   return up.reverse(); // outer → inner
 }
@@ -324,7 +326,7 @@ function buildPrompt(el, note) {
       : null,
     path.length > 1 ? "" : null,
     path.length > 1 ? `## Source path (outer → inner)` : null,
-    path.length > 1 ? path.map((p) => `${p.file}:${p.line}`).join(" > ") : null,
+    path.length > 1 ? path.join(" > ") : null,
     "",
     `## Current computed styles`,
     styles,

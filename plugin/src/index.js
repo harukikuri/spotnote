@@ -40,6 +40,8 @@ function stampVueTemplate(code, file, root, parse) {
   const { descriptor, errors } = parse(code, { filename: file });
   if (errors.length || !descriptor.template || !descriptor.template.ast) return;
   const rel = path.relative(root, file) || file;
+  // The SFC's component name ≈ its filename (Vue/devtools convention).
+  const name = path.basename(file, path.extname(file));
   const edits = [];
   const visit = (node) => {
     if (!node) return;
@@ -50,7 +52,7 @@ function stampVueTemplate(code, file, root, parse) {
         const { offset, line, column } = node.loc.start;
         const pos = offset + 1 + node.tag.length; // just past "<tag"
         // column → 0-based to match the JSX stamps (Vue reports 1-based).
-        edits.push({ pos, text: ` data-spotnote="${rel}:${line}:${column - 1}"` });
+        edits.push({ pos, text: ` data-spotnote="${rel}:${line}:${column - 1}" data-spotnote-name="${name}"` });
       }
     }
     (node.children || []).forEach(visit);

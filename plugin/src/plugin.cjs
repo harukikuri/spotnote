@@ -4,6 +4,28 @@
 // point differs.
 const path = require("path");
 
+// Derive a function's name: `function Foo(){}`, `const Foo = () =>`, or a wrapped
+// `const Foo = memo(() => {})` / `forwardRef(...)`.
+function fnName(fn) {
+  if (fn.node.id && fn.node.id.name) return fn.node.id.name;
+  let p = fn.parentPath;
+  while (p && p.isCallExpression()) p = p.parentPath; // unwrap memo()/forwardRef()
+  if (p && p.isVariableDeclarator() && p.node.id && p.node.id.name) return p.node.id.name;
+  return null;
+}
+
+// The nearest enclosing *capitalized* function = the component that owns this
+// element. Walks up past anonymous callbacks (e.g. `.map(item => <li/>)`).
+function ownerComponent(nodePath) {
+  let fn = nodePath.getFunctionParent();
+  while (fn) {
+    const n = fnName(fn);
+    if (n && /^[A-Z]/.test(n)) return n;
+    fn = fn.getFunctionParent();
+  }
+  return null;
+}
+
 module.exports = function ({ types: t }) {
   return {
     name: "data-spotnote",
@@ -37,6 +59,14 @@ module.exports = function ({ types: t }) {
         nodePath.node.attributes.push(
           t.jsxAttribute(t.jsxIdentifier("data-spotnote"), t.stringLiteral(value)),
         );
+
+        // Record the owning component so the client can show a name breadcrumb.
+        const owner = ownerComponent(nodePath);
+        if (owner) {
+          nodePath.node.attributes.push(
+            t.jsxAttribute(t.jsxIdentifier("data-spotnote-name"), t.stringLiteral(owner)),
+          );
+        }
       },
     },
   };
