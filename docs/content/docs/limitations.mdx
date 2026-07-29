@@ -1,0 +1,40 @@
+---
+title: Limitations
+description: What Spotnote covers, what it doesn't, and why
+---
+
+Spotnote stamps **host elements in your own source at dev time**, and the browser picker reads those stamps back. That design has clear edges — here they are, so nothing surprises you.
+
+## Coverage
+
+A click resolves to the nearest element carrying a `data-spotnote` stamp. What gets an **exact** stamp:
+
+- Native/host elements (`<div>`, `<button>`, …) written in your own `.jsx` / `.tsx` / `.vue` source.
+
+What **doesn't** — a click on these resolves to the nearest stamped ancestor, and the copied prompt flags it:
+
+- **Dependency-rendered DOM** — elements produced inside a `node_modules` component (a design-system `<Button>`, etc.). Spotnote transforms your source, not your dependencies.
+- **Raw / injected HTML** — `v-html`, `{@html}`, `dangerouslySetInnerHTML`, and third-party widgets that build their own DOM (charts, maps, rich-text editors).
+- **Dynamically-typed elements** — `<component :is="…">`, `<svelte:element this={…}>`: the tag is decided at runtime, so there's no static source to anchor to.
+- **Render functions** — components written with `h(...)` instead of templates/JSX have no static markup to stamp.
+
+This is inherent to stamping static markup at build time: if the element isn't written literally in source Spotnote transforms, there's nothing to attach a location to. (A capable agent can still work from the nearest-ancestor location plus the element's real classes, which are included in the prompt.)
+
+## Frameworks
+
+- **React / Solid** (Vite) — first-class; the standalone JSX Babel pass covers them.
+- **Vue** (Vite) — SFC `<template>` blocks only. Render functions and Vue-JSX aren't covered.
+- **Preact / Qwik** — share the JSX pass in principle but aren't verified; Qwik's optimizer in particular may not preserve the attribute.
+- **Svelte, Next.js** — not yet. Next isn't Vite (Webpack/Turbopack + SWC), so it needs a different adapter.
+- Only `.jsx` / `.tsx` / `.vue` files are processed — JSX authored in `.js` files isn't stamped.
+
+## Build & runtime
+
+- **Dev only.** The plugin is `apply: "serve"`, so production builds contain no `data-spotnote` and no picker — and there's nothing to point at in a prod build anyway.
+- **Vite only.** It ships as a Vite plugin; other bundlers (Webpack, Next's Turbopack) aren't supported yet.
+- **Notes are local.** Pins live in your browser's `localStorage` for the dev session — not synced across browsers, machines, or teammates, and not tied to Git.
+
+## Location accuracy
+
+- **Component boundary.** A stamp points at where an element is *defined*, not where its component is *used*. The `## Source path` breadcrumb in the prompt supplies the usage context so your agent can pick the right layer to edit.
+- **Repeated elements.** Items rendered from a loop share one source line; Spotnote disambiguates them by occurrence index and names the instance in the prompt.
