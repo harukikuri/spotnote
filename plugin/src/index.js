@@ -8,6 +8,7 @@
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import path from "node:path";
+import MagicString from "magic-string";
 
 const require = createRequire(import.meta.url);
 const babelVisitor = require("./plugin.cjs"); // the JSX-stamping Babel plugin
@@ -42,7 +43,8 @@ function stampVueTemplate(code, file, root, parse) {
   const rel = path.relative(root, file) || file;
   // The SFC's component name ≈ its filename (Vue/devtools convention).
   const name = path.basename(file, path.extname(file));
-  const edits = [];
+  const s = new MagicString(code);
+  let touched = false;
   const visit = (node) => {
     if (!node) return;
     // NodeTypes.ELEMENT === 1, ElementTypes.ELEMENT === 0 (a real DOM tag).
@@ -52,17 +54,17 @@ function stampVueTemplate(code, file, root, parse) {
         const { offset, line, column } = node.loc.start;
         const pos = offset + 1 + node.tag.length; // just past "<tag"
         // column → 0-based to match the JSX stamps (Vue reports 1-based).
-        edits.push({ pos, text: ` data-spotnote="${rel}:${line}:${column - 1}" data-spotnote-name="${name}"` });
+        s.appendLeft(pos, ` data-spotnote="${rel}:${line}:${column - 1}" data-spotnote-name="${name}"`);
+        touched = true;
       }
     }
     (node.children || []).forEach(visit);
   };
   visit(descriptor.template.ast);
-  if (!edits.length) return;
-  edits.sort((a, b) => b.pos - a.pos);
-  let out = code;
-  for (const e of edits) out = out.slice(0, e.pos) + e.text + out.slice(e.pos);
-  return out;
+  if (!touched) return;
+  // MagicString gives us a real source map (columns stay correct); back-to-front
+  // splicing is no longer needed since appendLeft tracks offsets itself.
+  return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
 }
 
 export default function spotnote() {
