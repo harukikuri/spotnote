@@ -225,16 +225,9 @@ function onClick(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  selectedEl = el;
   selectedRawTarget = e.target instanceof Element ? e.target : null; // may be deeper than `el`
-  const occ = occInfo(el);
-  selectedLoc = occ.loc;
-  selectedIndex = occ.index;
-  drawSelect(el);
-  notify();
-
-  console.log("[spotnote] selected:", parseLoc(selectedLoc));
-  openPanel(el);
+  console.log("[spotnote] selected:", el.getAttribute("data-spotnote"));
+  openPanel(el); // sets the selection + highlight for every open path
 }
 
 // "src/App.jsx:12:4" -> {file, line, column}  (split from the RIGHT: path may contain ':')
@@ -510,6 +503,13 @@ function openPanel(target, prefillNote) {
   const isEdit = pins.has(key); // reopened an existing note
   panelTarget = target;
   panelDragged = false;
+
+  // Highlight the target whenever the panel is open — including reopens from a
+  // pin or the notes list, not just a fresh click.
+  selectedEl = target;
+  selectedLoc = occ.loc;
+  selectedIndex = occ.index;
+  drawSelect(target);
 
   panel = document.createElement("div");
   panel.setAttribute("data-spotnote-ui", "");
