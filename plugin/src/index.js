@@ -75,6 +75,24 @@ export default function spotnote() {
 
     configResolved(config) {
       root = config.root; // so stamped paths are relative to the app root
+
+      // We stamp with enforce:"pre", so we beat normal-enforce compilers (Vue,
+      // React) automatically. But another *pre* JSX compiler (e.g. Solid) listed
+      // before us in the plugins array runs first and compiles the JSX away —
+      // then our stamp finds nothing. config.plugins is in execution order, so a
+      // framework compiler appearing before us here means the order is wrong.
+      // Only pre-enforce JSX compilers (Solid, Qwik) are order-sensitive; React
+      // and Vue run at normal enforce, so we always beat them — don't warn there.
+      const plugins = config.plugins || [];
+      const me = plugins.findIndex((p) => p && p.name === "spotnote");
+      const isPreCompiler = (p) => /solid|qwik/i.test(p.name || "");
+      const before = me > 0 && plugins.slice(0, me).find((p) => p && isPreCompiler(p));
+      if (before) {
+        console.warn(
+          `[spotnote] "${before.name}" runs before spotnote() — list spotnote() BEFORE your framework plugin in vite.config, ` +
+            `or its data-spotnote stamp lands on already-compiled code and nothing gets marked.`,
+        );
+      }
     },
     async buildStart() {
       ({ transformSync } = await import("@babel/core"));

@@ -22,13 +22,15 @@ It takes **no options**. One call does everything:
 
 ## Plugin order
 
-For React the order is flexible, but for Solid and Vue put `spotnote()` **before** the framework plugin so its `enforce: "pre"` stamp runs before their compiler:
+React and Vue run their compilers at normal enforce, so `spotnote()` (`enforce: "pre"`) always beats them — order is flexible. **Solid** (and other JSX compilers that also run at `enforce: "pre"`, like Qwik) run in the same phase, so list `spotnote()` **before** them or the JSX is compiled away before it can be stamped:
 
 ```ts
-plugins: [spotnote(), solid()]  // Solid
-plugins: [spotnote(), vue()]    // Vue
-plugins: [react(), spotnote()]  // React (either order works)
+plugins: [spotnote(), solid()]  // Solid — spotnote() must come first
+plugins: [react(), spotnote()]  // React — either order works
+plugins: [vue(), spotnote()]    // Vue — either order works
 ```
+
+If a pre-compiling framework plugin is listed ahead of `spotnote()`, it warns in the dev console so the misorder isn't silent.
 
 ## Framework support
 
