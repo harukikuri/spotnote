@@ -1,19 +1,43 @@
 <script setup>
-const items = ["Alpha", "Beta", "Gamma"];
+import { computed } from "vue";
+import { route } from "./router.js";
+import AppLink from "./components/AppLink.vue";
+import Home from "./pages/Home.vue";
+import Products from "./pages/Products.vue";
+import About from "./pages/About.vue";
+
+// Pages read the shared `route` themselves, so no props to thread through.
+const page = computed(() => {
+  const p = route.value.path;
+  if (p === "/") return Home;
+  if (p === "/products") return Products;
+  if (p === "/about") return About;
+  return null;
+});
 </script>
 
 <template>
-  <main style="font-family: system-ui, sans-serif; max-width: 640px; margin: 0 auto; padding: 32px">
-    <h1>Spotnote — Vue playground</h1>
-    <p>
-      Hold <kbd>Alt</kbd> and click an element (or toggle Inspect in the launcher).
-    </p>
-    <div style="display: flex; gap: 8px; margin: 16px 0">
-      <button>Primary</button>
-      <button>Secondary</button>
-    </div>
-    <ul>
-      <li v-for="it in items" :key="it">{{ it }}</li>
-    </ul>
-  </main>
+  <div>
+    <header class="nav">
+      <div class="nav-inner">
+        <span class="brand">◎ Spotnote</span>
+        <nav class="nav-links">
+          <AppLink to="/">Home</AppLink>
+          <AppLink to="/products?category=all&sort=name">Products</AppLink>
+          <AppLink to="/about">About</AppLink>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <component :is="page" v-if="page" />
+      <div v-else class="section">
+        <h2>404</h2>
+        <p class="muted">No page at {{ route.path }}</p>
+        <AppLink to="/">← Back home</AppLink>
+      </div>
+    </main>
+
+    <footer class="footer">Spotnote playground · Vue + Vite</footer>
+  </div>
 </template>
