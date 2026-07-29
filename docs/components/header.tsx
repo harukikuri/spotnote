@@ -19,7 +19,7 @@ export function Header() {
         <nav className="flex items-center gap-3">
           <FullSearchTrigger />
           <a
-            href="https://github.com/kuri-sun/spotnote"
+            href="https://github.com/harukikuri/spotnote"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-md p-2 text-fd-muted-foreground hover:text-fd-foreground transition-colors"
