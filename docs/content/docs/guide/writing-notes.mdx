@@ -32,11 +32,14 @@ Copying a note produces a framework-neutral, agent-ready markdown prompt:
 make the padding bigger
 
 ## Target
-- file: pages/Products.jsx
-- line: 12, column: 4
+- file: components/ProductCard.jsx
+- line: 12, column: 6
 - element: <button class="chip">
-- text: "shoes"
+- text: "Add to cart"
 - instance: 2 of 6 rendered from this line (by DOM order) — target the one matching the text above
+
+## Source path (outer → inner)
+App.jsx:10 > pages/Products.jsx:14 > components/ProductCard.jsx:12
 
 ## Current computed styles
   padding: 6px 12px
@@ -44,4 +47,10 @@ make the padding bigger
   …
 ````
 
-Paste it into Claude Code, Cursor, or Codex — it has the exact file/line, the element, and its computed styles, so the agent can make the edit without guessing. The `instance` line only appears when the element is one of several rendered from the same source line.
+Paste it into Claude Code, Cursor, or Codex — it has the exact file/line, the element, and its computed styles, so the agent can make the edit without guessing.
+
+A few sections are conditional:
+
+- **`instance`** appears only when the element is one of several rendered from the same source line.
+- **`## Source path`** is the file nesting from the clicked element up to the app root, read off the `data-spotnote` stamps of its ancestors (deduped by file, outer → inner). It gives the agent the composition context — so it can decide whether to edit the element's own file or the usage site a level up.
+- If you click an element that carries **no stamp** (e.g. rendered by a dependency or injected via `v-html` / `dangerouslySetInnerHTML`), the note resolves to the nearest stamped ancestor and adds a line flagging that the exact target isn't in your source.

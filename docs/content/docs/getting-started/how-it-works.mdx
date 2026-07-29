@@ -33,3 +33,7 @@ Pins persist in `localStorage` for your dev session and re-anchor across Hot Mod
 ## Repeated elements
 
 Elements rendered from a loop (`items.map(...)`) all share the same source line, so they carry the **same** `data-spotnote` value. Spotnote disambiguates them by **occurrence index** — the element's position among all matches in DOM order — and names the exact instance in the copied prompt (e.g. "instance 2 of 6") so your agent edits the right one.
+
+## Source path
+
+The same click also walks *up* the DOM, collecting the `data-spotnote` stamps of the element's ancestors (deduped by file, outer → inner). That yields a composition breadcrumb — e.g. `App.jsx > Products.jsx > ProductCard.jsx` — which goes into the prompt so the agent knows whether to edit the element's own file or the usage a level up. It uses only the stamps already in the DOM, so it stays framework-agnostic. If the clicked element has no stamp of its own (rendered by a dependency, or injected as raw HTML), Spotnote resolves to the nearest stamped ancestor and flags that in the prompt.
