@@ -497,7 +497,6 @@ function panelLabel(el) {
 function openPanel(target, prefillNote) {
   closePanel();
   ensurePlaceholderStyle();
-  const locStr = target.getAttribute("data-spotnote");
   const occ = occInfo(target);
   const key = refKey(occ.loc, occ.index);
   const isEdit = pins.has(key); // reopened an existing note
@@ -527,10 +526,12 @@ function openPanel(target, prefillNote) {
   if (isEdit) {
     const copyBtn = createIconBtn({
       svg: ICONS.copy,
-      title: "Copy source path",
+      title: "Copy prompt",
       parent: header,
       onClick: () => {
-        navigator.clipboard?.writeText(locStr);
+        const note = (input.textContent || "").trim();
+        if (!note) return;
+        navigator.clipboard?.writeText(buildPrompt(target, note)).catch(() => {});
         copyBtn.innerHTML = ICONS.check; // green tick feedback, then revert
         clearTimeout(copyBtn._t);
         copyBtn._t = setTimeout(() => {
