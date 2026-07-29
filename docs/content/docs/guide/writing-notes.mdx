@@ -39,7 +39,7 @@ make the padding bigger
 - instance: 2 of 6 rendered from this line (by DOM order) — target the one matching the text above
 
 ## Source path (outer → inner)
-App.jsx:10 > pages/Products.jsx:14 > components/ProductCard.jsx:12
+App > Products > ProductCard
 
 ## Current computed styles
   padding: 6px 12px
@@ -52,5 +52,5 @@ Paste it into Claude Code, Cursor, or Codex — it has the exact file/line, the 
 A few sections are conditional:
 
 - **`instance`** appears only when the element is one of several rendered from the same source line.
-- **`## Source path`** is the file nesting from the clicked element up to the app root, read off the `data-spotnote` stamps of its ancestors (deduped by file, outer → inner). It gives the agent the composition context — so it can decide whether to edit the element's own file or the usage site a level up.
+- **`## Source path`** is the component nesting from the clicked element up to the app root, read off its ancestors' stamps (each element records its owning component; deduped, outer → inner). It gives the agent the composition context — so it can decide whether to edit the element's own component or the usage site a level up.
 - If you click an element that carries **no stamp** (e.g. rendered by a dependency or injected via `v-html` / `dangerouslySetInnerHTML`), the note resolves to the nearest stamped ancestor and adds a line flagging that the exact target isn't in your source.
