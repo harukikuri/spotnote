@@ -22,6 +22,7 @@ let selectBox = null;
 let selectedEl = null;
 let selectedLoc = null;
 let selectedIndex = 0; // occurrence index among same-loc siblings (.map() items)
+let selectedRawTarget = null; // the actual clicked node (may be unstamped, e.g. 3rd-party)
 let panel = null;
 let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
@@ -225,6 +226,7 @@ function onClick(e) {
   e.stopPropagation();
 
   selectedEl = el;
+  selectedRawTarget = e.target instanceof Element ? e.target : null; // may be deeper than `el`
   const occ = occInfo(el);
   selectedLoc = occ.loc;
   selectedIndex = occ.index;
@@ -259,6 +261,22 @@ function resolveRef(loc, index) {
 
 // A ready-to-paste prompt: request first, then precise target + context, in a
 // labeled/structured layout that's easy for a coding agent to act on.
+// Walk up the DOM from `el`, collecting the distinct source files off the
+// data-spotnote stamps (outer → inner). Gives the agent the composition context
+// — e.g. App > Products > ProductCard — using only stamps already in the DOM.
+function sourcePath(el) {
+  const up = []; // inner → outer
+  for (let node = el; node; node = node.parentElement) {
+    if (node.hasAttribute("data-spotnote-ui")) continue; // skip our own overlay
+    const loc = node.getAttribute("data-spotnote");
+    if (!loc) continue;
+    const { file, line } = parseLoc(loc);
+    const prev = up[up.length - 1];
+    if (!prev || prev.file !== file) up.push({ file, line }); // dedupe consecutive same-file
+  }
+  return up.reverse(); // outer → inner
+}
+
 function buildPrompt(el, note) {
   const l = parseLoc(el.getAttribute("data-spotnote"));
   const occ = occInfo(el);
@@ -281,6 +299,14 @@ function buildPrompt(el, note) {
     .map(([label, prop]) => `  ${label}: ${round(cs.getPropertyValue(prop))}`)
     .join("\n");
 
+  // If the actual click landed on a deeper element with no stamp, flag it —
+  // it's likely from a dependency or injected HTML, and `el` is the nearest
+  // stamped ancestor (not the exact clicked node).
+  const raw = selectedRawTarget;
+  const rawUnstamped = raw && raw !== el && el.contains(raw);
+
+  const path = sourcePath(el); // outer → inner
+
   return [
     `## Request`,
     note,
@@ -293,6 +319,12 @@ function buildPrompt(el, note) {
     occ.total > 1
       ? `- instance: ${occ.index + 1} of ${occ.total} rendered from this line (by DOM order) — target the one matching the text above`
       : null,
+    rawUnstamped
+      ? `- note: the clicked <${raw.tagName.toLowerCase()}> has no source stamp (likely from a dependency or injected HTML); this is the nearest stamped ancestor`
+      : null,
+    path.length > 1 ? "" : null,
+    path.length > 1 ? `## Source path (outer → inner)` : null,
+    path.length > 1 ? path.map((p) => `${p.file}:${p.line}`).join(" > ") : null,
     "",
     `## Current computed styles`,
     styles,
@@ -650,6 +682,7 @@ function closePanel() {
   selectedEl = null;
   selectedLoc = null;
   selectedIndex = 0;
+  selectedRawTarget = null;
   notify();
   // Deferred so the click that dismissed the panel can't immediately re-select.
   setTimeout(refreshPointer, 0);
