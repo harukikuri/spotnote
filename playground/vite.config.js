@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import spotnote from "spotnote";
 
-// Pick the playground framework with SPOTNOTE_FW (react | solid | vue).
+// Pick the playground framework with SPOTNOTE_FW (react | solid | vue | svelte).
 const FW = process.env.SPOTNOTE_FW || "react";
 
 async function frameworkPlugin() {
   if (FW === "vue") return (await import("@vitejs/plugin-vue")).default();
   if (FW === "solid") return (await import("vite-plugin-solid")).default();
+  if (FW === "svelte") return (await import("@sveltejs/vite-plugin-svelte")).svelte();
   return (await import("@vitejs/plugin-react")).default();
 }
 

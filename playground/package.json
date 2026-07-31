@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:solid": "SPOTNOTE_FW=solid vite",
     "dev:vue": "SPOTNOTE_FW=vue vite",
+    "dev:svelte": "SPOTNOTE_FW=svelte vite",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -15,9 +16,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "solid-js": "^1.9.3",
+    "svelte": "^5.0.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitejs/plugin-vue": "^5.2.1",
     "vite": "^5.4.11",
