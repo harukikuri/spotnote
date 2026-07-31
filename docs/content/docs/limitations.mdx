@@ -29,14 +29,15 @@ How the stamp is added, per framework:
 | React (Vite) | Standalone Babel JSX pass |
 | Solid / Preact / Qwik (Vite) | Same Babel JSX pass |
 | Vue (Vite) | Your app's `vue/compiler-sfc`, template elements |
-| Svelte (Vite) | _Roadmap_ — markup preprocessor via `svelte/compiler` |
+| Svelte (Vite) | Your app's `svelte/compiler`, markup elements |
 | Next.js | _Roadmap_ — not Vite (Webpack/Turbopack + SWC), needs a different adapter |
 
 Caveats:
 
 - **Vue** covers SFC `<template>` blocks only — render functions and Vue-JSX aren't stamped.
+- **Svelte** covers markup elements (Svelte 5 and 4); `<svelte:element>` (dynamic tag) isn't stamped.
 - **Preact / Qwik** share the JSX pass but aren't verified; Qwik's optimizer in particular may not preserve the attribute.
-- Only `.jsx` / `.tsx` / `.vue` files are processed; JSX authored in `.js` files isn't stamped.
+- Only `.jsx` / `.tsx` / `.vue` / `.svelte` files are processed; JSX authored in `.js` files isn't stamped.
 
 ## Build & runtime
 

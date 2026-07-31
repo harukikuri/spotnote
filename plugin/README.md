@@ -95,14 +95,15 @@ which imports `spotnote` via the workspace link — see the repo root `DEVELOPME
 
 The client is framework-agnostic (it reads `data-spotnote` off the DOM). Stamping
 runs `enforce: "pre"`, before the framework compiler: JSX via a standalone Babel
-pass (no React dependency), and Vue `.vue` templates via the app's own
-`vue/compiler-sfc`. So:
+pass (no React dependency), and `.vue` / `.svelte` markup via the app's own
+`vue/compiler-sfc` / `svelte/compiler`. So:
 
 | Framework | Support | How |
 | --- | --- | --- |
 | React (Vite) | ✅ built-in | `plugins: [react(), spotnote()]` |
 | Solid / Preact / Qwik (Vite) | ✅ same plugin | `plugins: [framework(), spotnote()]` — the JSX pass runs before the framework's compiler |
 | Vue (Vite) | ✅ built-in | `plugins: [spotnote(), vue()]` — stamps `<template>` host elements; borrows `vue/compiler-sfc` from your app, no extra dep |
+| Svelte (Vite) | ✅ built-in | `plugins: [spotnote(), svelte()]` — stamps markup elements; borrows `svelte/compiler` from your app, no extra dep |
 | Next.js | ⏳ planned | not Vite — register `src/plugin.cjs` via `babel.config.js` and load the client manually |
 
 The only framework-specific work left is **non-Vite bundlers** (Next). The

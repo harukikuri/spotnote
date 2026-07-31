@@ -2,7 +2,7 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import type { ReactNode } from 'react';
 import { CodeBlockTabsTrigger } from 'fumadocs-ui/components/codeblock';
-import { SiNpm, SiPnpm, SiYarn, SiReact, SiSolid, SiVuedotjs } from 'react-icons/si';
+import { SiNpm, SiPnpm, SiYarn, SiReact, SiSolid, SiVuedotjs, SiSvelte } from 'react-icons/si';
 import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
 import { StampFlow, PickFlow } from './workflow-chart';
@@ -15,6 +15,7 @@ const tabIcons: Record<string, ReactNode> = {
   React: <SiReact />,
   Solid: <SiSolid />,
   Vue: <SiVuedotjs />,
+  Svelte: <SiSvelte />,
 };
 
 function CustomCodeBlockTabsTrigger(

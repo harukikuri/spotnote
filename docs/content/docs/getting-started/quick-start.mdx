@@ -39,6 +39,17 @@ export default defineConfig({
 });
 ```
 
+```ts tab="Svelte" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineConfig({
+  // spotnote() first — it stamps the .svelte markup before Svelte compiles it
+  plugins: [spotnote(), svelte()], // [!code highlight]
+});
+```
+
 ## 2. Start the dev server
 
 ```bash
