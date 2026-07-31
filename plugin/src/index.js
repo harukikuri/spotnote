@@ -17,6 +17,8 @@ const clientEntry = fileURLToPath(new URL("./client/inspector.js", import.meta.u
 const VIRTUAL = "virtual:spotnote-client";
 const RESOLVED = "\0" + VIRTUAL;
 
+const warnedParse = new Set(); // files we couldn't parse (warn once each)
+
 // Vue SFCs aren't JSX, so Babel can't reach them. Instead we parse the SFC with
 // the app's own `vue/compiler-sfc` and splice `data-spotnote` onto each native
 // template element. Resolved lazily from the project so the plugin keeps no Vue
@@ -67,6 +69,83 @@ function stampVueTemplate(code, file, root, parse) {
   return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
 }
 
+// Svelte, like Vue, isn't JSX — parse with the app's own `svelte/compiler` and
+// splice `data-spotnote` onto native markup elements. Resolved lazily from the
+// project (undefined = not tried yet, null = unavailable).
+let svelteParse;
+async function getSvelteParse(root) {
+  if (svelteParse !== undefined) return svelteParse;
+  try {
+    const projectRequire = createRequire(path.join(root, "index.js"));
+    const url = pathToFileURL(projectRequire.resolve("svelte/compiler"));
+    const m = await import(url.href);
+    // svelte/compiler is CJS — importing the file by path exposes `parse` on the
+    // interop default, not as a named export.
+    svelteParse = m.parse || (m.default && m.default.parse) || null;
+  } catch {
+    svelteParse = null; // no Svelte in this project — silently skip .svelte stamping
+  }
+  return svelteParse;
+}
+
+// Offset → { line (1-based), column (0-based) }, matching the JSX/Vue stamps.
+function offsetToLineCol(code, offset) {
+  let line = 1;
+  let column = 0;
+  for (let i = 0; i < offset && i < code.length; i++) {
+    if (code[i] === "\n") {
+      line++;
+      column = 0;
+    } else {
+      column++;
+    }
+  }
+  return { line, column };
+}
+
+// Generic tree walk over the parsed markup — resilient to Svelte 4 vs 5 AST
+// shapes (we don't care about node kinds except native elements).
+function walkSvelte(node, visit) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) {
+    for (const n of node) walkSvelte(n, visit);
+    return;
+  }
+  if (typeof node.type === "string") visit(node);
+  for (const key in node) {
+    if (key === "parent") continue;
+    walkSvelte(node[key], visit);
+  }
+}
+
+function stampSvelte(code, file, root, parse) {
+  let ast;
+  try {
+    ast = parse(code, { filename: file, modern: true });
+  } catch {
+    return; // let vite-plugin-svelte report the real parse error
+  }
+  const rel = path.relative(root, file).replace(/\\/g, "/") || file;
+  const name = path.basename(file, path.extname(file));
+  const s = new MagicString(code);
+  let touched = false;
+  // `fragment` (Svelte 5) / `html` (Svelte 4) is the markup root; walking it
+  // skips the <script>/<style> ASTs.
+  walkSvelte(ast.fragment || ast.html || ast, (node) => {
+    // RegularElement (Svelte 5) / Element (Svelte 4) = a native DOM tag;
+    // components (capitalized) and <svelte:*> are other node types → skipped.
+    if ((node.type !== "RegularElement" && node.type !== "Element") || !node.name) return;
+    if (typeof node.start !== "number") return;
+    const already = (node.attributes || []).some((a) => a && a.name === "data-spotnote");
+    if (already) return;
+    const { line, column } = offsetToLineCol(code, node.start);
+    s.appendLeft(node.start + 1 + node.name.length, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
+    touched = true;
+  });
+  if (!touched) return;
+  return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
+}
+
 export default function spotnote() {
   let transformSync;
   let root = process.cwd();
@@ -87,7 +166,7 @@ export default function spotnote() {
       // and Vue run at normal enforce, so we always beat them — don't warn there.
       const plugins = config.plugins || [];
       const me = plugins.findIndex((p) => p && p.name === "spotnote");
-      const isPreCompiler = (p) => /solid|qwik/i.test(p.name || "");
+      const isPreCompiler = (p) => /solid|qwik|svelte/i.test(p.name || "");
       const before = me > 0 && plugins.slice(0, me).find((p) => p && isPreCompiler(p));
       if (before) {
         console.warn(
@@ -116,15 +195,30 @@ export default function spotnote() {
       const file = id.split("?")[0];
 
       if (/\.(jsx|tsx)$/.test(file)) {
-        const res = transformSync(code, {
-          filename: file,
-          root,
-          plugins: [babelVisitor],
-          parserOpts: { plugins: ["jsx", "typescript"] },
-          configFile: false,
-          babelrc: false,
-          sourceMaps: true,
-        });
+        let res;
+        try {
+          res = transformSync(code, {
+            filename: file,
+            root,
+            plugins: [babelVisitor],
+            // Parse permissively so common app syntax (decorators, import
+            // attributes, `using`) doesn't trip our standalone pass.
+            parserOpts: {
+              plugins: ["jsx", "typescript", "decorators-legacy", "importAttributes", "explicitResourceManagement"],
+            },
+            configFile: false,
+            babelrc: false,
+            sourceMaps: true,
+          });
+        } catch {
+          // Couldn't parse (syntax our config doesn't enable) — hand the file to
+          // the framework's own compiler unstamped instead of erroring.
+          if (!warnedParse.has(file)) {
+            warnedParse.add(file);
+            console.warn(`[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`);
+          }
+          return;
+        }
         if (!res || res.code == null) return;
         return { code: res.code, map: res.map };
       }
@@ -135,6 +229,13 @@ export default function spotnote() {
         const parse = await getVueParse(root);
         if (!parse) return;
         return stampVueTemplate(code, file, root, parse);
+      }
+
+      // Raw .svelte import only — skip the ?svelte&type= sub-requests.
+      if (file.endsWith(".svelte") && !id.includes("?")) {
+        const parse = await getSvelteParse(root);
+        if (!parse) return;
+        return stampSvelte(code, file, root, parse);
       }
     },
 
