@@ -17,14 +17,14 @@ export default defineConfig({
 });
 ```
 
-```ts tab="Solid" title="vite.config.ts"
+```ts tab="Svelte" title="vite.config.ts"
 import { defineConfig } from 'vite';
-import solid from 'vite-plugin-solid';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import spotnote from 'spotnote'; // [!code highlight]
 
 export default defineConfig({
-  // spotnote() first — its enforce:"pre" stamp must run before Solid's compiler
-  plugins: [spotnote(), solid()], // [!code highlight]
+  // spotnote() first — its enforce:"pre" stamp must run before Svelte's compiler
+  plugins: [spotnote(), svelte()], // [!code highlight]
 });
 ```
 
@@ -36,17 +36,6 @@ import spotnote from 'spotnote'; // [!code highlight]
 export default defineConfig({
   // spotnote() first — it stamps the .vue template before Vue compiles it
   plugins: [spotnote(), vue()], // [!code highlight]
-});
-```
-
-```ts tab="Svelte" title="vite.config.ts"
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import spotnote from 'spotnote'; // [!code highlight]
-
-export default defineConfig({
-  // spotnote() first — it stamps the .svelte markup before Svelte compiles it
-  plugins: [spotnote(), svelte()], // [!code highlight]
 });
 ```
 

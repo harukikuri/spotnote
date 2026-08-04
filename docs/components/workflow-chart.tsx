@@ -5,7 +5,7 @@ import {
   LuClipboardCopy,
   LuCodeXml,
 } from 'react-icons/lu';
-import { SiReact, SiSolid, SiVuedotjs, SiVite } from 'react-icons/si';
+import { SiReact, SiSvelte, SiVuedotjs, SiVite } from 'react-icons/si';
 import type { ReactNode } from 'react';
 
 // ── Dev time: how the stamp gets into the DOM ───────────────────────
@@ -91,12 +91,12 @@ export function StampFlow() {
             React
           </FlowBox>
           <FlowBox>
-            <SiSolid size={16} color="#4f88c6" />
-            Solid
-          </FlowBox>
-          <FlowBox>
             <SiVuedotjs size={16} color="#4fc08d" />
             Vue
+          </FlowBox>
+          <FlowBox>
+            <SiSvelte size={16} color="#ff3e00" />
+            Svelte
           </FlowBox>
         </div>
 

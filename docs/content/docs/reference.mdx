@@ -22,10 +22,10 @@ It takes **no options**. One call does everything:
 
 ## Plugin order
 
-React and Vue run their compilers at normal enforce, so `spotnote()` (`enforce: "pre"`) always beats them — order is flexible. **Solid** (and other JSX compilers that also run at `enforce: "pre"`, like Qwik) run in the same phase, so list `spotnote()` **before** them or the JSX is compiled away before it can be stamped:
+React and Vue run their compilers at normal enforce, so `spotnote()` (`enforce: "pre"`) always beats them — order is flexible. **Svelte** and **Solid** (and other compilers that also run at `enforce: "pre"`, like Qwik) run in the same phase, so list `spotnote()` **before** them or the source is compiled away before it can be stamped:
 
 ```ts
-plugins: [spotnote(), solid()]  // Solid — spotnote() must come first
+plugins: [spotnote(), svelte()] // Svelte — spotnote() must come first
 plugins: [react(), spotnote()]  // React — either order works
 plugins: [vue(), spotnote()]    // Vue — either order works
 ```

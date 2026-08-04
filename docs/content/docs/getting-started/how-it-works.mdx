@@ -13,10 +13,11 @@ There is no manifest, no server, and no Git dependency. Everything lives in the 
 
 <StampFlow />
 
-The plugin runs with `apply: "serve"` (dev only) and `enforce: "pre"` (before the framework compiler), so the stamp is in place by the time React/Solid/Vue process the code:
+The plugin runs with `apply: "serve"` (dev only) and `enforce: "pre"` (before the framework compiler), so the stamp is in place by the time the framework processes the code:
 
 - **JSX (`.jsx` / `.tsx`)** — a standalone Babel pass walks the AST and adds `data-spotnote` to every host (lowercase) element. It has no React dependency, so it works for Solid and other JSX frameworks too.
 - **Vue (`.vue`)** — the plugin parses the SFC with your app's own `vue/compiler-sfc` and splices `data-spotnote` onto each native template element. No extra dependency of its own.
+- **Svelte (`.svelte`)** — same idea, using your app's own `svelte/compiler` to stamp native markup elements.
 
 The value is the element's source position relative to the project root, for example `pages/Products.jsx:12:4`.
 
