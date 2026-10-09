@@ -700,16 +700,16 @@ function closePanel() {
 }
 
 // ── Pins: persistent markers left on elements that have a note ────────
-function makePinEl() {
+// A pin = [number, hover preview of the note]. The number is filled in by
+// repositionPins, since deleting a pin renumbers the rest.
+function makePinEl(note) {
   const m = document.createElement("div");
   m.setAttribute("data-spotnote-ui", "");
-  m.style.cssText =
-    "position:absolute;z-index:2147483647;cursor:pointer;width:22px;height:22px;border-radius:50%;" +
-    `background:${ACCENT};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)`;
-  m.innerHTML =
-    '<svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:block" ' +
-    'width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round">' +
-    '<line x1="6" y1="10" x2="18" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg>';
+  m.className = "sn-pin";
+  const tip = document.createElement("div");
+  tip.className = "sn-pin-tip";
+  tip.textContent = note;
+  m.append(document.createElement("span"), tip);
   return m;
 }
 
@@ -734,7 +734,7 @@ function restorePins() {
   }
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
-    const marker = makePinMarker(s.key, s.loc, s.index);
+    const marker = makePinMarker(s.key, s.loc, s.index, s.note);
     pins.set(s.key, { loc: s.loc, index: s.index, note: s.note, url: s.url, marker });
   }
   repositionPins();
@@ -750,8 +750,8 @@ function openNoteWhenReady(key, tries = 20) {
 }
 
 // Build a pin's DOM marker + its reopen-on-click handler.
-function makePinMarker(key, loc, index) {
-  const marker = makePinEl();
+function makePinMarker(key, loc, index, note) {
+  const marker = makePinEl(note);
   marker.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -767,11 +767,12 @@ function upsertPin(occ, note) {
   const key = refKey(occ.loc, occ.index);
   let pin = pins.get(key);
   if (!pin) {
-    const marker = makePinMarker(key, occ.loc, occ.index);
+    const marker = makePinMarker(key, occ.loc, occ.index, note);
     pin = { loc: occ.loc, index: occ.index, note, url: pageUrl(), marker };
     pins.set(key, pin);
   } else {
     pin.note = note;
+    pin.marker.lastChild.textContent = note; // the hover preview
   }
   savePins();
   repositionPins();
@@ -781,19 +782,29 @@ function upsertPin(occ, note) {
 function deletePin(key) {
   const pin = pins.get(key);
   if (!pin) return;
-  pin.marker.remove();
+  // Shrink away, then drop the node (timeout covers reduced motion / hidden pins).
+  const m = pin.marker;
+  m.classList.add("sn-leaving");
+  m.addEventListener("animationend", () => m.remove(), { once: true });
+  setTimeout(() => m.remove(), 200);
   pins.delete(key);
   savePins();
+  repositionPins(); // renumber the rest
 }
 
 function repositionPins() {
+  let n = 0;
   for (const [, pin] of pins) {
+    const num = String(++n); // same order as the launcher's notes list
+    if (pin.marker.firstChild.textContent !== num) pin.marker.firstChild.textContent = num;
     const el = resolveRef(pin.loc, pin.index);
     if (pinsVisible && el && el.isConnected) {
       const r = el.getBoundingClientRect();
       pin.marker.style.display = "";
       pin.marker.style.left = r.left + window.scrollX - 11 + "px";
       pin.marker.style.top = r.top + window.scrollY - 11 + "px";
+      // Flip the preview left when it would run past the viewport's right edge.
+      pin.marker.classList.toggle("sn-tip-left", r.left + 280 > window.innerWidth);
     } else {
       pin.marker.style.display = "none";
     }

@@ -37,7 +37,25 @@ const CSS = [
   ".sn-panel.sn-leaving{animation:sn-pop-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pop-in{from{opacity:0;transform:scale(.95)}}",
   "@keyframes sn-pop-out{to{opacity:0;transform:scale(.95)}}",
-  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}.sn-panel,.sn-panel.sn-leaving{animation:none}}",
+  // Pins: numbered, pop in with a slight overshoot, shrink away on delete, and
+  // preview their note on hover. .sn-tip-left flips the preview near the right
+  // edge so it can't widen the page.
+  `.sn-pin{position:absolute;z-index:2147483647;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
+    `border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:#fff;font:600 11px/18px ${T.font};text-align:center;` +
+    "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
+  `.sn-pin:hover{box-shadow:0 0 0 3px rgba(${T.accentRgb},.35),0 2px 6px rgba(0,0,0,.35)}`,
+  ".sn-pin.sn-leaving{animation:sn-pin-out .12s ease-in forwards;pointer-events:none}",
+  "@keyframes sn-pin-in{from{transform:scale(0)}}",
+  "@keyframes sn-pin-out{to{transform:scale(0);opacity:0}}",
+  `.sn-pin-tip{position:absolute;left:28px;top:-3px;width:max-content;max-width:240px;padding:6px 9px;border-radius:8px;` +
+    `background:${T.bg};border:1px solid ${T.border};color:${T.text};font:400 12px/16px ${T.font};text-align:left;` +
+    "box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:pre-wrap;word-break:break-word;overflow:hidden;" +
+    "display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;pointer-events:none;" +
+    "opacity:0;transform:translateX(-4px);transition:opacity .12s ease,transform .12s ease}",
+  ".sn-pin.sn-tip-left .sn-pin-tip{left:auto;right:28px;transform:translateX(4px)}",
+  ".sn-pin:hover .sn-pin-tip{opacity:1;transform:none}",
+  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label,.sn-pin-tip{transition:none}" +
+    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving{animation:none}}",
 ].join("\n");
 
 // All Spotnote UI lives in one shadow root, so the host page's CSS can't restyle

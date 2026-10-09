@@ -142,7 +142,10 @@ export function mountLauncher(ctrl) {
     notes.forEach((n, i) => {
       const row = d(popBody, `padding:8px 0;cursor:pointer;${i ? `border-top:1px solid ${T.borderSubtle}` : ""}`);
       const label = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
-      d(row, `font-family:${T.mono};font-size:11px;color:#a5b4fc;margin-bottom:2px`, label);
+      // Numbered like its pin on the page.
+      const head = d(row, "display:flex;align-items:center;gap:6px;margin-bottom:2px");
+      d(head, `flex-shrink:0;width:16px;height:16px;border-radius:50%;background:${T.accent};color:#fff;font-size:10px;font-weight:600;line-height:16px;text-align:center`, String(i + 1));
+      d(head, `font-family:${T.mono};font-size:11px;color:#a5b4fc`, label);
       d(row, `font-size:12px;color:${T.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`, n.note);
       row.addEventListener("click", () => {
         popover = null;
