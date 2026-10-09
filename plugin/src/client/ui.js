@@ -21,6 +21,16 @@ const CSS = [
   "*,*::before,*::after{box-sizing:border-box}",
   "@keyframes dl-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}",
   "[data-spotnote-input]:empty::before{content:attr(data-placeholder);color:#666;pointer-events:none}",
+  // Hover highlight + label: created once, slid between targets via transform,
+  // faded in/out via .sn-on. .sn-snap moves them without animating.
+  ".sn-hover,.sn-hover-label{position:fixed;left:0;top:0;pointer-events:none;opacity:0;" +
+    "transition:transform .12s cubic-bezier(.2,0,0,1),width .12s cubic-bezier(.2,0,0,1),height .12s cubic-bezier(.2,0,0,1),opacity .12s ease}",
+  `.sn-hover{z-index:2147483646;border-radius:3px;border:2px dashed ${T.accent};background:rgba(${T.accentRgb},0.10)}`,
+  `.sn-hover-label{z-index:2147483647;display:flex;gap:6px;align-items:center;background:${T.accent};color:#fff;` +
+    `font-family:${T.font};font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)}`,
+  ".sn-on{opacity:1}",
+  ".sn-snap{transition:none}",
+  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}}",
 ].join("\n");
 
 // All Spotnote UI lives in one shadow root, so the host page's CSS can't restyle

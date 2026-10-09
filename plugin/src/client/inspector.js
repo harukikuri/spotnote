@@ -18,6 +18,9 @@ let sticky = false; // toggled from the launcher
 let altHeld = false; // momentary via Alt
 let hoverBox = null;
 let hoverLabel = null;
+let hoverTarget = null; // element the hover box is currently on
+let lastPointer = null; // { x, y, own } from the latest mousemove
+let moveScheduled = false;
 let selectBox = null;
 let selectedEl = null;
 let selectedLoc = null;
@@ -162,7 +165,8 @@ function bindPointer(on) {
   } else {
     document.removeEventListener("mousemove", onMove, true);
     document.removeEventListener("click", onClick, true);
-    removeHover();
+    lastPointer = null;
+    hideHover();
   }
 }
 
@@ -209,11 +213,24 @@ function overOwnUI(e) {
   return e.target instanceof Element && e.target.closest("[data-spotnote-ui]");
 }
 
+// mousemove can fire several times per frame; resolve the target once per frame.
 function onMove(e) {
-  if (overOwnUI(e)) return removeHover();
-  const el = targetAt(e.clientX, e.clientY);
-  if (!el) return removeHover();
-  drawHover(el);
+  lastPointer = { x: e.clientX, y: e.clientY, own: overOwnUI(e) };
+  if (moveScheduled) return;
+  moveScheduled = true;
+  requestAnimationFrame(() => {
+    moveScheduled = false;
+    updateHover(true);
+  });
+}
+
+// Re-resolve the element under the last pointer position. `animate` slides the
+// box from its previous target; scroll passes false so it tracks without lag.
+function updateHover(animate) {
+  if (!lastPointer || lastPointer.own) return hideHover();
+  const el = targetAt(lastPointer.x, lastPointer.y);
+  if (!el) return hideHover();
+  drawHover(el, animate);
 }
 
 function onClick(e) {
@@ -345,26 +362,15 @@ function rebindSelection() {
 }
 
 // ── Overlay UI (design language referenced from the Spotnote plugin) ──
-// `absolute` = document coordinates (rides page scroll natively, no lag) for the
-// persistent selection box; `fixed` (default) for the transient hover box, which
-// is redrawn on mousemove.
-function mkBox(dashed, absolute) {
+// The selection box: document coordinates (absolute), so it rides page scroll
+// natively with no lag.
+function mkBox() {
   const box = document.createElement("div");
   box.setAttribute("data-spotnote-ui", "");
   box.style.cssText =
-    `position:${absolute ? "absolute" : "fixed"};pointer-events:none;z-index:2147483646;box-sizing:border-box;border-radius:3px;` +
-    `border:2px ${dashed ? "dashed" : "solid"} ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
+    "position:absolute;pointer-events:none;z-index:2147483646;box-sizing:border-box;border-radius:3px;" +
+    `border:2px solid ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
   return box;
-}
-
-function mkLabel() {
-  const l = document.createElement("div");
-  l.setAttribute("data-spotnote-ui", "");
-  l.style.cssText =
-    "position:fixed;pointer-events:none;z-index:2147483647;display:flex;gap:6px;align-items:center;" +
-    `background:${ACCENT};color:#fff;font-family:${FONT};font-size:12px;font-weight:600;` +
-    "padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)";
-  return l;
 }
 
 // tag (strong) + .class (muted) + (file:line) (muted mono).
@@ -390,15 +396,6 @@ function setLabel(labelEl, el) {
   labelEl.appendChild(loc);
 }
 
-// Viewport coords — for the transient (fixed) hover box.
-function place(box, target) {
-  const r = target.getBoundingClientRect();
-  box.style.left = r.left + "px";
-  box.style.top = r.top + "px";
-  box.style.width = r.width + "px";
-  box.style.height = r.height + "px";
-}
-
 // Document coords — for absolute overlays that scroll with the page. During a
 // page scroll (rect.top + scrollY) is constant, so the reposition is a no-op and
 // the overlay tracks smoothly; it only recomputes for nested scroll / layout.
@@ -410,29 +407,48 @@ function placeAbs(box, target) {
   box.style.height = r.height + "px";
 }
 
-function drawHover(target) {
+// The hover box + label are created once and slid between targets with
+// transform + size transitions, so moving across elements animates instead of
+// flickering. A hidden box snaps into place first, then fades in, so it never
+// slides in from wherever it was last shown.
+function drawHover(target, animate) {
   if (!hoverBox) {
-    hoverBox = mkBox(true);
-    hoverLabel = mkLabel();
+    hoverBox = document.createElement("div");
+    hoverBox.className = "sn-hover";
+    hoverLabel = document.createElement("div");
+    hoverLabel.className = "sn-hover-label";
     uiRoot().append(hoverBox, hoverLabel);
   }
-  place(hoverBox, target);
-  setLabel(hoverLabel, target);
+  const snap = !animate || !hoverBox.classList.contains("sn-on");
+  if (snap) {
+    hoverBox.classList.add("sn-snap");
+    hoverLabel.classList.add("sn-snap");
+  }
   const r = target.getBoundingClientRect();
-  hoverLabel.style.left = r.left + "px";
-  hoverLabel.style.top = Math.max(0, r.top - 24) + "px";
+  hoverBox.style.transform = `translate(${r.left}px,${r.top}px)`;
+  hoverBox.style.width = r.width + "px";
+  hoverBox.style.height = r.height + "px";
+  if (target !== hoverTarget) setLabel(hoverLabel, target);
+  hoverLabel.style.transform = `translate(${r.left}px,${Math.max(0, r.top - 24)}px)`;
+  hoverTarget = target;
+  if (snap) {
+    hoverBox.getBoundingClientRect(); // flush, so the snap lands before transitions return
+    hoverBox.classList.remove("sn-snap");
+    hoverLabel.classList.remove("sn-snap");
+  }
+  hoverBox.classList.add("sn-on");
+  hoverLabel.classList.add("sn-on");
 }
 
-function removeHover() {
-  hoverBox?.remove();
-  hoverLabel?.remove();
-  hoverBox = null;
-  hoverLabel = null;
+function hideHover() {
+  hoverBox?.classList.remove("sn-on");
+  hoverLabel?.classList.remove("sn-on");
+  hoverTarget = null;
 }
 
 function drawSelect(target) {
   if (!selectBox) {
-    selectBox = mkBox(false, true); // absolute — rides page scroll
+    selectBox = mkBox();
     uiRoot().append(selectBox);
   }
   placeAbs(selectBox, target);
@@ -777,6 +793,8 @@ function repositionPins() {
 }
 
 function reposition() {
+  // The page moved under a still pointer: re-resolve what's under it now.
+  if (pointerBound) updateHover(false);
   repositionSelect();
   repositionPins();
   if (panel && panelTarget && panelTarget.isConnected && !panelDragged) positionPanel(panelTarget);
