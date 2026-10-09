@@ -15,6 +15,32 @@ export const T = {
   mono: "ui-monospace,SFMono-Regular,Menlo,monospace",
 };
 
+// Stylesheet for everything inside the shadow root. The UI was designed under a
+// border-box reset, so it's restated here rather than inherited from the page.
+const CSS = [
+  "*,*::before,*::after{box-sizing:border-box}",
+  "@keyframes dl-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}",
+  "[data-spotnote-input]:empty::before{content:attr(data-placeholder);color:#666;pointer-events:none}",
+].join("\n");
+
+// All Spotnote UI lives in one shadow root, so the host page's CSS can't restyle
+// it (and ours can't leak out). The host is pinned at the document origin:
+// position:absolute children use document coords, position:fixed the viewport.
+// It hangs off <html>, not <body>, so a positioned body can't offset it.
+let shadow = null;
+export function uiRoot() {
+  if (shadow) return shadow;
+  const host = document.createElement("spotnote-root");
+  host.setAttribute("data-spotnote-ui", "");
+  host.style.cssText = "all:initial;position:absolute;top:0;left:0;width:0;height:0;z-index:2147483647";
+  shadow = host.attachShadow({ mode: "open" });
+  const style = document.createElement("style");
+  style.textContent = CSS;
+  shadow.append(style);
+  document.documentElement.append(host);
+  return shadow;
+}
+
 export function createButton({ label, variant = "primary", parent, onClick }) {
   const b = document.createElement("button");
   b.setAttribute("data-spotnote-ui", "");

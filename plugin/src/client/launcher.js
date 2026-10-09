@@ -5,7 +5,7 @@
 //
 // Driven by a controller from the inspector:
 //   { toggleInspect, isInspecting, setPinsVisible, notes, openNote, onChange }
-import { T, createIconBtn } from "./ui.js";
+import { T, createIconBtn, uiRoot } from "./ui.js";
 
 const POS_KEY = "data-spotnote-launcher-pos";
 const MIN_KEY = "data-spotnote-launcher-min";
@@ -31,7 +31,7 @@ function d(parent, css, text) {
 }
 
 export function mountLauncher(ctrl) {
-  const wrap = d(document.body, `position:fixed;z-index:2147483647;font-family:${T.font};user-select:none;animation:dl-fade .2s ease`);
+  const wrap = d(uiRoot(), `position:fixed;z-index:2147483647;font-family:${T.font};user-select:none;animation:dl-fade .2s ease`);
   let pos = null;
   try {
     const raw = localStorage.getItem(POS_KEY);

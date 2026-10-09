@@ -4,7 +4,7 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createButton, createIconBtn, ICONS } from "./ui.js";
+import { T, createButton, createIconBtn, ICONS, uiRoot } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
 
 const ACTIVATE_KEY = "Alt";
@@ -82,7 +82,6 @@ const controller = {
 export function initInspector() {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
-  injectStyles();
 
   window.addEventListener("keydown", (e) => {
     if (e.key === ACTIVATE_KEY) {
@@ -346,14 +345,6 @@ function rebindSelection() {
 }
 
 // ── Overlay UI (design language referenced from the Spotnote plugin) ──
-function injectStyles() {
-  if (document.getElementById("data-spotnote-style")) return;
-  const style = document.createElement("style");
-  style.id = "data-spotnote-style";
-  style.textContent = "@keyframes dl-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}";
-  document.head.appendChild(style);
-}
-
 // `absolute` = document coordinates (rides page scroll natively, no lag) for the
 // persistent selection box; `fixed` (default) for the transient hover box, which
 // is redrawn on mousemove.
@@ -423,7 +414,7 @@ function drawHover(target) {
   if (!hoverBox) {
     hoverBox = mkBox(true);
     hoverLabel = mkLabel();
-    document.body.append(hoverBox, hoverLabel);
+    uiRoot().append(hoverBox, hoverLabel);
   }
   place(hoverBox, target);
   setLabel(hoverLabel, target);
@@ -442,7 +433,7 @@ function removeHover() {
 function drawSelect(target) {
   if (!selectBox) {
     selectBox = mkBox(false, true); // absolute — rides page scroll
-    document.body.append(selectBox);
+    uiRoot().append(selectBox);
   }
   placeAbs(selectBox, target);
 }
@@ -457,15 +448,6 @@ function repositionSelect() {
 }
 
 // ── Selection panel (note input + actions) ────────────────────────────
-function ensurePlaceholderStyle() {
-  if (document.getElementById("data-spotnote-ph")) return;
-  const s = document.createElement("style");
-  s.id = "data-spotnote-ph";
-  s.textContent =
-    "[data-spotnote-input]:empty::before{content:attr(data-placeholder);color:#666;pointer-events:none}";
-  document.head.append(s);
-}
-
 function panelLabel(el) {
   const wrap = document.createElement("div");
   wrap.style.cssText = "display:flex;gap:6px;align-items:baseline;min-width:0;flex:1;overflow:hidden";
@@ -496,7 +478,6 @@ function panelLabel(el) {
 
 function openPanel(target, prefillNote) {
   closePanel();
-  ensurePlaceholderStyle();
   const occ = occInfo(target);
   const key = refKey(occ.loc, occ.index);
   const isEdit = pins.has(key); // reopened an existing note
@@ -603,7 +584,7 @@ function openPanel(target, prefillNote) {
     // Esc handled by the capture-phase window listener (closes + consumes).
   });
 
-  document.body.append(panel);
+  uiRoot().append(panel);
   positionPanel(target);
   enablePanelDrag(panel);
   refreshPointer(); // pause picking while the panel is open
@@ -669,8 +650,11 @@ function positionPanel(target) {
 
 function onDocDown(e) {
   if (!panel) return;
-  if (panel.contains(e.target)) return;
-  if (selectedEl && selectedEl.contains(e.target)) return;
+  // A click inside our shadow root reaches the document retargeted to its host,
+  // so test the composed path rather than e.target.
+  const path = e.composedPath();
+  if (path.includes(panel)) return;
+  if (selectedEl && path.includes(selectedEl)) return;
   closePanel();
 }
 
@@ -751,7 +735,7 @@ function makePinMarker(key, loc, index) {
     const el = resolveRef(loc, index);
     if (el && p) openPanel(el, p.note);
   });
-  document.body.append(marker);
+  uiRoot().append(marker);
   return marker;
 }
 
