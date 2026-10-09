@@ -4,7 +4,7 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createButton, createIconBtn, ICONS, uiRoot } from "./ui.js";
+import { T, createIconBtn, ICONS, uiRoot } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
 
 const ACTIVATE_KEY = "Alt";
@@ -28,6 +28,7 @@ let selectedRawTarget = null; // the actual clicked node (may be unstamped, e.g.
 let panel = null;
 let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
+let panelSave = null; // saves an edited note when its panel closes
 let launcher = null;
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
@@ -509,6 +510,9 @@ function openPanel(target, prefillNote) {
   const occ = occInfo(target);
   const key = refKey(occ.loc, occ.index);
   const isEdit = pins.has(key); // reopened an existing note
+  // Clicking an element that already has a note edits it, so start from that
+  // note — otherwise the save-on-close would overwrite it with fresh text.
+  prefillNote ??= pins.get(key)?.note;
   panelTarget = target;
   panelDragged = false;
 
@@ -558,7 +562,7 @@ function openPanel(target, prefillNote) {
 
   // Note input
   const inputWrap = document.createElement("div");
-  inputWrap.style.cssText = "padding:10px 12px";
+  inputWrap.style.cssText = "display:flex;flex-direction:column;padding:10px 12px 8px";
   const input = document.createElement("div");
   input.contentEditable = "true";
   input.spellcheck = false;
@@ -580,20 +584,24 @@ function openPanel(target, prefillNote) {
     launcher?.flash(); // ✓ on the launcher core
   }
 
-  // Footer: Cancel + Add (creation) / Update (edit).
-  const footer = document.createElement("div");
-  footer.style.cssText = `display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-top:1px solid ${T.borderSubtle}`;
-  createButton({ label: "Cancel", variant: "secondary", parent: footer, onClick: closePanel });
-  const send = createButton({ label: isEdit ? "Update" : "Add", variant: "primary", parent: footer, onClick: doSend });
-  panel.append(footer);
-  const updateSend = () => {
-    const has = (input.textContent || "").trim().length > 0;
-    send.disabled = !has;
-    send.style.opacity = has ? "1" : "0.4";
-    send.style.cursor = has ? "pointer" : "default";
-  };
+  // No Cancel/Save footer: ×, Esc and an outside click all close. Enter (or
+  // this hint) sends; an edited note also saves itself on close. A new note is
+  // only kept once sent, so half-typed text never becomes a pin.
+  const send = document.createElement("button");
+  send.className = "sn-send";
+  send.innerHTML = `<kbd>↵</kbd>${isEdit ? "Save &amp; copy" : "Add &amp; copy"}`;
+  send.addEventListener("click", doSend);
+  inputWrap.append(send);
+  const updateSend = () => (send.disabled = !(input.textContent || "").trim());
   input.addEventListener("input", updateSend);
   updateSend();
+  if (isEdit) {
+    panelSave = () => {
+      const note = (input.textContent || "").trim();
+      // Skip a note just deleted from this panel, and an emptied one.
+      if (note && pins.has(key) && note !== pins.get(key).note) upsertPin(occ, note);
+    };
+  }
 
   input.addEventListener("keydown", (e) => {
     // Keep keystrokes in the note input from leaking to the page; Enter adds.
@@ -687,6 +695,8 @@ function onDocDown(e) {
 
 function closePanel() {
   if (!panel) return;
+  panelSave?.();
+  panelSave = null;
   document.removeEventListener("mousedown", onDocDown, true);
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so

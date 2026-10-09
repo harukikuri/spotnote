@@ -43,6 +43,13 @@ const CSS = [
   ".sn-panel.sn-leaving{animation:sn-pop-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pop-in{from{opacity:0;transform:scale(.95)}}",
   "@keyframes sn-pop-out{to{opacity:0;transform:scale(.95)}}",
+  // The note's send action: a quiet "↵ Add & copy" under the input, hidden
+  // until there's text to send.
+  `.sn-send{display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:2px 4px;border:none;border-radius:5px;` +
+    `background:none;color:${T.textMuted};font:12px ${T.font};cursor:pointer;transition:opacity .14s,color .14s}`,
+  `.sn-send:hover{color:${T.accent}}`,
+  `.sn-send:disabled{opacity:0;pointer-events:none}`,
+  `.sn-send kbd{font:11px ${T.mono};padding:0 4px;border:1px solid ${T.border};border-radius:4px;color:inherit}`,
   // Pins: numbered, pop in with a slight overshoot, shrink away on delete, and
   // preview their note on hover. .sn-tip-left flips the preview near the right
   // edge so it can't widen the page.
@@ -151,40 +158,6 @@ export function uiRoot() {
   shadow.append(style);
   document.documentElement.append(host);
   return shadow;
-}
-
-export function createButton({ label, variant = "primary", parent, onClick }) {
-  const b = document.createElement("button");
-  b.setAttribute("data-spotnote-ui", "");
-  const s = [
-    "border:none",
-    "cursor:pointer",
-    "user-select:none",
-    "font-family:" + T.font,
-    "font-size:13px",
-    "padding:5px 12px",
-    "border-radius:6px",
-    "transition:opacity .14s,background .14s,color .14s",
-  ];
-  if (variant === "primary") s.push(`background:${T.accent}`, `color:${T.accentInk}`);
-  else if (variant === "secondary") s.push("background:none", `color:${T.textMuted}`);
-  b.style.cssText = s.join(";");
-  b.textContent = label;
-
-  if (onClick) b.addEventListener("click", onClick);
-
-  b.addEventListener("mouseenter", () => {
-    if (b.disabled) return; // callers may disable the button via the DOM property
-    if (variant === "primary") b.style.opacity = "0.85";
-    else if (variant === "secondary") b.style.color = T.text;
-  });
-  b.addEventListener("mouseleave", () => {
-    b.style.opacity = b.disabled ? "0.4" : "1";
-    if (variant === "secondary") b.style.color = T.textMuted;
-  });
-
-  if (parent) parent.appendChild(b);
-  return b;
 }
 
 export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
