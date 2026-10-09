@@ -64,7 +64,7 @@ const CSS = [
   // swings the items clockwise along a spiral into their slots on a quarter arc
   // (--start = the corner's first edge); closing reverses it.
   `.snl{position:fixed;left:var(--x);top:var(--y);width:0;height:0;z-index:2147483647;--r:72px;--stagger:40ms;--start:-90deg;` +
-    `font-family:${T.font};transition:left .6s ${SPRING},top .6s ${SPRING}}`,
+    `color:#f2f2f3;font-family:${T.font};transition:left .6s ${SPRING},top .6s ${SPRING}}`,
   ".snl.snl-dragging,.snl.snl-no-anim{transition:none}",
   ".snl button{font:inherit;color:inherit;margin:0;-webkit-tap-highlight-color:transparent}",
   `.snl button:focus-visible{outline:2px solid ${T.accent};outline-offset:3px}`,
@@ -96,6 +96,8 @@ const CSS = [
   '.snl[data-open="true"] .snl-item{transform:rotate(var(--a)) translateX(var(--r)) rotate(calc(var(--a) * -1)) scale(1);' +
     `opacity:1;pointer-events:auto;transition:transform .62s ${SPRING} calc(var(--i) * var(--stagger)),` +
     "opacity .16s ease calc(var(--i) * var(--stagger)),background-color .15s ease}",
+  // z-index lifts the hovered item, so its name paints over the next item.
+  ".snl-item:hover,.snl-item:focus-visible{z-index:1}",
   ".snl-item:hover{background:rgba(44,44,50,.86)}",
   `.snl-ic{display:grid;transition:transform .18s ${SPRING}}`,
   ".snl-item:hover .snl-ic{transform:scale(1.12)}",
