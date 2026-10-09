@@ -1,5 +1,5 @@
-// Small UI kit ported from the Spotnote plugin (button.ts / icon-btn.ts),
-// as plain JS with a fixed dark theme + indigo accent.
+// Small UI kit (buttons + icon buttons) as plain JS, with a fixed dark theme +
+// indigo accent.
 
 export const T = {
   accent: "#6366f1",
