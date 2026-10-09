@@ -38,11 +38,11 @@ function AccentBox({ children }: { children: ReactNode }) {
       style={{
         padding: '6px 12px',
         borderRadius: 8,
-        border: '1px solid rgba(99,102,241,0.3)',
-        background: 'rgba(99,102,241,0.06)',
+        border: '1px solid var(--sn-marker-line)',
+        background: 'var(--sn-marker)',
         fontSize: 14,
         fontWeight: 600,
-        color: '#6366f1',
+        color: 'var(--color-fd-foreground)',
         whiteSpace: 'nowrap',
         display: 'flex',
         alignItems: 'center',
@@ -174,8 +174,8 @@ export function PickFlow() {
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 700,
-                background: 'rgba(99,102,241,0.08)',
-                color: '#6366f1',
+                background: 'var(--sn-yellow)',
+                color: 'var(--sn-ink)',
                 marginTop: 1,
               }}
             >
@@ -183,7 +183,7 @@ export function PickFlow() {
             </div>
             <div
               className="flex items-center justify-center shrink-0"
-              style={{ width: 32, height: 32, borderRadius: 8, fontSize: 16, color: '#6366f1' }}
+              style={{ width: 32, height: 32, borderRadius: 8, fontSize: 16, color: 'var(--color-fd-foreground)' }}
             >
               {step.icon}
             </div>

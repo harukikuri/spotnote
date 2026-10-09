@@ -1,17 +1,53 @@
 @import 'tailwindcss';
-@import 'fumadocs-ui/css/catppuccin.css';
+@import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+/* Neutral greys for reading; the plugin's highlighter yellow is used only as a
+   marker (active item, link underline, selection) — never as text on white,
+   where it would be unreadable. In dark mode it can be the text colour too. */
 :root {
   --fd-banner-height: 3.5rem;
   --fd-docs-height: calc(100dvh - 3.5rem);
-  --color-fd-primary: #6366f1;
-  --color-fd-primary-foreground: #fff;
+  --sn-yellow: #ffd84d;
+  --sn-ink: #1a1600; /* text on yellow */
+  --sn-marker: rgba(255, 216, 77, 0.45); /* highlighter fill */
+  --sn-marker-line: #f2c200; /* underline: deeper so it shows on white */
+  --color-fd-background: #ffffff;
+  --color-fd-foreground: #111111;
+  --color-fd-muted-foreground: #5c5c5c;
+  --color-fd-primary: #111111;
+  --color-fd-primary-foreground: #ffffff;
 }
 
 .dark {
-  --color-fd-primary: #818cf8;
-  --color-fd-primary-foreground: #1e1b4b;
+  --sn-marker: rgba(255, 216, 77, 0.16);
+  --sn-marker-line: #ffd84d;
+  --color-fd-background: #141414;
+  --color-fd-foreground: #ededed;
+  --color-fd-muted-foreground: #a3a3a3;
+  --color-fd-primary: #ffd84d;
+  --color-fd-primary-foreground: #1a1600;
+}
+
+::selection {
+  background: var(--sn-marker);
+}
+
+/* Links: a highlighter underline that fills in on hover. */
+.prose a:not([data-card]) {
+  text-decoration-color: var(--sn-marker-line);
+  text-decoration-thickness: 2px;
+  transition: background-color 0.15s;
+}
+.prose a:not([data-card]):hover {
+  opacity: 1;
+  background-color: var(--sn-marker);
+}
+
+/* The current page in the sidebar reads as highlighted text. */
+#nd-sidebar a[data-active='true'] {
+  background-color: var(--sn-marker);
+  color: var(--color-fd-foreground);
 }
 
 /* Spacing between content and footer nav */
