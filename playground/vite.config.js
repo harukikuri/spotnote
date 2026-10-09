@@ -19,8 +19,7 @@ export default defineConfig(async () => ({
     // serve the injected picker client from plugin/src.
     fs: { allow: ["../.."] },
   },
-  // spotnote() must precede the framework plugin so its enforce:"pre" JSX stamp
-  // runs before the framework's own JSX compile (matters for Solid). It's
-  // apply:'serve' + self-injecting, so prod builds stay untouched.
+  // spotnote is apply:'serve' + self-injecting, so prod builds stay untouched.
+  // Its stamp runs as an order:"pre" transform, so array order doesn't matter.
   plugins: [spotnote(), await frameworkPlugin()],
 }));

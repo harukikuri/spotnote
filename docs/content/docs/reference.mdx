@@ -22,12 +22,9 @@ It takes **no options**. One call does everything:
 
 ## Plugin order
 
-React and Vue run their compilers at normal enforce, so `spotnote()` (`enforce: "pre"`) always beats them — order is flexible. **Svelte** and **Solid** (and other compilers that also run at `enforce: "pre"`, like Qwik) run in the same phase, so list `spotnote()` **before** them or the source is compiled away before it can be stamped:
+Order doesn't matter. `spotnote()` stamps in a `transform` hook with `order: "pre"`, which Vite runs ahead of every hook without one — including framework compilers that are themselves `enforce: "pre"` (Svelte, Solid). List it anywhere in `plugins`:
 
 ```ts
-plugins: [spotnote(), svelte()] // Svelte — spotnote() must come first
-plugins: [react(), spotnote()]  // React — either order works
-plugins: [vue(), spotnote()]    // Vue — either order works
+plugins: [react(), spotnote()]
+plugins: [spotnote(), svelte()] // same result
 ```
-
-If a pre-compiling framework plugin is listed ahead of `spotnote()`, it warns in the dev console so the misorder isn't silent.

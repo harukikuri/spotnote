@@ -23,8 +23,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import spotnote from 'spotnote'; // [!code highlight]
 
 export default defineConfig({
-  // spotnote() first — its enforce:"pre" stamp must run before Svelte's compiler
-  plugins: [spotnote(), svelte()], // [!code highlight]
+  plugins: [svelte(), spotnote()], // [!code highlight]
 });
 ```
 
@@ -34,8 +33,7 @@ import vue from '@vitejs/plugin-vue';
 import spotnote from 'spotnote'; // [!code highlight]
 
 export default defineConfig({
-  // spotnote() first — it stamps the .vue template before Vue compiles it
-  plugins: [spotnote(), vue()], // [!code highlight]
+  plugins: [vue(), spotnote()], // [!code highlight]
 });
 ```
 
