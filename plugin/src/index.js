@@ -103,8 +103,8 @@ function offsetToLineCol(code, offset) {
   return { line, column };
 }
 
-// Generic tree walk over the parsed markup — resilient to Svelte 4 vs 5 AST
-// shapes (we don't care about node kinds except native elements).
+// Generic tree walk over the parsed markup (we don't care about node kinds
+// except native elements).
 function walkSvelte(node, visit) {
   if (!node || typeof node !== "object") return;
   if (Array.isArray(node)) {
@@ -129,12 +129,12 @@ function stampSvelte(code, file, root, parse) {
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
   let touched = false;
-  // `fragment` (Svelte 5) / `html` (Svelte 4) is the markup root; walking it
+  // `fragment` is the markup root (Svelte 5 modern AST); walking it
   // skips the <script>/<style> ASTs.
-  walkSvelte(ast.fragment || ast.html || ast, (node) => {
-    // RegularElement (Svelte 5) / Element (Svelte 4) = a native DOM tag;
+  walkSvelte(ast.fragment, (node) => {
+    // RegularElement = a native DOM tag;
     // components (capitalized) and <svelte:*> are other node types → skipped.
-    if ((node.type !== "RegularElement" && node.type !== "Element") || !node.name) return;
+    if (node.type !== "RegularElement" || !node.name) return;
     if (typeof node.start !== "number") return;
     const already = (node.attributes || []).some((a) => a && a.name === "data-spotnote");
     if (already) return;
