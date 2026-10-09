@@ -1,243 +1,235 @@
-// Launcher — matches the Spotnote toolbar spec: a compact vertical icon rail
-// (radius 10, padding 4, #444 dividers, 32px round #999 buttons) with
-// open/close · pause · notes. Opening it starts selection mode; closing ends it.
-// Notes opens as a popover.
-// Smooth collapse/expand, draggable, position persisted.
+// Launcher — a core button parked in a viewport corner. Opening it starts
+// selection mode and fans three items out clockwise along a quarter arc that
+// points into the page (pause · notes · settings); closing ends both.
+// Drag the core to move it: on release it snaps to the nearest corner and the
+// fan re-aims. The corner is remembered; the open state is not (it always
+// starts closed, so a reload never lands the page in selection mode).
 //
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote, onChange }
-import { T, createIconBtn, uiRoot } from "./ui.js";
+import { uiRoot } from "./ui.js";
 
-const POS_KEY = "data-spotnote-launcher-pos";
+const CORNER_KEY = "data-spotnote-launcher-corner";
+const INSET = 44; // core centre ↔ viewport edges
+// Fan start angle per corner (screen coords, y down, so +angle = clockwise).
+// The fan sweeps +90° from here, which always points into the page.
+const START = { bl: -90, br: 180, tr: 90, tl: 0 };
 
-// Exact icons from the spec.
-const LI = {
-  // A "+" — rotating it 45° yields "×". One glyph, two states.
-  plus:
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-  inspect:
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>',
-  list:
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+const svg = (attrs, body) => `<svg width="18" height="18" viewBox="0 0 24 24" ${attrs}>${body}</svg>`;
+const LINE = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const ICON = {
+  // Rotated 135° when open, the "+" reads as "×".
+  plus: svg('class="snl-plus" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"', '<path d="M12 5v14M5 12h14"/>'),
+  check: svg('class="snl-check" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"', '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  pause: svg('fill="currentColor"', '<rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/>'),
+  play: svg('fill="currentColor"', '<path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/>'),
+  notes: svg(LINE, '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'),
+  gear: svg(
+    LINE,
+    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  ),
 };
 
-function d(parent, css, text) {
-  const e = document.createElement("div");
-  e.setAttribute("data-spotnote-ui", "");
-  if (css) e.style.cssText = css;
-  if (text != null) e.textContent = text;
+function el(tag, cls, parent) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
   if (parent) parent.append(e);
   return e;
 }
 
 export function mountLauncher(ctrl) {
-  const wrap = d(uiRoot(), `position:fixed;z-index:2147483647;font-family:${T.font};user-select:none;animation:dl-fade .2s ease`);
-  let pos = null;
+  const root = el("div", "snl", uiRoot());
+  let corner = "bl";
   try {
-    const raw = localStorage.getItem(POS_KEY);
-    if (raw) pos = JSON.parse(raw);
+    const saved = localStorage.getItem(CORNER_KEY);
+    if (saved in START) corner = saved;
   } catch {
     /* ignore */
   }
-  if (pos) {
-    wrap.style.top = pos.top + "px";
-    wrap.style.left = pos.left + "px";
-  } else {
-    // Default: bottom-left, so it clears the app's top nav/header.
-    wrap.style.bottom = "16px";
-    wrap.style.left = "16px";
-  }
+  let open = false;
 
-  let popover = null; // "notes" | null
-  let minimized = false;
+  // The quarter arc the items ride on.
+  const NS = "http://www.w3.org/2000/svg";
+  const track = document.createElementNS(NS, "svg");
+  track.setAttribute("class", "snl-track");
+  track.setAttribute("aria-hidden", "true");
+  const arc = document.createElementNS(NS, "circle");
+  track.append(arc);
+  root.append(track);
 
-  // ── Rail (spec styling) ──
-  const rail = d(
-    wrap,
-    "display:flex;flex-direction:column;align-items:center;gap:0;padding:4px;cursor:grab;" +
-      "background:#1a1a1a;border:1px solid #333;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4)",
-  );
-
-  const railBtn = (parent, svg, tip, onClick) => {
-    const b = createIconBtn({ svg, title: tip, parent, size: 32, onClick });
-    b.style.borderRadius = "50%";
-    b.style.color = "#999";
-    return b;
+  // Items, in clockwise order (--i places them on the arc).
+  const item = (i, icon, tip, onClick) => {
+    const b = el("button", "snl-item snl-glass", root);
+    b.style.setProperty("--i", i);
+    b.tabIndex = -1; // reachable only while open
+    const ic = el("span", "snl-ic", b);
+    ic.innerHTML = icon; // hardcoded SVG constants, not user input
+    const t = el("span", "snl-tip snl-glass", b);
+    t.textContent = tip;
+    if (onClick) b.addEventListener("click", onClick);
+    return { b, ic, t };
   };
-  const divider = (parent) =>
-    d(parent, "width:20px;height:1px;background:#444;margin:4px auto;align-self:center");
+  const pause = item(0, ICON.pause, "Pause selecting", () => ctrl.toggleInspect());
+  const notes = item(1, ICON.notes, "Notes", () => toggleNotes());
+  const badge = el("span", "snl-badge", notes.b);
+  item(2, ICON.gear, "Settings"); // placeholder — no settings yet
 
-  const topBtn = railBtn(rail, LI.plus, "Minimize", () => setMin(!minimized));
+  const core = el("button", "snl-core snl-glass", root);
+  core.innerHTML = ICON.plus + ICON.check;
 
-  // Collapsible tool group (animated on minimize).
-  const tools = d(rail, "overflow:hidden;display:flex;flex-direction:column;align-items:center;transition:max-height .24s cubic-bezier(.4,0,.2,1),opacity .18s ease");
-  divider(tools);
-  const inspectBtn = railBtn(tools, LI.inspect, "Pause selecting", () => ctrl.toggleInspect());
-  const notesBtn = railBtn(tools, LI.list, "Notes", () => togglePop("notes"));
+  const pop = el("div", "snl-notes snl-glass", root);
+  pop.setAttribute("role", "dialog");
+  pop.setAttribute("aria-label", "Notes");
+  const popTitle = el("h4", "", pop);
+  const list = el("ol", "", pop);
+  const empty = el("p", "snl-empty", pop);
+  empty.textContent = "No notes yet. Click an element on the page to add one.";
 
-  // ── Popover (notes) ──
-  const pop = d(
-    wrap,
-    "position:absolute;left:100%;bottom:0;margin-left:10px;width:220px;overflow:hidden;" +
-      `background:${T.bg};border:1px solid ${T.border};border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.5);` +
-      "transform-origin:left bottom;opacity:0;transform:scale(.96);pointer-events:none;transition:opacity .16s ease,transform .16s ease",
-  );
-  const popTitle = d(pop, `padding:9px 12px;border-bottom:1px solid ${T.borderSubtle};font-size:13px;font-weight:600;color:${T.text}`);
-  const popBody = d(pop, "padding:12px;max-height:260px;overflow-y:auto");
-
-  function togglePop(which) {
-    popover = popover === which ? null : which;
-    render();
-  }
-
-  function setActive(btn, on) {
-    if (on) {
-      btn.setAttribute("data-active", "1");
-      btn.style.background = `rgba(${T.accentRgb},0.08)`;
-      btn.style.color = T.accent;
-    } else {
-      btn.removeAttribute("data-active");
-      btn.style.background = "none";
-      btn.style.color = "#999";
+  // ── Geometry ──
+  function place(animate) {
+    root.classList.toggle("snl-no-anim", !animate);
+    root.style.setProperty("--x", (corner[1] === "l" ? INSET : innerWidth - INSET) + "px");
+    root.style.setProperty("--y", (corner[0] === "t" ? INSET : innerHeight - INSET) + "px");
+    root.style.setProperty("--start", START[corner] + "deg");
+    root.dataset.corner = corner;
+    if (!animate) {
+      root.getBoundingClientRect(); // flush, so the jump lands before transitions return
+      root.classList.remove("snl-no-anim");
     }
   }
-
-  function setMin(v) {
-    minimized = v;
-    ctrl.setPinsVisible(!v); // minimized launcher hides the pins too
-    ctrl.setInspect(!v); // open = selecting, closed = not
-    if (v) {
-      popover = null;
-      tools.style.maxHeight = "0";
-      tools.style.opacity = "0";
-      topBtn.style.transform = "rotate(0deg)"; // "+"
-      topBtn.title = "Open Spotnote";
-    } else {
-      tools.style.maxHeight = tools.scrollHeight + "px";
-      tools.style.opacity = "1";
-      topBtn.style.transform = "rotate(45deg)"; // "×"
-      topBtn.title = "Minimize";
-    }
-    render();
+  function drawTrack() {
+    const r = parseFloat(getComputedStyle(root).getPropertyValue("--r"));
+    const s = r + 2;
+    track.setAttribute("width", 2 * s);
+    track.setAttribute("height", 2 * s);
+    track.style.left = track.style.top = -s + "px";
+    arc.setAttribute("cx", s);
+    arc.setAttribute("cy", s);
+    arc.setAttribute("r", r);
+    root.style.setProperty("--C", (2 * Math.PI * r).toFixed(2));
   }
 
+  // ── State → UI ──
+  let shownSelecting = null;
+  let shownCount = 0;
   function render() {
-    setActive(inspectBtn, ctrl.isInspecting());
-    inspectBtn.title = ctrl.isInspecting() ? "Pause selecting" : "Resume selecting";
-    setActive(notesBtn, popover === "notes");
-    const show = popover && !minimized;
-    pop.style.opacity = show ? "1" : "0";
-    pop.style.transform = show ? "scale(1)" : "scale(.96)";
-    pop.style.pointerEvents = show ? "auto" : "none";
-    if (show) renderPop();
+    const selecting = ctrl.isInspecting();
+    root.dataset.open = open;
+    root.dataset.paused = !selecting;
+    const label = open ? "Close Spotnote" : "Open Spotnote";
+    core.setAttribute("aria-expanded", open);
+    core.setAttribute("aria-label", label);
+    core.title = label;
+    if (selecting !== shownSelecting) {
+      shownSelecting = selecting;
+      pause.ic.innerHTML = selecting ? ICON.pause : ICON.play;
+      pause.t.textContent = selecting ? "Pause selecting" : "Resume selecting";
+      pause.b.setAttribute("aria-pressed", !selecting);
+    }
+    root.querySelectorAll(".snl-item").forEach((b) => (b.tabIndex = open ? 0 : -1));
+    const count = ctrl.notes().length;
+    if (count !== shownCount) {
+      badge.textContent = count || "";
+      if (count > shownCount) {
+        badge.classList.remove("snl-bump");
+        badge.getBoundingClientRect(); // restart the animation
+        badge.classList.add("snl-bump");
+      }
+      shownCount = count;
+    }
+    if (pop.classList.contains("snl-show")) renderNotes();
   }
 
-  function renderPop() {
-    popBody.textContent = "";
-    const notes = ctrl.notes();
-    popTitle.textContent = `Notes${notes.length ? ` (${notes.length})` : ""}`;
-    if (!notes.length) {
-      d(popBody, `font-size:12px;color:${T.textMuted}`, "No notes yet — select an element and add one.");
-      return;
-    }
-    notes.forEach((n, i) => {
-      const row = d(popBody, `padding:8px 0;cursor:pointer;${i ? `border-top:1px solid ${T.borderSubtle}` : ""}`);
-      const label = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
-      // Numbered like its pin on the page.
-      const head = d(row, "display:flex;align-items:center;gap:6px;margin-bottom:2px");
-      d(head, `flex-shrink:0;width:16px;height:16px;border-radius:50%;background:${T.accent};color:#fff;font-size:10px;font-weight:600;line-height:16px;text-align:center`, String(i + 1));
-      d(head, `font-family:${T.mono};font-size:11px;color:#a5b4fc`, label);
-      d(row, `font-size:12px;color:${T.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`, n.note);
-      row.addEventListener("click", () => {
-        popover = null;
-        render();
+  function setOpen(v) {
+    open = v;
+    if (!v) toggleNotes(false);
+    ctrl.setPinsVisible(v);
+    ctrl.setInspect(v); // open = selecting, closed = not
+    render();
+  }
+
+  // ── Notes popover ──
+  function toggleNotes(force) {
+    const show = force ?? !pop.classList.contains("snl-show");
+    pop.classList.toggle("snl-show", show);
+    notes.b.setAttribute("aria-expanded", show);
+    if (show) renderNotes();
+  }
+  function renderNotes() {
+    const all = ctrl.notes();
+    popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
+    list.textContent = "";
+    all.forEach((n, i) => {
+      const li = el("li", "", list);
+      el("span", "snl-num", li).textContent = String(i + 1); // same number as its pin
+      el("span", "snl-src", li).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
+      el("span", "snl-txt", li).textContent = n.note;
+      li.addEventListener("click", () => {
+        toggleNotes(false);
         ctrl.openNote(n.key);
       });
     });
+    empty.hidden = all.length > 0;
+  }
+  function closePopover() {
+    if (!pop.classList.contains("snl-show")) return false;
+    toggleNotes(false);
+    return true;
   }
 
-  function savePos() {
-    const r = wrap.getBoundingClientRect();
-    pos = { top: r.top, left: r.left };
-    localStorage.setItem(POS_KEY, JSON.stringify(pos));
-  }
-  makeDraggable(wrap, rail, savePos);
+  // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──
+  let drag = null;
+  let justDragged = false;
+  core.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    drag = { sx: e.clientX, sy: e.clientY, moved: false };
+    core.setPointerCapture(e.pointerId);
+  });
+  core.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
+    drag.moved = true;
+    root.classList.add("snl-dragging");
+    toggleNotes(false);
+    root.style.setProperty("--x", e.clientX + "px");
+    root.style.setProperty("--y", e.clientY + "px");
+  });
+  const endDrag = (e) => {
+    if (!drag) return;
+    const moved = drag.moved;
+    drag = null;
+    root.classList.remove("snl-dragging");
+    if (!moved) return;
+    // Swallow the click this drag ends with.
+    justDragged = true;
+    setTimeout(() => (justDragged = false), 0);
+    corner = (e.clientY < innerHeight / 2 ? "t" : "b") + (e.clientX < innerWidth / 2 ? "l" : "r");
+    try {
+      localStorage.setItem(CORNER_KEY, corner);
+    } catch {
+      /* ignore */
+    }
+    place(true);
+  };
+  core.addEventListener("pointerup", endDrag);
+  core.addEventListener("pointercancel", endDrag);
+  core.addEventListener("click", () => {
+    if (!justDragged) setOpen(!open);
+  });
 
-  // Esc closes the open popover, consumed so it can't cascade.
-  window.addEventListener(
-    "keydown",
-    (e) => {
-      if (e.key === "Escape" && popover) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        popover = null;
-        render();
-      }
-    },
-    true,
-  );
+  addEventListener("resize", () => place(false));
+
+  // A brief ✓ on the core after a copy.
+  let flashTimer;
+  function flash() {
+    core.classList.add("snl-done");
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => core.classList.remove("snl-done"), 1200);
+  }
 
   ctrl.onChange(render);
-  // Always start closed, so a reload never lands the page in selection mode.
-  tools.style.maxHeight = "0";
-  setMin(true);
-  render();
-  // Enable the +/× rotation only after the initial state (no spin on mount).
-  topBtn.style.transition = "transform .24s cubic-bezier(.4,0,.2,1)";
-
-  function flash(msg) {
-    const t = d(
-      wrap,
-      "position:absolute;bottom:100%;left:0;margin-bottom:8px;white-space:nowrap;animation:dl-fade .15s ease;" +
-        `background:${T.accent};color:#fff;font-size:12px;padding:5px 10px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.4)`,
-      msg,
-    );
-    setTimeout(() => t.remove(), 1500);
-  }
-  return { flash, open: () => setMin(false) };
-}
-
-function makeDraggable(target, handle, onEnd) {
-  // Grab anywhere on the rail — buttons included. A press only becomes a drag
-  // once the pointer moves past a small threshold; below it, the button click
-  // fires as normal. A real drag swallows the trailing click so it can't
-  // trigger the control it started on.
-  const THRESH = 4;
-  let sx = 0, sy = 0, ox = 0, oy = 0, armed = false, dragging = false;
-  handle.addEventListener("mousedown", (e) => {
-    if (e.button !== 0) return;
-    const r = target.getBoundingClientRect();
-    sx = e.clientX;
-    sy = e.clientY;
-    ox = r.left;
-    oy = r.top;
-    armed = true;
-    dragging = false;
-  });
-  document.addEventListener("mousemove", (e) => {
-    if (!armed) return;
-    if (!dragging) {
-      if (Math.abs(e.clientX - sx) < THRESH && Math.abs(e.clientY - sy) < THRESH) return;
-      dragging = true; // threshold crossed → this is a drag, not a click
-    }
-    e.preventDefault();
-    target.style.bottom = ""; // switch from the default bottom-anchor to top/left
-    target.style.left = ox + (e.clientX - sx) + "px";
-    target.style.top = oy + (e.clientY - sy) + "px";
-  });
-  document.addEventListener("mouseup", () => {
-    if (!armed) return;
-    armed = false;
-    if (!dragging) return; // no movement → let the button's click through
-    dragging = false;
-    // Swallow the click that follows this drag so it doesn't hit the control.
-    const swallow = (ev) => {
-      ev.stopPropagation();
-      ev.preventDefault();
-    };
-    document.addEventListener("click", swallow, true);
-    setTimeout(() => document.removeEventListener("click", swallow, true), 0);
-    if (onEnd) onEnd();
-  });
+  place(false);
+  drawTrack();
+  setOpen(false);
+  return { flash, open: () => setOpen(true), closePopover };
 }

@@ -74,8 +74,9 @@ That's the whole setup — no client import, no Babel wiring. `spotnote()` is
 - **Component boundary**: cards come from `components/ProductCard.jsx`, so their
   stamps point there — not where they're used.
 - **HMR**: edit a page; class-only changes keep pins anchored, line shifts re-bind.
-- **Launcher**: open it (+ ↔ ×) to start inspecting, close it to stop; pause with
-  the cursor button; drag it; open the Notes list of your pins.
+- **Launcher**: open it (+ ↔ ×) to start inspecting, close it to stop. Its arc
+  holds pause, the Notes list of your pins, and settings (coming soon). Drag it to
+  any corner.
 
 ## Layout
 
@@ -85,7 +86,7 @@ src/                  # THE TOOL (this package)
   plugin.cjs          # Babel visitor — stamps data-spotnote (host-only, project-relative)
   client/             # browser runtime (auto-injected by the plugin in dev)
     inspector.js      # picking, panel, pins, clipboard prompt, HMR re-bind
-    launcher.js       # compact draggable/minimizable rail
+    launcher.js       # corner button + radial menu (pause · notes · settings)
     ui.js             # buttons, icons, theme tokens
 ```
 

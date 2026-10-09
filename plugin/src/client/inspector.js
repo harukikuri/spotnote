@@ -118,12 +118,15 @@ export function initInspector() {
     "keydown",
     (e) => {
       if (e.key !== "Escape") return;
-      if (!panel && !active) return;
+      // Esc backs out one layer at a time: the launcher's notes popover, then
+      // the panel, then selection mode.
+      const closedPopover = launcher?.closePopover();
+      if (!closedPopover && !panel && !active) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      // Esc backs out one step: close the panel (keep selecting), else pause.
-      if (panel) closePanel();
+      if (closedPopover) return;
+      if (panel) closePanel(); // keeps selecting
       else {
         sticky = false;
         syncActive();
@@ -393,13 +396,13 @@ function setLabel(labelEl, el) {
     typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
   if (cls) {
     const c = document.createElement("span");
-    c.style.color = "rgba(255,255,255,0.6)";
+    c.style.color = "rgba(26,22,0,0.6)";
     c.textContent = "." + cls;
     labelEl.appendChild(c);
   }
 
   const loc = document.createElement("span");
-  loc.style.cssText = `color:rgba(255,255,255,0.8);font-family:${MONO};font-weight:400`;
+  loc.style.cssText = `color:rgba(26,22,0,0.75);font-family:${MONO};font-weight:400`;
   const l = parseLoc(el.getAttribute("data-spotnote"));
   loc.textContent = `(${l.file.split("/").pop()}:${l.line})`;
   labelEl.appendChild(loc);
@@ -574,7 +577,7 @@ function openPanel(target, prefillNote) {
     console.log("[spotnote] copied prompt:\n" + prompt);
     upsertPin(occ, note); // leave a marker on the element
     closePanel(); // selection mode stays on while the launcher is open
-    launcher?.flash("copied ✓");
+    launcher?.flash(); // ✓ on the launcher core
   }
 
   // Footer: Cancel + Add (creation) / Update (edit).
