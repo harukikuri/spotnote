@@ -30,7 +30,14 @@ const CSS = [
     `font-family:${T.font};font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)}`,
   ".sn-on{opacity:1}",
   ".sn-snap{transition:none}",
-  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}}",
+  // Note panel: grows out of its target (transform-origin is set per placement)
+  // and shrinks back toward it on close.
+  `.sn-panel{position:fixed;z-index:2147483647;width:300px;background:${T.bg};border:1px solid ${T.border};border-radius:10px;` +
+    `box-shadow:0 12px 32px rgba(0,0,0,0.5);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1)}`,
+  ".sn-panel.sn-leaving{animation:sn-pop-out .12s ease-in forwards;pointer-events:none}",
+  "@keyframes sn-pop-in{from{opacity:0;transform:scale(.95)}}",
+  "@keyframes sn-pop-out{to{opacity:0;transform:scale(.95)}}",
+  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}.sn-panel,.sn-panel.sn-leaving{animation:none}}",
 ].join("\n");
 
 // All Spotnote UI lives in one shadow root, so the host page's CSS can't restyle

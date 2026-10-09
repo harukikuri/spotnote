@@ -10,7 +10,6 @@ import { mountLauncher } from "./launcher.js";
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
 const ACCENT_RGB = T.accentRgb;
-const FONT = T.font;
 const MONO = T.mono;
 
 let active = false; // effective inspect state
@@ -509,12 +508,7 @@ function openPanel(target, prefillNote) {
 
   panel = document.createElement("div");
   panel.setAttribute("data-spotnote-ui", "");
-  panel.style.cssText = [
-    "position:fixed", "z-index:2147483647", "width:300px",
-    `background:${T.bg}`, `border:1px solid ${T.border}`, "border-radius:10px",
-    "box-shadow:0 12px 32px rgba(0,0,0,0.5)", "overflow:hidden",
-    `font-family:${FONT}`, "animation:dl-fade .15s ease",
-  ].join(";");
+  panel.className = "sn-panel";
 
   // Header: label + icon buttons
   const header = document.createElement("div");
@@ -655,13 +649,19 @@ function enablePanelDrag(panelEl) {
 
 function positionPanel(target) {
   const r = target.getBoundingClientRect();
-  const pr = panel.getBoundingClientRect();
+  // offset* = untransformed size (getBoundingClientRect shrinks mid pop-in).
+  const pw = panel.offsetWidth;
+  const ph = panel.offsetHeight;
   const gap = 8;
   let top = r.bottom + gap;
-  if (top + pr.height > window.innerHeight - 8) top = Math.max(8, r.top - pr.height - gap);
-  const left = Math.max(8, Math.min(r.left, window.innerWidth - pr.width - 8));
+  const above = top + ph > window.innerHeight - 8;
+  if (above) top = Math.max(8, r.top - ph - gap);
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - pw - 8));
   panel.style.left = left + "px";
   panel.style.top = top + "px";
+  // Grow out of the target: origin under its center, on the edge facing it.
+  const ox = Math.max(0, Math.min(r.left + r.width / 2 - left, pw));
+  panel.style.transformOrigin = `${ox}px ${above ? "100%" : "0"}`;
 }
 
 function onDocDown(e) {
@@ -677,7 +677,15 @@ function onDocDown(e) {
 function closePanel() {
   if (!panel) return;
   document.removeEventListener("mousedown", onDocDown, true);
-  panel.remove();
+  // Play the exit animation on a detached reference; all state below resets now,
+  // so nothing else ever sees a closing panel as open. inert drops its focus so
+  // keystrokes can't land in it while it fades.
+  const leaving = panel;
+  leaving.inert = true;
+  leaving.classList.add("sn-leaving");
+  const done = () => leaving.remove();
+  leaving.addEventListener("animationend", done, { once: true });
+  setTimeout(done, 200); // reduced motion: no animation, so no animationend
   panel = null;
   panelTarget = null;
   // A closed panel ends the transient selection (pins persist separately).
