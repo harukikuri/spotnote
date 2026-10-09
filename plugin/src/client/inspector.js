@@ -45,6 +45,12 @@ const controller = {
     syncActive();
     notify();
   },
+  // The launcher drives this: open ⇄ selecting, closed ⇄ not.
+  setInspect(on) {
+    sticky = on;
+    syncActive();
+    notify();
+  },
   isInspecting: () => active,
   // Launcher minimized → hide the pins (and their panel) with it.
   setPinsVisible(visible) {
@@ -116,9 +122,12 @@ export function initInspector() {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
+      // Esc backs out one step: close the panel (keep selecting), else pause.
       if (panel) closePanel();
-      sticky = false;
-      syncActive();
+      else {
+        sticky = false;
+        syncActive();
+      }
     },
     true,
   );
@@ -145,6 +154,7 @@ export function initInspector() {
     const openKey = sessionStorage.getItem(OPEN_KEY);
     if (openKey) {
       sessionStorage.removeItem(OPEN_KEY);
+      launcher.open(); // it starts closed; the jump came from its notes list
       openNoteWhenReady(openKey);
     }
   } catch {
@@ -563,9 +573,7 @@ function openPanel(target, prefillNote) {
     navigator.clipboard?.writeText(prompt).catch(() => {});
     console.log("[spotnote] copied prompt:\n" + prompt);
     upsertPin(occ, note); // leave a marker on the element
-    closePanel();
-    sticky = false; // exit selection mode
-    syncActive();
+    closePanel(); // selection mode stays on while the launcher is open
     launcher?.flash("copied ✓");
   }
 

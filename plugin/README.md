@@ -19,7 +19,7 @@ pnpm dev                                    # React demo
 pnpm --filter spotnote-playground dev:solid # Solid demo
 ```
 
-Open the printed URL. Toggle **Inspect** in the launcher (bottom-left) or **hold
+Open the printed URL. Open the launcher (the `+` in the bottom-left) or **hold
 `Alt`**, then hover and click an element.
 
 ## Use in your app
@@ -74,7 +74,8 @@ That's the whole setup — no client import, no Babel wiring. `spotnote()` is
 - **Component boundary**: cards come from `components/ProductCard.jsx`, so their
   stamps point there — not where they're used.
 - **HMR**: edit a page; class-only changes keep pins anchored, line shifts re-bind.
-- **Launcher**: drag it, minimize (+ ↔ ×), open the Notes list of your pins.
+- **Launcher**: open it (+ ↔ ×) to start inspecting, close it to stop; pause with
+  the cursor button; drag it; open the Notes list of your pins.
 
 ## Layout
 

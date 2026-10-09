@@ -1,14 +1,14 @@
 // Launcher — matches the Spotnote toolbar spec: a compact vertical icon rail
 // (radius 10, padding 4, #444 dividers, 32px round #999 buttons) with
-// minimize · inspect · notes. Notes opens as a popover.
+// open/close · pause · notes. Opening it starts selection mode; closing ends it.
+// Notes opens as a popover.
 // Smooth collapse/expand, draggable, position persisted.
 //
 // Driven by a controller from the inspector:
-//   { toggleInspect, isInspecting, setPinsVisible, notes, openNote, onChange }
+//   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote, onChange }
 import { T, createIconBtn, uiRoot } from "./ui.js";
 
 const POS_KEY = "data-spotnote-launcher-pos";
-const MIN_KEY = "data-spotnote-launcher-min";
 
 // Exact icons from the spec.
 const LI = {
@@ -72,7 +72,7 @@ export function mountLauncher(ctrl) {
   // Collapsible tool group (animated on minimize).
   const tools = d(rail, "overflow:hidden;display:flex;flex-direction:column;align-items:center;transition:max-height .24s cubic-bezier(.4,0,.2,1),opacity .18s ease");
   divider(tools);
-  const inspectBtn = railBtn(tools, LI.inspect, "Inspect mode (or hold Alt)", () => ctrl.toggleInspect());
+  const inspectBtn = railBtn(tools, LI.inspect, "Pause selecting", () => ctrl.toggleInspect());
   const notesBtn = railBtn(tools, LI.list, "Notes", () => togglePop("notes"));
 
   // ── Popover (notes) ──
@@ -104,8 +104,8 @@ export function mountLauncher(ctrl) {
 
   function setMin(v) {
     minimized = v;
-    localStorage.setItem(MIN_KEY, v ? "1" : "0");
     ctrl.setPinsVisible(!v); // minimized launcher hides the pins too
+    ctrl.setInspect(!v); // open = selecting, closed = not
     if (v) {
       popover = null;
       tools.style.maxHeight = "0";
@@ -123,6 +123,7 @@ export function mountLauncher(ctrl) {
 
   function render() {
     setActive(inspectBtn, ctrl.isInspecting());
+    inspectBtn.title = ctrl.isInspecting() ? "Pause selecting" : "Resume selecting";
     setActive(notesBtn, popover === "notes");
     const show = popover && !minimized;
     pop.style.opacity = show ? "1" : "0";
@@ -178,8 +179,9 @@ export function mountLauncher(ctrl) {
   );
 
   ctrl.onChange(render);
-  tools.style.maxHeight = localStorage.getItem(MIN_KEY) === "1" ? "0" : tools.scrollHeight + "px";
-  setMin(localStorage.getItem(MIN_KEY) === "1");
+  // Always start closed, so a reload never lands the page in selection mode.
+  tools.style.maxHeight = "0";
+  setMin(true);
   render();
   // Enable the +/× rotation only after the initial state (no spin on mount).
   topBtn.style.transition = "transform .24s cubic-bezier(.4,0,.2,1)";
@@ -193,7 +195,7 @@ export function mountLauncher(ctrl) {
     );
     setTimeout(() => t.remove(), 1500);
   }
-  return { flash };
+  return { flash, open: () => setMin(false) };
 }
 
 function makeDraggable(target, handle, onEnd) {
