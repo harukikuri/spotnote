@@ -156,24 +156,6 @@ export default function spotnote() {
 
     configResolved(config) {
       root = config.root; // so stamped paths are relative to the app root
-
-      // We stamp with enforce:"pre", so we beat normal-enforce compilers (Vue,
-      // React) automatically. But another *pre* JSX compiler (e.g. Solid) listed
-      // before us in the plugins array runs first and compiles the JSX away —
-      // then our stamp finds nothing. config.plugins is in execution order, so a
-      // framework compiler appearing before us here means the order is wrong.
-      // Only pre-enforce JSX compilers (Solid, Qwik) are order-sensitive; React
-      // and Vue run at normal enforce, so we always beat them — don't warn there.
-      const plugins = config.plugins || [];
-      const me = plugins.findIndex((p) => p && p.name === "spotnote");
-      const isPreCompiler = (p) => /solid|qwik|svelte/i.test(p.name || "");
-      const before = me > 0 && plugins.slice(0, me).find((p) => p && isPreCompiler(p));
-      if (before) {
-        console.warn(
-          `[spotnote] "${before.name}" runs before spotnote() — list spotnote() BEFORE your framework plugin in vite.config, ` +
-            `or its data-spotnote stamp lands on already-compiled code and nothing gets marked.`,
-        );
-      }
     },
     async buildStart() {
       ({ transformSync } = await import("@babel/core"));
@@ -189,54 +171,59 @@ export default function spotnote() {
       }
     },
 
-    // Stamp host elements with their source location.
-    async transform(code, id) {
-      if (id.includes("node_modules")) return;
-      const file = id.split("?")[0];
+    // Stamp host elements with their source location. order:"pre" runs this
+    // hook ahead of every plugin without one — including other enforce:"pre"
+    // compilers (Svelte, Solid) — so plugins-array order never matters.
+    transform: {
+      order: "pre",
+      async handler(code, id) {
+        if (id.includes("node_modules")) return;
+        const file = id.split("?")[0];
 
-      if (/\.(jsx|tsx)$/.test(file)) {
-        let res;
-        try {
-          res = transformSync(code, {
-            filename: file,
-            root,
-            plugins: [babelVisitor],
-            // Parse permissively so common app syntax (decorators, import
-            // attributes, `using`) doesn't trip our standalone pass.
-            parserOpts: {
-              plugins: ["jsx", "typescript", "decorators-legacy", "importAttributes", "explicitResourceManagement"],
-            },
-            configFile: false,
-            babelrc: false,
-            sourceMaps: true,
-          });
-        } catch {
-          // Couldn't parse (syntax our config doesn't enable) — hand the file to
-          // the framework's own compiler unstamped instead of erroring.
-          if (!warnedParse.has(file)) {
-            warnedParse.add(file);
-            console.warn(`[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`);
+        if (/\.(jsx|tsx)$/.test(file)) {
+          let res;
+          try {
+            res = transformSync(code, {
+              filename: file,
+              root,
+              plugins: [babelVisitor],
+              // Parse permissively so common app syntax (decorators, import
+              // attributes, `using`) doesn't trip our standalone pass.
+              parserOpts: {
+                plugins: ["jsx", "typescript", "decorators-legacy", "importAttributes", "explicitResourceManagement"],
+              },
+              configFile: false,
+              babelrc: false,
+              sourceMaps: true,
+            });
+          } catch {
+            // Couldn't parse (syntax our config doesn't enable) — hand the file to
+            // the framework's own compiler unstamped instead of erroring.
+            if (!warnedParse.has(file)) {
+              warnedParse.add(file);
+              console.warn(`[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`);
+            }
+            return;
           }
-          return;
+          if (!res || res.code == null) return;
+          return { code: res.code, map: res.map };
         }
-        if (!res || res.code == null) return;
-        return { code: res.code, map: res.map };
-      }
 
-      // Only the raw SFC import — skip the ?vue&type= sub-requests that the
-      // Vue plugin derives from our already-stamped code.
-      if (file.endsWith(".vue") && !id.includes("?")) {
-        const parse = await getVueParse(root);
-        if (!parse) return;
-        return stampVueTemplate(code, file, root, parse);
-      }
+        // Only the raw SFC import — skip the ?vue&type= sub-requests that the
+        // Vue plugin derives from our already-stamped code.
+        if (file.endsWith(".vue") && !id.includes("?")) {
+          const parse = await getVueParse(root);
+          if (!parse) return;
+          return stampVueTemplate(code, file, root, parse);
+        }
 
-      // Raw .svelte import only — skip the ?svelte&type= sub-requests.
-      if (file.endsWith(".svelte") && !id.includes("?")) {
-        const parse = await getSvelteParse(root);
-        if (!parse) return;
-        return stampSvelte(code, file, root, parse);
-      }
+        // Raw .svelte import only — skip the ?svelte&type= sub-requests.
+        if (file.endsWith(".svelte") && !id.includes("?")) {
+          const parse = await getSvelteParse(root);
+          if (!parse) return;
+          return stampSvelte(code, file, root, parse);
+        }
+      },
     },
 
     // Inject the client so the app doesn't have to import it.
