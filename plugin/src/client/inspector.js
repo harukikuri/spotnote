@@ -29,6 +29,7 @@ let panel = null;
 let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let panelSave = null; // saves an edited note when its panel closes
+let panelDraft = null; // () => true while the note has unsent text
 let launcher = null;
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
@@ -183,11 +184,12 @@ function bindPointer(on) {
   }
 }
 
-// Picking is live only while inspecting AND no panel is open.
+// Page clicks are ours while inspecting, and also while a panel is open (even
+// paused or after Alt is released) — so a click can never slip through to the
+// page, navigate away, and strand the panel on a vanished element.
 function refreshPointer() {
-  const on = active && !panel;
-  bindPointer(on);
-  document.body.style.cursor = on ? "crosshair" : "";
+  bindPointer(active || !!panel);
+  document.body.style.cursor = active ? "crosshair" : "";
 }
 
 function syncActive() {
@@ -240,16 +242,23 @@ function onMove(e) {
 // Re-resolve the element under the last pointer position. `animate` slides the
 // box from its previous target; scroll passes false so it tracks without lag.
 function updateHover(animate) {
-  if (!lastPointer || lastPointer.own) return hideHover();
+  if (!active || !lastPointer || lastPointer.own) return hideHover();
   const el = targetAt(lastPointer.x, lastPointer.y);
   if (!el) return hideHover();
   drawHover(el, animate);
 }
 
 function onClick(e) {
-  if (panel) return; // a selection is already active
   if (overOwnUI(e)) return; // let our own UI handle its own clicks
-  const el = targetAt(e.clientX, e.clientY);
+  const el = active ? targetAt(e.clientX, e.clientY) : null;
+  if (panel) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (el === panelTarget) return;
+    // Unsent text survives the first click away: nudge instead.
+    if (panelDraft?.()) return nudgePanel();
+    if (!el) return closePanel();
+  }
   if (!el) return;
   e.preventDefault();
   e.stopPropagation();
@@ -595,6 +604,11 @@ function openPanel(target, prefillNote) {
   const updateSend = () => (send.disabled = !(input.textContent || "").trim());
   input.addEventListener("input", updateSend);
   updateSend();
+  // Unsent text — a new note, or an edit that differs from the saved note.
+  panelDraft = () => {
+    const note = (input.textContent || "").trim();
+    return !!note && note !== pins.get(key)?.note;
+  };
   if (isEdit) {
     panelSave = () => {
       const note = (input.textContent || "").trim();
@@ -616,7 +630,7 @@ function openPanel(target, prefillNote) {
   uiRoot().append(panel);
   positionPanel(target);
   enablePanelDrag(panel);
-  refreshPointer(); // pause picking while the panel is open
+  refreshPointer();
   setTimeout(() => {
     input.focus();
     // With a prefilled note, drop the caret at the END so editing continues
@@ -683,20 +697,31 @@ function positionPanel(target) {
   panel.style.transformOrigin = `${ox}px ${above ? "100%" : "0"}`;
 }
 
+// While a panel is open, a press on the page is held back too: no focus theft
+// from the note, no text selection, no app mousedown handlers. onClick then
+// decides what the click does (switch target, close, or nudge).
 function onDocDown(e) {
-  if (!panel) return;
-  // A click inside our shadow root reaches the document retargeted to its host,
-  // so test the composed path rather than e.target.
-  const path = e.composedPath();
-  if (path.includes(panel)) return;
-  if (selectedEl && path.includes(selectedEl)) return;
-  closePanel();
+  if (!panel || overOwnUI(e)) return;
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+// "You have an unsent note": a short shake (a border flash under reduced motion).
+function nudgePanel() {
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  panel.animate(
+    still
+      ? [{ borderColor: ACCENT }, { borderColor: T.border }]
+      : [0, -6, 6, -4, 4, 0].map((x) => ({ transform: `translateX(${x}px)` })),
+    { duration: still ? 600 : 320, easing: "ease-out" },
+  );
 }
 
 function closePanel() {
   if (!panel) return;
   panelSave?.();
   panelSave = null;
+  panelDraft = null;
   document.removeEventListener("mousedown", onDocDown, true);
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so
@@ -837,7 +862,15 @@ function reposition() {
   if (pointerBound) updateHover(false);
   repositionSelect();
   repositionPins();
-  if (panel && panelTarget && panelTarget.isConnected && !panelDragged) positionPanel(panelTarget);
+  // The panel's element was re-rendered (HMR) or removed (a route change):
+  // follow its replacement, or close if it's gone.
+  if (panel && !panelTarget.isConnected) {
+    const el = resolveRef(selectedLoc, selectedIndex);
+    if (!el) return closePanel();
+    panelTarget = selectedEl = el;
+    repositionSelect();
+  }
+  if (panel && !panelDragged) positionPanel(panelTarget);
 }
 
 // Scroll fires rapidly; coalesce repositions into one per animation frame.
