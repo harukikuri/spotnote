@@ -1,0 +1,35 @@
+---
+title: Framework Support
+description: Which frameworks and file types Spotnote stamps, and how.
+---
+
+| Framework | Status | Files | How the stamp is added |
+| --- | --- | --- | --- |
+| React | Tested (React 18) | `.jsx`, `.tsx` | Babel JSX pass |
+| Solid | Tested (Solid 1.9) | `.jsx`, `.tsx` | Same Babel JSX pass |
+| Vue | Tested (Vue 3.5) | `.vue` | Your app's `vue/compiler-sfc` |
+| Svelte | Tested (Svelte 5) | `.svelte` | Your app's `svelte/compiler` |
+| Preact, other JSX | Untested | `.jsx`, `.tsx` | Same Babel JSX pass |
+| Svelte 4 | Not supported | | |
+| Next.js | Not supported | | Not Vite (Webpack / Turbopack) |
+
+Tested with Vite 5.
+
+## Per framework
+
+### JSX (React, Solid, …)
+
+- Only `.jsx` and `.tsx` files are stamped. JSX written in `.js` or `.ts` files isn't.
+- Lowercase tags (`<div>`) are stamped; capitalized ones (`<Card>`) are components and aren't.
+- Member and namespaced tags (`<motion.div>`, `<svg:rect>`) aren't stamped.
+
+### Vue
+
+- `<template>` blocks in single-file components are stamped.
+- Render functions (`h(...)`) aren't.
+- `<component :is="…">` isn't, because its tag is decided at runtime.
+
+### Svelte
+
+- Markup elements in `.svelte` files are stamped (Svelte 5's parser).
+- `<svelte:element this={…}>` isn't, because its tag is decided at runtime.

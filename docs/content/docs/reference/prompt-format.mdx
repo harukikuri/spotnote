@@ -1,0 +1,59 @@
+---
+title: Prompt Format
+description: Every field of the prompt Spotnote copies, and when it appears.
+---
+
+## Example
+
+````markdown
+## Request
+Make the padding bigger
+
+## Target
+- file: pages/Products.jsx
+- line: 47, column: 10
+- element: <button class="chip chip-active">
+- text: "all"
+- instance: 1 of 4 rendered from this line (by DOM order) — target the one matching the text above
+
+## Source path (outer → inner)
+App > Products
+
+## Current computed styles
+  padding: 6px 12px
+  margin: 0px
+  color: rgb(255, 255, 255)
+  background: rgb(17, 17, 17)
+  font-size: 13px
+  font-weight: 400
+  border-radius: 999px
+````
+
+## Fields
+
+### Request
+
+Under `## Request`: your note, as written.
+
+### Target
+
+Under `## Target`, one line per item:
+
+| Line | Content | When |
+| --- | --- | --- |
+| `file` | Path of the source file, relative to the Vite root. | Always |
+| `line`, `column` | Position of the element's opening tag. `line` counts from 1; `column` counts from **0**. | Always |
+| `element` | Tag name, plus `id` and `class` when the element has them. | Always |
+| `text` | The element's text, whitespace collapsed, cut at 60 characters. | When the element has text |
+| `instance` | Which of the elements rendered from this line you picked, counted in DOM order. | When the line rendered more than one element |
+| `note` | Says the element you clicked has no stamp, and this target is its nearest stamped ancestor. | When you clicked an unstamped element |
+
+### Source path
+
+Under `## Source path (outer → inner)`: the owning components of the element and its stamped ancestors, from the app root down, with consecutive repeats merged. See [Component boundaries](/guides/lists-and-components#component-boundaries).
+
+Left out when only one component owns the whole path.
+
+### Current computed styles
+
+Under `## Current computed styles`: the element's computed values for, in this order: `padding`, `margin`, `color`, `background` (the computed `background-color`), `font-size`, `font-weight` and `border-radius`.

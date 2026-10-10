@@ -1,0 +1,51 @@
+---
+title: Plugin API
+description: The spotnote() Vite plugin.
+---
+
+## `spotnote()`
+
+```ts
+import type { Plugin } from 'vite';
+
+export default function spotnote(): Plugin;
+```
+
+The package's only export. Call it with no arguments and add the result to `plugins`:
+
+```ts title="vite.config.ts"
+import spotnote from 'spotnote';
+
+export default defineConfig({
+  plugins: [react(), spotnote()],
+});
+```
+
+It has **no options**.
+
+## What the plugin does
+
+| | |
+| --- | --- |
+| Runs in | `vite dev` only (`apply: "serve"`). `vite build` skips it, so the built app (and `vite preview`) has no trace of it. |
+| Stamps | `.jsx`, `.tsx`, `.vue` and `.svelte` files outside `node_modules`. See [Attributes](/reference/attributes). |
+| Injects | A script tag for the virtual module `virtual:spotnote-client` into the HTML Vite serves (`transformIndexHtml`). |
+| Dependencies | `@babel/core` and `magic-string`. Vue and Svelte stamping use the compiler already installed in your app. |
+| Peer dependency | `vite >= 5` |
+
+## Plugin order
+
+Order in `plugins` doesn't matter. The stamping `transform` hook is registered with `order: "pre"`, which runs before every hook without an order, including framework plugins that are themselves `enforce: "pre"` (Svelte, Solid).
+
+```ts
+plugins: [react(), spotnote()]
+plugins: [spotnote(), svelte()] // same result
+```
+
+## Warnings
+
+```
+[spotnote] skipped pages/Editor.tsx — couldn't parse it, so its elements won't be pickable.
+```
+
+Printed once per file when the JSX pass can't parse a file. The file is passed on to your framework's compiler unchanged, so your app still works; only that file's elements can't be picked directly.

@@ -1,0 +1,27 @@
+---
+title: Using with Agents
+description: Paste Spotnote prompts into Claude Code, Cursor or Codex, and get the edit you meant.
+---
+
+The copied prompt is plain Markdown, so it works anywhere you can paste text: Claude Code, Cursor, Codex, or a chat window. Paste it as the whole message, or add your own lines before or after it.
+
+## What the agent gets
+
+- **Where to edit**: the file, line and column of the element's opening tag.
+- **Which element**: its tag, `id`, classes and the start of its text, so the agent can confirm it found the right one.
+- **Which instance**, when the element is rendered several times from one line (a list item, a card in a grid).
+- **The component path** from the app root down to the element, so the agent can tell whether to change the component or the place it's used.
+- **The current computed styles**, so a request like "a bit more padding" has a starting value.
+
+The full layout is in [Prompt format](/reference/prompt-format).
+
+## Writing good requests
+
+- **Say the outcome, not the location.** The prompt already has the location. "Make this pill-shaped" is enough; "In Home.jsx, change the span…" repeats what Spotnote added.
+- **One change per note.** Each note is about one element. For a change that spans several elements, write a note on each and paste the prompts together.
+- **Say when the change should apply everywhere.** For repeated elements, the prompt points at one instance. If you mean all of them, say "all the cards", not "this card".
+- **Mention the component when it matters.** If the element comes from a shared component and you only want to change this usage, say so. The component path tells the agent where that usage is.
+
+## After the edit
+
+When the agent saves the file, Vite's hot reload updates the page. If the edit moved the element's opening tag to another line, its pin disappears. That's expected: see [When your code changes](/guides/notes#when-your-code-changes).

@@ -1,0 +1,53 @@
+---
+title: Troubleshooting & Limitations
+description: Fixes for common problems, and what Spotnote can't do.
+---
+
+## Troubleshooting
+
+### The launcher doesn't appear
+
+- **Check you're on the dev server.** Spotnote runs only in `vite dev`, not in a build or `vite preview`.
+- **Check your HTML goes through Vite.** The client is added to the page through Vite's `transformIndexHtml` hook. If your setup serves HTML that doesn't pass through that hook, the client is never loaded.
+- **Check the browser console** for errors loading `virtual:spotnote-client`.
+
+### Hovering highlights nothing
+
+- **Is selection mode on?** Open the launcher (it should be yellow, not grey) or hold `Alt` / `⌥ Option`.
+- **Is the file stamped?** Only `.jsx`, `.tsx`, `.vue` and `.svelte` files are. In dev tools, look for a `data-spotnote` attribute on the element.
+- **Did the terminal print `[spotnote] skipped …`?** That file couldn't be parsed, so its elements aren't stamped. See [Warnings](/reference/plugin-api#warnings).
+
+### A pin disappeared after an edit
+
+The edit moved the element's opening tag, so the note no longer matches any element. See [When your code changes](/guides/notes#when-your-code-changes).
+
+### My notes are gone
+
+Notes are saved per browser and per address. If Vite started on another port (for example `5174` because `5173` was busy), your notes are still saved under the old port. See [Storage](/reference/storage).
+
+### The prompt points at the wrong file
+
+You probably clicked an element from a shared component: its location is inside that component's file. Check the **source path** in the prompt, and tell the agent which usage you mean. See [Component boundaries](/guides/lists-and-components#component-boundaries).
+
+## Limitations
+
+### Elements without a source location
+
+Spotnote can only point at elements written literally in your own source. For these, a click selects the nearest stamped ancestor, and the prompt says so:
+
+- **Elements rendered by dependencies**, such as a UI library's components. Spotnote stamps your source, not `node_modules`.
+- **Injected HTML**: `dangerouslySetInnerHTML`, `v-html`, `{@html}`.
+- **DOM built by scripts**: charts, maps, rich-text editors and other widgets.
+- **Elements whose tag is chosen at runtime**: `<component :is="…">`, `<svelte:element this={…}>`.
+- **Vue render functions** (`h(...)`).
+
+### Platform
+
+- **Vite only.** Next.js and other non-Vite setups aren't supported.
+- **Dev only.** Nothing runs in production builds.
+- **Notes are local.** They're saved in your browser, not shared with teammates, and not tied to Git.
+
+### Notes and code changes
+
+- A note is tied to a source location. Edits that move the element's opening tag detach the note.
+- For repeated elements, a note is tied to a position in the list, so sorting or filtering moves it to another item.

@@ -1,0 +1,52 @@
+---
+title: Concepts
+description: How Spotnote stamps source locations at dev time and reads them back in the browser.
+---
+
+Spotnote has two halves. While Vite compiles your code, the **plugin** writes each element's source location onto it. In the browser, the **client** reads that location back when you click. Nothing else is involved: no manifest, no extra server, no Git.
+
+## Stamps
+
+<StampFlow />
+
+A **stamp** is a `data-spotnote` attribute holding the element's source location, relative to your Vite root:
+
+```html
+<button data-spotnote="components/ProductCard.jsx:12:6" data-spotnote-name="ProductCard">
+```
+
+The plugin adds it to every **host element** (a real DOM tag such as `<div>` or `<button>`) written in your own source. Components (`<ProductCard>`) aren't stamped, because a component doesn't always pass attributes down to a DOM node. Their elements are stamped inside their own file instead.
+
+How the stamp is added depends on the file type:
+
+- **`.jsx` / `.tsx`**: a Babel pass over the JSX. It doesn't depend on React, so Solid and other JSX frameworks get the same stamps.
+- **`.vue`**: the template is parsed with your app's own `vue/compiler-sfc`.
+- **`.svelte`**: the markup is parsed with your app's own `svelte/compiler`.
+
+The stamping runs before your framework's compiler, wherever `spotnote()` sits in `plugins`. Files in `node_modules` are never stamped.
+
+Alongside the location, `data-spotnote-name` records the **owning component**: the nearest enclosing capitalized function in JSX, or the file name for `.vue` and `.svelte`. The client uses it to build the source path.
+
+See [Attributes](/reference/attributes) for the exact formats.
+
+## The client
+
+<PickFlow />
+
+The plugin also adds a script to the page Vite serves, so the client starts without an import in your app. It draws everything (the launcher, outlines, panel and pins) inside a shadow root, so your app's CSS doesn't affect it and its CSS doesn't leak into your app.
+
+When you click in selection mode, the client:
+
+1. finds the element under the cursor that carries a stamp (the nearest stamped ancestor if the exact element has none),
+2. opens the note panel,
+3. on send, builds the prompt from the stamp, the element itself, its computed styles, and the owning components of its stamped ancestors.
+
+## How a note finds its element
+
+A note is saved with its element's stamp and its **position** among elements with the same stamp (for repeated elements). To show a pin, the client looks for the element with that stamp at that position.
+
+This is what makes notes survive reloads and hot updates without any IDs in your code. It's also why a note loses its element when an edit moves the opening tag: the stamp changes, so nothing matches. See [When your code changes](/guides/notes#when-your-code-changes).
+
+## Dev only
+
+The plugin runs only for `vite dev` (`apply: "serve"`). Production builds don't include stamps or the client.

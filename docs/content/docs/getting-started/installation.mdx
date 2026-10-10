@@ -1,11 +1,17 @@
 ---
 title: Installation
-description: Install Spotnote in your Vite project
+description: Install Spotnote and add it to your Vite config.
 ---
 
-## Install the package
+## Requirements
 
-Add Spotnote as a dev dependency — it only ever runs in the dev server.
+- A Vite app that Vite serves through its `index.html` (see [Troubleshooting](/troubleshooting#the-launcher-doesnt-appear)).
+- Vite 5 or later.
+- React, Solid, Vue 3 or Svelte 5. Details in [Framework support](/reference/framework-support).
+
+## 1. Install the package
+
+Spotnote only runs in the dev server, so add it as a dev dependency.
 
 ```bash tab="npm"
 npm install -D spotnote
@@ -19,10 +25,57 @@ pnpm add -D spotnote
 yarn add -D spotnote
 ```
 
-## Requirements
+## 2. Add the plugin
 
-- **Vite** 5.0 or later
+Add `spotnote()` to `plugins`. It takes no options, and where you put it in the array doesn't matter.
 
-## Next steps
+```ts tab="React" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import spotnote from 'spotnote'; // [!code highlight]
 
-See [Quick Start](/getting-started/quick-start) to add Spotnote to your Vite config and create your first note.
+export default defineConfig({
+  plugins: [react(), spotnote()], // [!code highlight]
+});
+```
+
+```ts tab="Solid" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import solid from 'vite-plugin-solid';
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [solid(), spotnote()], // [!code highlight]
+});
+```
+
+```ts tab="Vue" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [vue(), spotnote()], // [!code highlight]
+});
+```
+
+```ts tab="Svelte" title="vite.config.ts"
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineConfig({
+  plugins: [svelte(), spotnote()], // [!code highlight]
+});
+```
+
+You don't import anything in your app code: the plugin adds its own script to the page.
+
+<Callout type="info" title="Production builds are untouched">
+  The plugin only runs during `vite dev`. `vite build` never sees it, so your
+  bundle has no `data-spotnote` attributes and no Spotnote script.
+</Callout>
+
+## Next
+
+[Quick Start](/getting-started/quick-start): write your first note.

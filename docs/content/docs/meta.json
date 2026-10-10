@@ -3,8 +3,9 @@
   "pages": [
     "index",
     "getting-started",
-    "guide",
+    "guides",
+    "concepts",
     "reference",
-    "limitations"
+    "troubleshooting"
   ]
 }

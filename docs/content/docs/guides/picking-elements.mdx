@@ -1,0 +1,46 @@
+---
+title: Picking Elements
+description: Selection mode, the launcher, and how a click finds its element.
+---
+
+## Selection mode
+
+In **selection mode**, an outline follows your cursor and a label shows the element under it: tag, first class, and `(file:line)`. Clicking an element opens the note panel instead of reaching your app.
+
+There are two ways in:
+
+- **Open the launcher** (the round button in a corner). Selection mode stays on until you pause it or close the launcher.
+- **Hold `Alt`** (`⌥ Option` on a Mac). Selection mode lasts while the key is down. Use it for a quick pick while you're using your app normally.
+
+While the note panel is open, clicks on the page still don't reach your app. Clicking another element moves the panel to it; clicking empty space closes the panel. See [Notes](/guides/notes) for what happens to text you haven't sent.
+
+## The launcher
+
+The launcher is a round button in a corner of the page. It always starts closed when the page loads.
+
+- **Open** (`+`): selection mode starts, the button turns yellow, and your pins appear.
+- **Close** (`×`): selection mode ends and the pins hide.
+
+Opening it fans three buttons out along an arc:
+
+| Button | What it does |
+| --- | --- |
+| Pause | Turns selection mode off (and back on) without closing the launcher, so you can use your app with your pins still showing. The launcher turns grey while paused. |
+| Notes | Opens the list of your notes, numbered like their pins. See [Notes](/guides/notes#the-notes-list). |
+| Settings | Not available yet. |
+
+**Move it** by dragging: it snaps to the nearest corner, the arc turns to face into the page, and the corner is remembered.
+
+## Backing out with `Esc`
+
+`Esc` closes one thing at a time, in this order:
+
+1. the notes list,
+2. the note panel,
+3. selection mode (the launcher stays open, paused).
+
+## What a click selects
+
+Spotnote picks the element that carries a **stamp**: the `data-spotnote` attribute the plugin adds to every element written in your source. If you click something without one (for example, markup rendered inside a dependency), the selection moves up to the nearest ancestor that has one, and the prompt says so.
+
+See [Lists & components](/guides/lists-and-components) for repeated elements and component boundaries.

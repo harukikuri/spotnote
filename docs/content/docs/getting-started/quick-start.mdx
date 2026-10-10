@@ -1,67 +1,43 @@
 ---
 title: Quick Start
-description: Add Spotnote to your Vite project in under a minute
+description: Write your first note and hand it to your coding agent.
 ---
 
-## 1. Add the plugin to your Vite config
+This assumes Spotnote is [installed](/getting-started/installation).
 
-`spotnote()` is the whole setup — no options, no client import, no Babel wiring. It's `apply: "serve"`, so it activates in `vite dev` and is a no-op in production builds.
-
-```ts tab="React" title="vite.config.ts"
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import spotnote from 'spotnote'; // [!code highlight]
-
-export default defineConfig({
-  plugins: [react(), spotnote()], // [!code highlight]
-});
-```
-
-```ts tab="Svelte" title="vite.config.ts"
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import spotnote from 'spotnote'; // [!code highlight]
-
-export default defineConfig({
-  plugins: [svelte(), spotnote()], // [!code highlight]
-});
-```
-
-```ts tab="Vue" title="vite.config.ts"
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import spotnote from 'spotnote'; // [!code highlight]
-
-export default defineConfig({
-  plugins: [vue(), spotnote()], // [!code highlight]
-});
-```
-
-## 2. Start the dev server
+## 1. Start the dev server
 
 ```bash
 pnpm dev
 ```
 
-That's it. Spotnote stamps a `data-spotnote="file:line:column"` attribute on your host elements and auto-injects the picker into the page — no changes to your app code.
+Open the local URL Vite prints. A round `+` button sits in the bottom-left corner of the page: that's the **launcher**.
 
-<Callout type="info" title="Production stays clean">
-  Because the plugin is `apply: "serve"`, `vite build` never sees it — no
-  `data-spotnote` attributes and no picker leak into your bundle.
-</Callout>
+## 2. Pick an element
 
-## 3. Create a note
+Click the launcher. It turns yellow and **selection mode** starts: as you move the cursor, an outline follows it with a label like `button .chip (ProductCard.jsx:12)`.
 
-Open the printed `localhost` URL. Open the launcher (the `+` in the bottom-left) or hold **`Alt`**, then hover and click an element to open the note panel.
+Click the element you want to change. The note panel opens next to it.
 
 <BrowserFrame url="localhost:5173">
   <SpotnoteDemo />
 </BrowserFrame>
 
-Type an instruction and press `Enter` — Spotnote copies an agent-ready prompt to your clipboard and drops a pin. Paste it into Claude Code / Cursor / Codex.
+## 3. Write the note
 
-## Next steps
+Type what should change, in plain words, and press `Enter`. Spotnote:
 
-- [How it works](/getting-started/how-it-works) for the technical details
-- [Selecting elements](/guide/selecting-elements) for inspect mode and repeated elements
-- [Writing notes](/guide/writing-notes) for the copied prompt format
+- copies the prompt to your clipboard (the launcher shows a ✓),
+- leaves a numbered **pin** on the element, so you can reopen the note later.
+
+You stay in selection mode, ready for the next element.
+
+## 4. Paste it into your agent
+
+Paste into Claude Code, Cursor, Codex or any chat. The prompt names the file, line and column of the element, so the agent edits the right place. When the change lands, Vite's hot reload shows it in the page.
+
+## Next
+
+- [Picking elements](/guides/picking-elements): selection mode, the launcher, and `Alt`.
+- [Notes](/guides/notes): editing, deleting and the notes list.
+- [Using with agents](/guides/using-with-agents): getting good edits from the prompt.

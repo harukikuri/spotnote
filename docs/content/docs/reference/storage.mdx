@@ -1,0 +1,22 @@
+---
+title: Storage
+description: What Spotnote saves in the browser, and for how long.
+---
+
+Spotnote saves only in your browser. Nothing is sent to a server or written to your project.
+
+| Key | Storage | Holds |
+| --- | --- | --- |
+| `data-spotnote-pins` | `localStorage` | Your notes: each note's text, its element's stamp and position, and the page it was written on. |
+| `data-spotnote-launcher-corner` | `localStorage` | The corner the launcher was dragged to. |
+| `data-spotnote-open` | `sessionStorage` | The note to open after the notes list switches pages. Removed as soon as the new page reads it. |
+
+## Scope
+
+`localStorage` belongs to one browser profile and one origin (scheme, host **and port**). So:
+
+- Notes survive reloads, closing the browser, and restarting the dev server.
+- The same app on a different port (for example, when `5173` is taken and Vite picks `5174`) starts with no notes, and the old ones come back when you return to the old port.
+- Notes aren't shared across browsers, machines or teammates.
+
+To clear everything, delete these keys in your browser's dev tools (Application → Local Storage).

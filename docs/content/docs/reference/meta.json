@@ -1,0 +1,11 @@
+{
+  "title": "Reference",
+  "pages": [
+    "plugin-api",
+    "prompt-format",
+    "keyboard-and-mouse",
+    "attributes",
+    "storage",
+    "framework-support"
+  ]
+}
