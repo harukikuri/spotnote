@@ -121,7 +121,7 @@ const CSS = [
   `.snl-badge.snl-bump{animation:snl-bump .45s ${SPRING}}`,
   "@keyframes snl-bump{from{transform:scale(.4)}}",
   // Notes popover: opens diagonally from the middle item, outside the arc.
-  ".snl-notes{position:absolute;width:260px;border-radius:12px;padding:6px;opacity:0;pointer-events:none;transform:scale(.94);" +
+  ".snl-notes{position:absolute;width:340px;max-width:calc(100vw - 96px);border-radius:12px;padding:6px;opacity:0;pointer-events:none;transform:scale(.94);" +
     `transition:opacity .14s ease,transform .3s ${SPRING};--d:calc(var(--r) * .71 + 30px)}`,
   ".snl-notes.snl-show{opacity:1;pointer-events:auto;transform:none}",
   '.snl[data-corner="bl"] .snl-notes{left:var(--d);bottom:var(--d);transform-origin:0 100%}',
