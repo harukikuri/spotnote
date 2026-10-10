@@ -60,7 +60,24 @@ const controller = {
     if (!visible && panel) closePanel();
     repositionPins();
   },
-  notes: () => [...pins.entries()].map(([key, p]) => ({ key, loc: p.loc, index: p.index, note: p.note })),
+  // `lost`: the note was written on this page, but no element has its source
+  // location any more (an edit moved or removed it).
+  notes: () =>
+    [...pins.entries()].map(([key, p]) => ({
+      key,
+      loc: p.loc,
+      index: p.index,
+      note: p.note,
+      lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
+    })),
+  copyNote(key) {
+    const p = pins.get(key);
+    if (p) navigator.clipboard?.writeText(savedPrompt(p)).catch(() => {});
+  },
+  deleteNote(key) {
+    deletePin(key);
+    notify();
+  },
   openNote: (key) => {
     const p = pins.get(key);
     if (!p) return;
@@ -139,10 +156,15 @@ export function initInspector() {
   window.addEventListener("scroll", scheduleReposition, true);
   window.addEventListener("resize", scheduleReposition);
   // Route changes / conditional renders move or remove pinned elements without
-  // firing scroll — watch the DOM so pins re-anchor (or hide) right away. The
-  // callback is rAF-coalesced, and it only sets styles (no node changes), so it
-  // can't retrigger the observer.
-  new MutationObserver(scheduleReposition).observe(document.body, { childList: true, subtree: true });
+  // firing scroll, and a hot update that shifts a line only rewrites the
+  // data-spotnote attribute — watch both so pins re-anchor (or hide) right away
+  // and the notes list re-checks which notes lost their element. The callbacks
+  // are rAF-coalesced and only set styles (no node changes), so they can't
+  // retrigger the observer.
+  new MutationObserver(() => {
+    scheduleReposition();
+    scheduleNotify();
+  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-spotnote"] });
 
   if (import.meta.hot) {
     import.meta.hot.on("vite:afterUpdate", () => {
@@ -765,7 +787,14 @@ function pageUrl() {
 }
 function savePins() {
   try {
-    const data = [...pins.entries()].map(([key, p]) => ({ key, loc: p.loc, index: p.index, note: p.note, url: p.url }));
+    const data = [...pins.entries()].map(([key, p]) => ({
+      key,
+      loc: p.loc,
+      index: p.index,
+      note: p.note,
+      url: p.url,
+      prompt: p.prompt,
+    }));
     localStorage.setItem(PINS_KEY, JSON.stringify(data));
   } catch {
     /* ignore quota / serialization errors */
@@ -781,7 +810,7 @@ function restorePins() {
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
     const marker = makePinMarker(s.key, s.loc, s.index, s.note);
-    pins.set(s.key, { loc: s.loc, index: s.index, note: s.note, url: s.url, marker });
+    pins.set(s.key, { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, marker });
   }
   repositionPins();
 }
@@ -820,9 +849,22 @@ function upsertPin(occ, note) {
     pin.note = note;
     pin.marker.lastChild.textContent = note; // the hover preview
   }
+  // Keep the last full prompt, so the note can still be copied after an edit
+  // moves its element away (see savedPrompt).
+  const el = resolveRef(occ.loc, occ.index);
+  if (el) pin.prompt = buildPrompt(el, note);
   savePins();
   repositionPins();
   notify();
+}
+
+// The prompt for a note whose element can't be found: the one saved when it was
+// written, flagged as possibly stale (older notes have none — rebuild the basics).
+function savedPrompt(pin) {
+  const stale = "- note: this location is from when the note was written; the code has changed since, so look near it";
+  if (pin.prompt) return pin.prompt.replace("## Target\n", `## Target\n${stale}\n`);
+  const l = parseLoc(pin.loc);
+  return ["## Request", pin.note, "", "## Target", stale, `- file: ${l.file}`, `- line: ${l.line}, column: ${l.column}`].join("\n");
 }
 
 function deletePin(key) {
@@ -871,6 +913,16 @@ function reposition() {
     repositionSelect();
   }
   if (panel && !panelDragged) positionPanel(panelTarget);
+}
+
+let notifyScheduled = false;
+function scheduleNotify() {
+  if (notifyScheduled) return;
+  notifyScheduled = true;
+  requestAnimationFrame(() => {
+    notifyScheduled = false;
+    notify();
+  });
 }
 
 // Scroll fires rapidly; coalesce repositions into one per animation frame.

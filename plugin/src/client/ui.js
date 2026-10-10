@@ -134,9 +134,19 @@ const CSS = [
   ".snl-notes li:hover{background:rgba(255,255,255,.06)}",
   `.snl-num{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
     `font:600 11px/20px ${T.font};text-align:center}`,
-  `.snl-src{font:12px ${T.mono};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}`,
+  `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
+  ".snl-src>span:first-child{overflow:hidden;text-overflow:ellipsis}",
   ".snl-txt{font-size:12px;color:#a1a1aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:#a1a1aa;line-height:1.5}",
+  // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
+  ".snl-notes li.snl-lost{grid-template-columns:20px 1fr auto;cursor:default}",
+  ".snl-lost .snl-num{background:#3f3f46;color:#a1a1aa}",
+  `.snl-lost-tag{flex:none;margin-left:6px;font:500 11px/16px ${T.font};color:#fb923c}`,
+  ".snl-lost .snl-src,.snl-lost .snl-txt{grid-column:2}",
+  ".snl-acts{grid-column:3;grid-row:1/span 2;display:flex;align-items:center;gap:2px}",
+  ".snl-acts button{display:grid;place-items:center;width:26px;height:26px;padding:0;border:none;border-radius:6px;" +
+    "background:none;color:#a1a1aa;cursor:pointer}",
+  ".snl-acts button:hover{background:rgba(255,255,255,.08);color:#f2f2f3}",
   "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label,.sn-pin-tip{transition:none}" +
     ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving{animation:none}" +
     ".snl,.snl *{transition-duration:.01s!important;animation:none!important}}",

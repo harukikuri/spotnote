@@ -6,8 +6,9 @@
 // starts closed, so a reload never lands the page in selection mode).
 //
 // Driven by a controller from the inspector:
-//   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote, onChange }
-import { uiRoot } from "./ui.js";
+//   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
+//     copyNote, deleteNote, onChange }
+import { ICONS, uiRoot } from "./ui.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
@@ -160,14 +161,34 @@ export function mountLauncher(ctrl) {
     popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
     list.textContent = "";
     all.forEach((n, i) => {
-      const li = el("li", "", list);
+      const li = el("li", n.lost ? "snl-lost" : "", list);
       el("span", "snl-num", li).textContent = String(i + 1); // same number as its pin
-      el("span", "snl-src", li).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
+      const src = el("span", "snl-src", li);
+      el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
       el("span", "snl-txt", li).textContent = n.note;
-      li.addEventListener("click", () => {
-        toggleNotes(false);
-        ctrl.openNote(n.key);
+      if (!n.lost) {
+        li.addEventListener("click", () => {
+          toggleNotes(false);
+          ctrl.openNote(n.key);
+        });
+        return;
+      }
+      // An edit moved or removed its element: it can't be opened, but it can
+      // still be copied (the prompt saved when it was written) or deleted.
+      el("span", "snl-lost-tag", src).textContent = "Not found";
+      const acts = el("span", "snl-acts", li);
+      const copy = el("button", "", acts);
+      copy.title = "Copy prompt";
+      copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
+      copy.addEventListener("click", () => {
+        ctrl.copyNote(n.key);
+        copy.innerHTML = ICONS.check;
+        setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
       });
+      const del = el("button", "", acts);
+      del.title = "Delete note";
+      del.innerHTML = ICONS.trash;
+      del.addEventListener("click", () => ctrl.deleteNote(n.key));
     });
     empty.hidden = all.length > 0;
   }
