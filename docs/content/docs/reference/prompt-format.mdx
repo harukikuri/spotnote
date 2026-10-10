@@ -11,7 +11,7 @@ Make the padding bigger
 
 ## Target
 - file: pages/Products.jsx
-- line: 47, column: 10
+- line: 47, column: 11
 - element: <button class="chip chip-active">
 - text: "all"
 - instance: 1 of 4 rendered from this line (by DOM order) — target the one matching the text above
@@ -42,7 +42,7 @@ Under `## Target`, one line per item:
 | Line | Content | When |
 | --- | --- | --- |
 | `file` | Path of the source file, relative to the Vite root. | Always |
-| `line`, `column` | Position of the element's opening tag. `line` counts from 1; `column` counts from **0**. | Always |
+| `line`, `column` | Position of the element's opening tag. Both count from 1, as in your editor. | Always |
 | `element` | Tag name, plus `id` and `class` when the element has them. | Always |
 | `text` | The element's text, whitespace collapsed, cut at 60 characters. | When the element has text |
 | `instance` | Which of the elements rendered from this line you picked, counted in DOM order. | When the line rendered more than one element |

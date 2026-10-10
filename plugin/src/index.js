@@ -55,8 +55,8 @@ function stampVueTemplate(code, file, root, parse) {
       if (!already) {
         const { offset, line, column } = node.loc.start;
         const pos = offset + 1 + node.tag.length; // just past "<tag"
-        // column → 0-based to match the JSX stamps (Vue reports 1-based).
-        s.appendLeft(pos, ` data-spotnote="${rel}:${line}:${column - 1}" data-spotnote-name="${name}"`);
+        // Vue's line and column are already 1-based, like the other stamps.
+        s.appendLeft(pos, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
         touched = true;
       }
     }
@@ -88,14 +88,14 @@ async function getSvelteParse(root) {
   return svelteParse;
 }
 
-// Offset → { line (1-based), column (0-based) }, matching the JSX/Vue stamps.
+// Offset → { line, column }, both 1-based like the JSX/Vue stamps.
 function offsetToLineCol(code, offset) {
   let line = 1;
-  let column = 0;
+  let column = 1;
   for (let i = 0; i < offset && i < code.length; i++) {
     if (code[i] === "\n") {
       line++;
-      column = 0;
+      column = 1;
     } else {
       column++;
     }

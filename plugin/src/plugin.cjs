@@ -52,9 +52,8 @@ module.exports = function ({ types: t }) {
         const root = (state.file && state.file.opts && state.file.opts.root) || process.cwd();
         const rel = path.relative(root, filename).replace(/\\/g, "/");
 
-        // Note: Babel line is 1-based, column is 0-based. We store as-is and
-        // add +1 to the column at open-in-editor time on the client.
-        const value = `${rel}:${loc.start.line}:${loc.start.column}`;
+        // Babel's column is 0-based; stamps are 1-based like editors (line:col).
+        const value = `${rel}:${loc.start.line}:${loc.start.column + 1}`;
 
         nodePath.node.attributes.push(
           t.jsxAttribute(t.jsxIdentifier("data-spotnote"), t.stringLiteral(value)),

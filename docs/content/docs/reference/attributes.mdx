@@ -12,7 +12,7 @@ description: The attributes and elements Spotnote adds to the page in dev.
 The element's source location, as `path:line:column`:
 
 - `path` is relative to the Vite root, with `/` separators.
-- `line` counts from 1, `column` from 0.
+- `line` and `column` both count from 1, as in your editor.
 - The position is the start of the opening tag (`<`).
 
 Added to every host element written in `.jsx`, `.tsx`, `.vue` and `.svelte` files outside `node_modules`. An element that already has a `data-spotnote` attribute is left as is.
