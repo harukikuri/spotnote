@@ -4,7 +4,7 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createIconBtn, ICONS, uiRoot } from "./ui.js";
+import { T, createIconBtn, ICONS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
 
 const ACTIVATE_KEY = "Alt";
@@ -31,6 +31,7 @@ let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let panelSave = null; // saves an edited note when its panel closes
 let panelDraft = null; // () => true while the note has unsent text
 let launcher = null;
+let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
 const pins = new Map(); // refKey (loc@index) -> { loc, index, note, url, marker }
@@ -62,6 +63,7 @@ const controller = {
   },
   // `lost`: the note was written on this page, but no element has its source
   // location any more (an edit moved or removed it).
+  fileKind,
   notes: () =>
     [...pins.entries()].map(([key, p]) => ({
       key,
@@ -106,9 +108,10 @@ const controller = {
   },
 };
 
-export function initInspector() {
+export function initInspector({ jsx = null } = {}) {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
+  jsxFramework = jsx;
 
   window.addEventListener("keydown", (e) => {
     if (e.key === ACTIVATE_KEY) {
@@ -290,6 +293,30 @@ function onClick(e) {
   openPanel(el); // sets the selection + highlight for every open path
 }
 
+// The framework mark for a source file: .vue/.svelte by extension; .jsx/.tsx by
+// what the plugin found in the Vite config ("jsx" when it couldn't tell).
+function fileKind(file) {
+  if (file.endsWith(".vue")) return "vue";
+  if (file.endsWith(".svelte")) return "svelte";
+  return jsxFramework || "jsx";
+}
+
+// [mark] File.jsx:12 — the file part of the hover label and the panel header.
+function fileTag(file, line, color) {
+  const kind = fileKind(file);
+  const wrap = document.createElement("span");
+  // margin-left: a little extra air after the tag/class, so the file reads as its own group.
+  wrap.style.cssText = "display:inline-flex;align-items:center;gap:4px;margin-left:4px;white-space:nowrap;flex-shrink:0";
+  wrap.title = FRAMEWORKS[kind].name;
+  const icon = document.createElement("span");
+  icon.style.cssText = `display:inline-flex;color:${color ?? FRAMEWORKS[kind].color}`;
+  icon.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
+  const name = document.createElement("span");
+  name.textContent = `${file.split("/").pop()}:${line}`;
+  wrap.append(icon, name);
+  return wrap;
+}
+
 // "src/App.jsx:12:4" -> {file, line, column}  (split from the RIGHT: path may contain ':')
 function parseLoc(s) {
   const i = s.lastIndexOf(":");
@@ -433,10 +460,12 @@ function setLabel(labelEl, el) {
     labelEl.appendChild(c);
   }
 
-  const loc = document.createElement("span");
-  loc.style.cssText = `color:rgba(26,22,0,0.75);font-family:${MONO};font-weight:400`;
+  // On the yellow label the mark stays in the label's ink, not brand colour.
   const l = parseLoc(el.getAttribute("data-spotnote"));
-  loc.textContent = `(${l.file.split("/").pop()}:${l.line})`;
+  const loc = fileTag(l.file, l.line, "inherit");
+  loc.style.color = "rgba(26,22,0,0.75)";
+  loc.style.fontFamily = MONO;
+  loc.style.fontWeight = "400";
   labelEl.appendChild(loc);
 }
 
@@ -529,9 +558,11 @@ function panelLabel(el) {
   }
 
   const l = parseLoc(el.getAttribute("data-spotnote"));
-  const loc = document.createElement("span");
-  loc.style.cssText = `color:${T.textMuted};font-family:${MONO};font-size:11px;white-space:nowrap;flex-shrink:0`;
-  loc.textContent = `(${l.file.split("/").pop()}:${l.line})`;
+  const loc = fileTag(l.file, l.line);
+  loc.style.color = T.textMuted;
+  loc.style.fontFamily = MONO;
+  loc.style.fontSize = "11px";
+  loc.style.alignSelf = "center";
   wrap.append(loc);
   return wrap;
 }

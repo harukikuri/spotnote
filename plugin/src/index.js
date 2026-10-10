@@ -146,9 +146,19 @@ function stampSvelte(code, file, root, parse) {
   return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
 }
 
+// Which framework compiles .jsx/.tsx here, from the plugins in the config —
+// the extension alone can't tell React from Solid. null = none or both.
+function jsxFramework(plugins) {
+  const names = plugins.map((p) => p.name || "");
+  const react = names.some((n) => n.startsWith("vite:react"));
+  const solid = names.includes("solid");
+  return react === solid ? null : react ? "react" : "solid";
+}
+
 export default function spotnote() {
   let transformSync;
   let root = process.cwd();
+  let jsx = null;
   return {
     name: "spotnote",
     apply: "serve", // dev only — production builds are untouched
@@ -156,6 +166,7 @@ export default function spotnote() {
 
     configResolved(config) {
       root = config.root; // so stamped paths are relative to the app root
+      jsx = jsxFramework(config.plugins);
     },
     async buildStart() {
       ({ transformSync } = await import("@babel/core"));
@@ -167,7 +178,7 @@ export default function spotnote() {
     },
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector();`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx })});`;
       }
     },
 

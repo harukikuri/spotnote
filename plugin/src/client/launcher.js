@@ -7,8 +7,8 @@
 //
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
-//     copyNote, deleteNote, onChange }
-import { ICONS, uiRoot } from "./ui.js";
+//     copyNote, deleteNote, fileKind, onChange }
+import { ICONS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
@@ -164,6 +164,11 @@ export function mountLauncher(ctrl) {
       const li = el("li", n.lost ? "snl-lost" : "", list);
       el("span", "snl-num", li).textContent = String(i + 1); // same number as its pin
       const src = el("span", "snl-src", li);
+      const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
+      const mark = el("span", "snl-fw", src);
+      mark.style.color = FRAMEWORKS[kind].color;
+      mark.title = FRAMEWORKS[kind].name;
+      mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
       el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
       el("span", "snl-txt", li).textContent = n.note;
       if (!n.lost) {
