@@ -22,7 +22,11 @@ export default async function Page({
 
   return (
     <DocsPage toc={page.data.toc}>
-      <DocsTitle>{page.data.title}</DocsTitle>
+      {page.data.headline && (
+        // Styled like the breadcrumb other pages show above their title.
+        <p className="text-sm font-medium text-fd-primary">{page.data.title}</p>
+      )}
+      <DocsTitle>{page.data.headline ?? page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <Mdx components={getMDXComponents()} />

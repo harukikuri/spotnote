@@ -1,6 +1,7 @@
 ---
 title: What is Spotnote?
-description: Point at an element in your running app, and give your coding agent its exact source location.
+headline: Point, don't describe.
+description: Click any element in your running app and hand your coding agent its exact file and line.
 ---
 
 Spotnote is a **dev-only Vite plugin**. In your running app, click an element and write what should change. Spotnote copies a prompt for your coding agent that names the **file, line and column** where that element is written.
@@ -9,7 +10,7 @@ Spotnote is a **dev-only Vite plugin**. In your running app, click an element an
 
 ## Why
 
-Describing UI to an agent in words loses information. "Make the button in the hero rounder" leaves the agent to search the codebase and guess which button you mean. Spotnote skips the guessing: the prompt says exactly where the element is defined, which instance you picked if it's one of many, and which components it sits inside.
+Describing UI to an agent in words loses information. "Make the button in the hero rounder" leaves the agent to search the codebase and guess which button you mean. Spotnote skips the guessing: the prompt says exactly where the element is defined, which instance you picked if it's one of many, and which components it sits inside. No searching also means fewer tokens spent.
 
 ## What you paste
 

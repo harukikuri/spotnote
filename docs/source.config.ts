@@ -1,7 +1,14 @@
-import { defineDocs, defineConfig } from 'fumadocs-mdx/config';
+import { defineDocs, defineConfig, frontmatterSchema } from 'fumadocs-mdx/config';
 
 export const docs = defineDocs({
   dir: 'content/docs',
+  docs: {
+    // `headline`: shown as the page's big title, with `title` (still the
+    // sidebar name) moved above it like a breadcrumb. Used by the home page.
+    schema: frontmatterSchema.extend({
+      headline: frontmatterSchema.shape.title.optional(),
+    }),
+  },
 });
 
 export default defineConfig({
