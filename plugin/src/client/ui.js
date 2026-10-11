@@ -96,7 +96,15 @@ const CSS = [
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
   `.sn-pin:hover{box-shadow:0 0 0 3px rgba(${T.accentRgb},.35),0 2px 6px rgba(0,0,0,.35)}`,
   ".sn-pin.sn-done{background:var(--sn-bg);color:var(--sn-accent-text)}",
-  ".sn-pin.sn-done .sn-pin-tip{-webkit-line-clamp:5}", // note + the agent's summary
+  ".sn-pin.sn-done .sn-pin-tip,.sn-pin.sn-asked .sn-pin-tip{-webkit-line-clamp:5}", // note + the agent's last word
+  // The agent asked something: a slow pulse until you answer.
+  `.sn-pin.sn-asked{animation:sn-ask 1.6s ease-in-out infinite}`,
+  `@keyframes sn-ask{50%{box-shadow:0 0 0 5px rgba(${T.accentRgb},.4),0 2px 6px rgba(0,0,0,.35)}}`,
+  // The note panel's conversation, above the reply input.
+  ".sn-thread{max-height:220px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}",
+  `.sn-msg{color:${T.text};font:13px/18px ${T.font};white-space:pre-wrap;word-break:break-word}`,
+  `.sn-msg-agent{padding-left:8px;border-left:2px solid ${T.accent}}`,
+  `.sn-who{display:block;font-size:11px;line-height:16px;color:${T.textMuted}}`,
   ".sn-pin.sn-leaving{animation:sn-pin-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pin-in{from{transform:scale(0)}}",
   "@keyframes sn-pin-out{to{transform:scale(0);opacity:0}}",
@@ -183,6 +191,7 @@ const CSS = [
   ".snl-txt{font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
   // A note an agent resolved over MCP: a check instead of its number, and its summary.
+  ".snl-asked .snl-sum{font-weight:500}",
   ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
   ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
@@ -207,7 +216,7 @@ const CSS = [
   ".snl-seg button:hover{color:var(--sn-glass-text)}",
   '.snl-seg button[aria-checked="true"]{background:var(--sn-bg);color:var(--sn-glass-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}',
   "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label,.sn-pin-tip{transition:none}" +
-    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving{animation:none}" +
+    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked{animation:none}" +
     ".snl,.snl *{transition-duration:.01s!important;animation:none!important}}",
 ].join("\n");
 

@@ -172,8 +172,8 @@ export function mountLauncher(ctrl) {
     popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
     list.textContent = "";
     all.forEach((n, i) => {
-      const li = el("li", [n.lost && "snl-lost", n.done && "snl-done"].filter(Boolean).join(" "), list);
-      el("span", "snl-num", li).textContent = n.done ? "✓" : String(i + 1); // same as its pin
+      const li = el("li", [n.lost && "snl-lost", n.state !== "open" && `snl-${n.state}`].filter(Boolean).join(" "), list);
+      el("span", "snl-num", li).textContent = { done: "✓", asked: "?" }[n.state] ?? String(i + 1); // same as its pin
       const src = el("span", "snl-src", li);
       const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
       const mark = el("span", "snl-fw", src);
@@ -182,11 +182,11 @@ export function mountLauncher(ctrl) {
       mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
       el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
       el("span", "snl-txt", li).textContent = n.note;
-      if (n.done) {
-        // What the agent said it changed (see mcp.js).
+      if (n.state !== "open") {
+        // The agent's last word: what it changed, or what it's asking (see mcp.js).
         const sum = el("span", "snl-sum", li);
-        sum.textContent = n.summary;
-        sum.title = n.summary;
+        sum.textContent = n.agent;
+        sum.title = n.agent;
       }
       if (!n.lost) {
         li.addEventListener("click", () => {

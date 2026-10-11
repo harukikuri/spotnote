@@ -31,6 +31,8 @@ let panelTarget = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
 let panelSave = null; // saves an edited note when its panel closes
 let panelDraft = null; // () => true while the note has unsent text
+let panelKey = null; // the open panel's note key
+let panelRefresh = null; // redraws the open panel's conversation
 let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
@@ -72,8 +74,8 @@ const controller = {
       loc: p.loc,
       index: p.index,
       note: p.note,
-      done: !!p.done,
-      summary: p.summary,
+      state: pinState(p),
+      agent: lastAgentMsg(p)?.text,
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
     })),
   copyNote(key) {
@@ -176,7 +178,7 @@ export function initInspector({ jsx = null } = {}) {
   }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-spotnote"] });
 
   if (import.meta.hot) {
-    import.meta.hot.on("spotnote:resolve", resolveNotes);
+    import.meta.hot.on("spotnote:agent", applyAgent);
     import.meta.hot.on("vite:afterUpdate", () => {
       rebindSelection();
       repositionPins();
@@ -579,10 +581,14 @@ function openPanel(target, prefillNote) {
   const occ = occInfo(target);
   const key = refKey(occ.loc, occ.index);
   const isEdit = pins.has(key); // reopened an existing note
+  // Once the agent has answered, the panel is a conversation: the input replies
+  // instead of editing the note.
+  const talking = isEdit && (pins.get(key).thread?.length > 0 || !!pins.get(key).done);
   // Clicking an element that already has a note edits it, so start from that
   // note — otherwise the save-on-close would overwrite it with fresh text.
-  prefillNote ??= pins.get(key)?.note;
+  prefillNote = talking ? null : (prefillNote ?? pins.get(key)?.note);
   panelTarget = target;
+  panelKey = key;
   panelDragged = false;
 
   // Highlight the target whenever the panel is open — including reopens from a
@@ -606,7 +612,7 @@ function openPanel(target, prefillNote) {
       title: "Copy prompt",
       parent: header,
       onClick: () => {
-        const note = (input.textContent || "").trim();
+        const note = talking ? pins.get(key).note : (input.textContent || "").trim();
         if (!note) return;
         navigator.clipboard?.writeText(buildPrompt(target, note)).catch(() => {});
         copyBtn.innerHTML = ICONS.check; // green tick feedback, then revert
@@ -629,14 +635,38 @@ function openPanel(target, prefillNote) {
   createIconBtn({ svg: ICONS.close, title: "Close", parent: header, onClick: closePanel });
   panel.append(header);
 
+  // The conversation: your note, then the agent's and your messages.
+  if (talking) {
+    const thread = document.createElement("div");
+    thread.className = "sn-thread";
+    panel.append(thread);
+    panelRefresh = () => {
+      const pin = pins.get(key);
+      if (!pin) return;
+      thread.textContent = "";
+      for (const m of [{ from: "you", text: pin.note }, ...(pin.thread ?? [])]) {
+        const msg = document.createElement("div");
+        msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
+        const who = document.createElement("span");
+        who.className = "sn-who";
+        who.textContent = m.from === "agent" ? (m.resolves ? "Agent · done" : "Agent") : "You";
+        msg.append(who, m.text);
+        thread.append(msg);
+      }
+      thread.scrollTop = thread.scrollHeight;
+    };
+    panelRefresh();
+  }
+
   // Note input
   const inputWrap = document.createElement("div");
   inputWrap.style.cssText = "display:flex;flex-direction:column;padding:10px 12px 8px";
+  if (talking) inputWrap.style.borderTop = `1px solid ${T.borderSubtle}`; // reply box, below the conversation
   const input = document.createElement("div");
   input.contentEditable = "true";
   input.spellcheck = false;
   input.setAttribute("data-spotnote-input", "1");
-  input.setAttribute("data-placeholder", "Describe the change for the agent…");
+  input.setAttribute("data-placeholder", talking ? "Reply to the agent…" : "Describe the change for the agent…");
   input.style.cssText = `min-height:20px;max-height:120px;overflow-y:auto;color:${T.text};font-size:13px;line-height:18px;outline:none;white-space:pre-wrap;word-break:break-word`;
   if (prefillNote) input.textContent = prefillNote;
   inputWrap.append(input);
@@ -645,6 +675,14 @@ function openPanel(target, prefillNote) {
   function doSend() {
     const note = (input.textContent || "").trim();
     if (!note) return;
+    if (talking) {
+      // A reply goes to the agent over MCP, so there's nothing to copy.
+      replyNote(key, note);
+      input.textContent = "";
+      updateSend();
+      panelRefresh();
+      return;
+    }
     const prompt = buildPrompt(target, note);
     navigator.clipboard?.writeText(prompt).catch(() => {});
     console.log("[spotnote] copied prompt:\n" + prompt);
@@ -658,7 +696,7 @@ function openPanel(target, prefillNote) {
   // only kept once sent, so half-typed text never becomes a pin.
   const send = document.createElement("button");
   send.className = "sn-send";
-  send.innerHTML = `<kbd>↵</kbd>${isEdit ? "Save &amp; copy" : "Add &amp; copy"}`;
+  send.innerHTML = `<kbd>↵</kbd>${talking ? "Reply" : isEdit ? "Save &amp; copy" : "Add &amp; copy"}`;
   send.addEventListener("click", doSend);
   inputWrap.append(send);
   const updateSend = () => (send.disabled = !(input.textContent || "").trim());
@@ -667,9 +705,9 @@ function openPanel(target, prefillNote) {
   // Unsent text — a new note, or an edit that differs from the saved note.
   panelDraft = () => {
     const note = (input.textContent || "").trim();
-    return !!note && note !== pins.get(key)?.note;
+    return !!note && (talking || note !== pins.get(key)?.note);
   };
-  if (isEdit) {
+  if (isEdit && !talking) {
     panelSave = () => {
       const note = (input.textContent || "").trim();
       // Skip a note just deleted from this panel, and an emptied one.
@@ -783,6 +821,8 @@ function closePanel() {
   panelSave?.();
   panelSave = null;
   panelDraft = null;
+  panelKey = null;
+  panelRefresh = null;
   document.removeEventListener("mousedown", onDocDown, true);
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so
@@ -834,7 +874,7 @@ function savePins() {
       url: p.url,
       prompt: p.prompt,
       done: p.done,
-      summary: p.summary,
+      thread: p.thread,
     }));
     localStorage.setItem(PINS_KEY, JSON.stringify(data));
   } catch {
@@ -862,27 +902,57 @@ function syncNotes() {
       url: p.url,
       prompt: p.prompt ? p.prompt : savedPrompt(p),
       done: !!p.done,
+      thread: p.thread ?? [],
     })),
   });
 }
 
-// An agent marked notes done (see mcp.js): check their pins, keep its summary.
-function resolveNotes(list) {
-  const mine = list.filter(({ key }) => pins.has(key)); // the broadcast reaches every browser
-  if (!mine.length) return;
-  for (const { key, summary } of mine) {
+// ── The conversation on a note (see mcp.js) ──────────────────────────
+// pin.thread: [{ id, from: "agent" | "you", text, at, resolves? }]. The note
+// itself is the opening message; resolves marks the agent's "done" summary.
+const lastAgentMsg = (pin) => pin.thread?.findLast((m) => m.from === "agent");
+// "done" (resolved), "asked" (the agent is waiting on you) or "open".
+function pinState(pin) {
+  if (pin.done) return "done";
+  return pin.thread?.at(-1)?.from === "agent" ? "asked" : "open";
+}
+
+// Messages from the agent. The broadcast reaches every browser, so keep only
+// ones for our own notes (same key and text).
+function applyAgent(list) {
+  let changed = false;
+  for (const { key, note, msg } of list) {
     const pin = pins.get(key);
-    pin.done = true;
-    pin.summary = summary;
-    showDone(pin);
+    if (!pin || pin.note !== note || pin.thread?.some((m) => m.id === msg.id)) continue;
+    (pin.thread ??= []).push(msg);
+    if (msg.resolves) pin.done = true;
+    showState(pin);
+    changed = true;
+    if (panelKey === key) panelRefresh?.();
   }
+  if (!changed) return;
   savePins();
-  repositionPins(); // number → ✓
+  repositionPins(); // number → ✓ / ?
   notify();
 }
-function showDone(pin) {
-  pin.marker.classList.toggle("sn-done", !!pin.done);
-  pin.marker.lastChild.textContent = pin.done ? `${pin.note}\n✓ ${pin.summary}` : pin.note; // the hover preview
+
+// Your answer to the agent. Replying on a done note reopens it.
+function replyNote(key, text) {
+  const pin = pins.get(key);
+  (pin.thread ??= []).push({ id: Math.random().toString(36).slice(2), from: "you", text, at: Date.now() });
+  pin.done = false;
+  showState(pin);
+  savePins();
+  repositionPins();
+  notify();
+}
+
+function showState(pin) {
+  const state = pinState(pin);
+  pin.marker.classList.toggle("sn-done", state === "done");
+  pin.marker.classList.toggle("sn-asked", state === "asked");
+  const last = state === "open" ? null : lastAgentMsg(pin);
+  pin.marker.lastChild.textContent = last ? `${pin.note}\n${state === "done" ? "✓" : "?"} ${last.text}` : pin.note; // the hover preview
 }
 function restorePins() {
   let saved = [];
@@ -894,9 +964,9 @@ function restorePins() {
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
     const marker = makePinMarker(s.key, s.loc, s.index, s.note);
-    const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, summary: s.summary, marker };
+    const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, thread: s.thread, marker };
     pins.set(s.key, pin);
-    if (pin.done) showDone(pin);
+    showState(pin);
   }
   repositionPins();
   syncNotes();
@@ -933,9 +1003,13 @@ function upsertPin(occ, note) {
     pin = { loc: occ.loc, index: occ.index, note, url: pageUrl(), marker };
     pins.set(key, pin);
   } else {
-    if (note !== pin.note) pin.done = false; // a changed note is a new request
+    if (note !== pin.note) {
+      // A rewritten note is a new request: start its conversation over.
+      pin.done = false;
+      pin.thread = [];
+    }
     pin.note = note;
-    showDone(pin);
+    showState(pin);
   }
   // Keep the last full prompt, so the note can still be copied after an edit
   // moves its element away (see savedPrompt).
@@ -972,7 +1046,7 @@ function repositionPins() {
   let n = 0;
   for (const [, pin] of pins) {
     n++; // same order as the launcher's notes list
-    const num = pin.done ? "✓" : String(n);
+    const num = { done: "✓", asked: "?" }[pinState(pin)] ?? String(n);
     if (pin.marker.firstChild.textContent !== num) pin.marker.firstChild.textContent = num;
     const el = resolveRef(pin.loc, pin.index);
     if (pinsVisible && el && el.isConnected) {
