@@ -8,9 +8,8 @@ description: Which frameworks and file types Spotnote stamps, and how.
 | React | Tested (React 18) | `.jsx`, `.tsx` | Babel JSX pass |
 | Solid | Tested (Solid 1.9) | `.jsx`, `.tsx` | Same Babel JSX pass |
 | Vue | Tested (Vue 3.5) | `.vue` | Your app's `vue/compiler-sfc` |
-| Svelte | Tested (Svelte 5) | `.svelte` | Your app's `svelte/compiler` |
+| Svelte | Tested (Svelte 4.2 and 5) | `.svelte` | Your app's `svelte/compiler` |
 | Preact, other JSX | Untested | `.jsx`, `.tsx` | Same Babel JSX pass |
-| Svelte 4 | Not supported | | |
 | Next.js | Not supported | | Not Vite (Webpack / Turbopack) |
 
 Tested with Vite 5.
@@ -31,5 +30,6 @@ Tested with Vite 5.
 
 ### Svelte
 
-- Markup elements in `.svelte` files are stamped (Svelte 5's parser).
+- Markup elements in `.svelte` files are stamped, with Svelte 4 and Svelte 5 alike.
+- Components and `<slot>` aren't. Markup you pass into a slot is stamped in the file where you wrote it.
 - `<svelte:element this={…}>` isn't, because its tag is decided at runtime.
