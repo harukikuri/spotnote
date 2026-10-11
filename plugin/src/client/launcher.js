@@ -8,7 +8,8 @@
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
 //     copyNote, deleteNote, fileKind, onChange }
-import { ICONS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
+import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
+import { getSettings, setSetting } from "./settings.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
@@ -71,19 +72,27 @@ export function mountLauncher(ctrl) {
     return { b, ic, t };
   };
   const pause = item(0, ICON.pause, "Pause selecting", () => ctrl.toggleInspect());
-  const notes = item(1, ICON.notes, "Notes", () => toggleNotes());
+  const notes = item(1, ICON.notes, "Notes", () => togglePop(notesPop));
   const badge = el("span", "snl-badge", notes.b);
-  item(2, ICON.gear, "Settings"); // placeholder — no settings yet
+  const gear = item(2, ICON.gear, "Settings", () => togglePop(settingsPop));
 
   const core = el("button", "snl-core snl-glass", root);
   core.innerHTML = ICON.plus + ICON.check;
 
-  const pop = el("div", "snl-notes snl-glass", root);
-  pop.setAttribute("role", "dialog");
-  pop.setAttribute("aria-label", "Notes");
-  const popTitle = el("h4", "", pop);
-  const list = el("ol", "", pop);
-  const empty = el("p", "snl-empty", pop);
+  const popover = (cls, label) => {
+    const p = el("div", `snl-pop ${cls} snl-glass`, root);
+    p.setAttribute("role", "dialog");
+    p.setAttribute("aria-label", label);
+    return p;
+  };
+  const notesPop = popover("snl-notes", "Notes");
+  notesPop.item = notes.b;
+  const popTitle = el("h4", "", notesPop);
+  const list = el("ol", "", notesPop);
+  const empty = el("p", "snl-empty", notesPop);
+  const settingsPop = popover("snl-settings", "Settings");
+  settingsPop.item = gear.b;
+  el("h4", "", settingsPop).textContent = "Settings";
   empty.textContent = "No notes yet. Click an element on the page to add one.";
 
   // ── Geometry ──
@@ -138,23 +147,25 @@ export function mountLauncher(ctrl) {
       }
       shownCount = count;
     }
-    if (pop.classList.contains("snl-show")) renderNotes();
+    if (notesPop.classList.contains("snl-show")) renderNotes();
   }
 
   function setOpen(v) {
     open = v;
-    if (!v) toggleNotes(false);
+    if (!v) togglePop(null);
     ctrl.setPinsVisible(v);
     ctrl.setInspect(v); // open = selecting, closed = not
     render();
   }
 
-  // ── Notes popover ──
-  function toggleNotes(force) {
-    const show = force ?? !pop.classList.contains("snl-show");
-    pop.classList.toggle("snl-show", show);
-    notes.b.setAttribute("aria-expanded", show);
-    if (show) renderNotes();
+  // ── Popovers: at most one open; togglePop(null) closes it ──
+  function togglePop(which) {
+    for (const p of [notesPop, settingsPop]) {
+      const show = p === which && !p.classList.contains("snl-show");
+      p.classList.toggle("snl-show", show);
+      p.item.setAttribute("aria-expanded", show);
+      if (show) (p === notesPop ? renderNotes : renderSettings)();
+    }
   }
   function renderNotes() {
     const all = ctrl.notes();
@@ -173,7 +184,7 @@ export function mountLauncher(ctrl) {
       el("span", "snl-txt", li).textContent = n.note;
       if (!n.lost) {
         li.addEventListener("click", () => {
-          toggleNotes(false);
+          togglePop(null);
           ctrl.openNote(n.key);
         });
         return;
@@ -198,9 +209,41 @@ export function mountLauncher(ctrl) {
     empty.hidden = all.length > 0;
   }
   function closePopover() {
-    if (!pop.classList.contains("snl-show")) return false;
-    toggleNotes(false);
+    if (!root.querySelector(".snl-pop.snl-show")) return false;
+    togglePop(null);
     return true;
+  }
+
+  // ── Settings popover ──
+  // A row of mutually exclusive choices; picking one saves it and re-renders.
+  function choices(parent, cls, name, options, render) {
+    const group = el("div", cls, parent);
+    group.setAttribute("role", "radiogroup");
+    for (const [value, label] of options) {
+      const b = el("button", "", group);
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", getSettings()[name] === value);
+      render(b, value, label);
+      b.addEventListener("click", () => {
+        setSetting(name, value);
+        renderSettings();
+      });
+    }
+  }
+  function row(label) {
+    const r = el("div", "snl-row", settingsPop);
+    el("span", "snl-lbl", r).textContent = label;
+    return r;
+  }
+  function renderSettings() {
+    settingsPop.querySelectorAll(".snl-row").forEach((n) => n.remove());
+    choices(row("Color"), "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, name) => {
+      b.style.setProperty("--c", ACCENTS[k].accent);
+      b.title = name;
+      b.setAttribute("aria-label", name);
+    });
+    const seg = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
+    choices(row("Theme"), "snl-seg", "theme", seg, (b, _, label) => (b.textContent = label));
   }
 
   // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──
@@ -216,7 +259,7 @@ export function mountLauncher(ctrl) {
     if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
     drag.moved = true;
     root.classList.add("snl-dragging");
-    toggleNotes(false);
+    togglePop(null);
     root.style.setProperty("--x", e.clientX + "px");
     root.style.setProperty("--y", e.clientY + "px");
   });

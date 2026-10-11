@@ -4,8 +4,9 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createIconBtn, ICONS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
+import { T, createIconBtn, ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
+import { getSettings, onSettings } from "./settings.js";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -112,6 +113,8 @@ export function initInspector({ jsx = null } = {}) {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   jsxFramework = jsx;
+  applyLook(getSettings());
+  onSettings(applyLook);
 
   window.addEventListener("keydown", (e) => {
     if (e.key === ACTIVATE_KEY) {
@@ -455,15 +458,15 @@ function setLabel(labelEl, el) {
     typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
   if (cls) {
     const c = document.createElement("span");
-    c.style.color = "rgba(26,22,0,0.6)";
+    c.style.opacity = "0.6"; // the label's ink, faded
     c.textContent = "." + cls;
     labelEl.appendChild(c);
   }
 
-  // On the yellow label the mark stays in the label's ink, not brand colour.
+  // On the accent label the mark stays in the label's ink, not brand colour.
   const l = parseLoc(el.getAttribute("data-spotnote"));
   const loc = fileTag(l.file, l.line, "inherit");
-  loc.style.color = "rgba(26,22,0,0.75)";
+  loc.style.opacity = "0.75";
   loc.style.fontFamily = MONO;
   loc.style.fontWeight = "400";
   labelEl.appendChild(loc);
@@ -762,9 +765,10 @@ function onDocDown(e) {
 // "You have an unsent note": a short shake (a border flash under reduced motion).
 function nudgePanel() {
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const cs = getComputedStyle(panel); // keyframes need resolved colours, not var()
   panel.animate(
     still
-      ? [{ borderColor: ACCENT }, { borderColor: T.border }]
+      ? [{ borderColor: cs.getPropertyValue("--sn-accent") }, { borderColor: cs.getPropertyValue("--sn-border") }]
       : [0, -6, 6, -4, 4, 0].map((x) => ({ transform: `translateX(${x}px)` })),
     { duration: still ? 600 : 320, easing: "ease-out" },
   );

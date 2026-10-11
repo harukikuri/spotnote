@@ -1,20 +1,54 @@
-// Small UI kit (buttons + icon buttons) as plain JS, with a fixed dark theme +
-// highlighter-yellow accent.
+// Small UI kit (buttons + icon buttons) as plain JS. Colours are CSS variables
+// on the shadow host, so the accent and light/dark theme can change live (see
+// applyLook and the Settings menu).
 
 export const T = {
-  accent: "#ffd84d", // highlighter yellow
-  accentRgb: "255,216,77",
-  accentInk: "#1a1600", // text/icons drawn on the accent
-  bg: "#1a1a1a",
-  bgInput: "#141414",
-  border: "#333",
-  borderSubtle: "#262626",
-  text: "#ededed",
-  textMuted: "#888",
-  textIcon: "#999",
+  accent: "var(--sn-accent)",
+  accentRgb: "var(--sn-accent-rgb)",
+  accentInk: "var(--sn-ink)", // text/icons drawn on the accent
+  accentText: "var(--sn-accent-text)", // the accent as text on the theme's surfaces
+  bg: "var(--sn-bg)",
+  bgInput: "var(--sn-bg-input)",
+  border: "var(--sn-border)",
+  borderSubtle: "var(--sn-border-subtle)",
+  text: "var(--sn-text)",
+  textMuted: "var(--sn-muted)",
+  textIcon: "var(--sn-icon)",
   font: "system-ui,-apple-system,sans-serif",
   mono: "ui-monospace,SFMono-Regular,Menlo,monospace",
 };
+
+// Accent presets for the Settings menu. All are light enough for dark `ink` on
+// top; `deep` is the same hue dark enough to read as text on the light theme.
+export const ACCENTS = {
+  yellow: { name: "Yellow", accent: "#ffd84d", ink: "#1a1600", deep: "#8a6a00" },
+  pink: { name: "Pink", accent: "#ff4d94", ink: "#2a0016", deep: "#be185d" },
+  cyan: { name: "Cyan", accent: "#1ccfe8", ink: "#00222b", deep: "#0e7490" },
+  green: { name: "Green", accent: "#3ddc84", ink: "#00230f", deep: "#15803d" },
+  orange: { name: "Orange", accent: "#ff9419", ink: "#2a1400", deep: "#c2410c" },
+  violet: { name: "Violet", accent: "#a07cff", ink: "#160a33", deep: "#6d28d9" },
+};
+
+// Theme surfaces. Dark is the original look; light mirrors it.
+const THEMES = {
+  dark: {
+    bg: "#1a1a1a", "bg-input": "#141414", border: "#333", "border-subtle": "#262626",
+    text: "#ededed", muted: "#888", icon: "#999", sub: "#a1a1aa", placeholder: "#666",
+    hover: "rgba(255,255,255,.06)", "hover-strong": "rgba(255,255,255,.08)", "text-strong": "#fff",
+    glass: "rgba(24,24,28,.74)", "glass-border": "rgba(255,255,255,.10)", "glass-inset": "rgba(255,255,255,.06)",
+    "glass-text": "#f2f2f3", "glass-hover": "rgba(44,44,50,.86)", track: "#a1a1aa",
+    "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)",
+  },
+  light: {
+    bg: "#ffffff", "bg-input": "#f4f4f5", border: "#e4e4e7", "border-subtle": "#f0f0f1",
+    text: "#18181b", muted: "#71717a", icon: "#71717a", sub: "#71717a", placeholder: "#a1a1aa",
+    hover: "rgba(0,0,0,.04)", "hover-strong": "rgba(0,0,0,.06)", "text-strong": "#000",
+    glass: "rgba(255,255,255,.8)", "glass-border": "rgba(0,0,0,.08)", "glass-inset": "rgba(255,255,255,.7)",
+    "glass-text": "#18181b", "glass-hover": "rgba(244,244,245,.94)", track: "#71717a",
+    "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)",
+  },
+};
+const vars = (o) => Object.entries(o).map(([k, v]) => `--sn-${k}:${v}`).join(";");
 
 // Spring easing (damping 0.52): ~15% overshoot, settled by the end.
 const SPRING =
@@ -24,9 +58,11 @@ const SPRING =
 // Stylesheet for everything inside the shadow root. The UI was designed under a
 // border-box reset, so it's restated here rather than inherited from the page.
 const CSS = [
+  `:host{${vars(THEMES.dark)}}`,
+  `:host([data-theme="light"]){${vars(THEMES.light)}}`,
   "*,*::before,*::after{box-sizing:border-box}",
   "@keyframes dl-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}",
-  "[data-spotnote-input]:empty::before{content:attr(data-placeholder);color:#666;pointer-events:none}",
+  "[data-spotnote-input]:empty::before{content:attr(data-placeholder);color:var(--sn-placeholder);pointer-events:none}",
   // Hover highlight + label: created once, slid between targets via transform,
   // faded in/out via .sn-on. .sn-snap moves them without animating.
   ".sn-hover,.sn-hover-label{position:fixed;left:0;top:0;pointer-events:none;opacity:0;" +
@@ -39,7 +75,7 @@ const CSS = [
   // Note panel: grows out of its target (transform-origin is set per placement)
   // and shrinks back toward it on close.
   `.sn-panel{position:fixed;z-index:2147483647;width:300px;background:${T.bg};border:1px solid ${T.border};border-radius:10px;` +
-    `box-shadow:0 12px 32px rgba(0,0,0,0.5);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1)}`,
+    `box-shadow:0 12px 32px var(--sn-shadow);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1)}`,
   ".sn-panel.sn-leaving{animation:sn-pop-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pop-in{from{opacity:0;transform:scale(.95)}}",
   "@keyframes sn-pop-out{to{opacity:0;transform:scale(.95)}}",
@@ -47,7 +83,7 @@ const CSS = [
   // until there's text to send.
   `.sn-send{display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:2px 4px;border:none;border-radius:5px;` +
     `background:none;color:${T.textMuted};font:12px ${T.font};cursor:pointer;transition:opacity .14s,color .14s}`,
-  `.sn-send:hover{color:${T.accent}}`,
+  `.sn-send:hover{color:${T.accentText}}`,
   `.sn-send:disabled{opacity:0;pointer-events:none}`,
   `.sn-send kbd{font:11px ${T.mono};padding:0 4px;border:1px solid ${T.border};border-radius:4px;color:inherit}`,
   // Pins: numbered, pop in with a slight overshoot, shrink away on delete, and
@@ -62,7 +98,7 @@ const CSS = [
   "@keyframes sn-pin-out{to{transform:scale(0);opacity:0}}",
   `.sn-pin-tip{position:absolute;left:28px;top:-3px;width:max-content;max-width:240px;padding:6px 9px;border-radius:8px;` +
     `background:${T.bg};border:1px solid ${T.border};color:${T.text};font:400 12px/16px ${T.font};text-align:left;` +
-    "box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:pre-wrap;word-break:break-word;overflow:hidden;" +
+    "box-shadow:0 8px 24px var(--sn-shadow);white-space:pre-wrap;word-break:break-word;overflow:hidden;" +
     "display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;pointer-events:none;" +
     "opacity:0;transform:translateX(-4px);transition:opacity .12s ease,transform .12s ease}",
   ".sn-pin.sn-tip-left .sn-pin-tip{left:auto;right:28px;transform:translateX(4px)}",
@@ -71,12 +107,12 @@ const CSS = [
   // swings the items clockwise along a spiral into their slots on a quarter arc
   // (--start = the corner's first edge); closing reverses it.
   `.snl{position:fixed;left:var(--x);top:var(--y);width:0;height:0;z-index:2147483647;--r:72px;--stagger:40ms;--start:-90deg;` +
-    `color:#f2f2f3;font-family:${T.font};transition:left .6s ${SPRING},top .6s ${SPRING}}`,
+    `color:var(--sn-glass-text);font-family:${T.font};transition:left .6s ${SPRING},top .6s ${SPRING}}`,
   ".snl.snl-dragging,.snl.snl-no-anim{transition:none}",
   ".snl button{font:inherit;color:inherit;margin:0;-webkit-tap-highlight-color:transparent}",
   `.snl button:focus-visible{outline:2px solid ${T.accent};outline-offset:3px}`,
-  ".snl-glass{background:rgba(24,24,28,.74);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);" +
-    "border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 28px rgba(0,0,0,.28);color:#f2f2f3}",
+  ".snl-glass{background:var(--sn-glass);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);" +
+    "border:1px solid var(--sn-glass-border);box-shadow:inset 0 1px 0 var(--sn-glass-inset),0 10px 28px rgba(0,0,0,.28);color:var(--sn-glass-text)}",
   ".snl-core{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;" +
     "padding:0;cursor:grab;touch-action:none;transition:background-color .25s ease,color .25s ease,box-shadow .25s ease}",
   ".snl-dragging .snl-core{cursor:grabbing}",
@@ -90,7 +126,7 @@ const CSS = [
   ".snl-done .snl-check{opacity:1;transform:none}",
   `.snl-track{position:absolute;pointer-events:none;overflow:visible;transform:rotate(var(--start));transition:transform .6s ${SPRING}}`,
   // A zero-length dash still paints its round cap, so it's hidden while closed.
-  ".snl-track circle{fill:none;stroke:#a1a1aa;stroke-opacity:.35;stroke-width:1.5;stroke-linecap:round;" +
+  ".snl-track circle{fill:none;stroke:var(--sn-track);stroke-opacity:.35;stroke-width:1.5;stroke-linecap:round;" +
     "stroke-dasharray:0px calc(var(--C) * 1px);opacity:0;transition:stroke-dasharray .28s ease-in,opacity 0s linear .28s}",
   '.snl[data-open="true"] .snl-track circle{stroke-dasharray:calc(var(--C) * .25px) calc(var(--C) * 1px);opacity:1;' +
     "transition:stroke-dasharray .5s cubic-bezier(.2,0,0,1),opacity 0s}",
@@ -105,10 +141,10 @@ const CSS = [
     "opacity .16s ease calc(var(--i) * var(--stagger)),background-color .15s ease}",
   // z-index lifts the hovered item, so its name paints over the next item.
   ".snl-item:hover,.snl-item:focus-visible{z-index:1}",
-  ".snl-item:hover{background:rgba(44,44,50,.86)}",
+  ".snl-item:hover{background:var(--sn-glass-hover)}",
   `.snl-ic{display:grid;transition:transform .18s ${SPRING}}`,
   ".snl-item:hover .snl-ic{transform:scale(1.12)}",
-  `.snl-item[aria-pressed="true"],.snl-item[aria-expanded="true"]{color:${T.accent}}`,
+  `.snl-item[aria-pressed="true"],.snl-item[aria-expanded="true"]{color:${T.accentText}}`,
   // Item names sit on the side facing into the page.
   ".snl-tip{position:absolute;top:50%;white-space:nowrap;pointer-events:none;font-size:12px;font-weight:500;padding:4px 8px;" +
     "border-radius:6px;opacity:0;transform:translate(var(--tx),-50%);transition:opacity .12s ease,transform .12s ease}",
@@ -116,39 +152,51 @@ const CSS = [
   '.snl[data-corner$="r"] .snl-tip{right:100%;margin-right:8px;--tx:4px}',
   ".snl-item:hover .snl-tip,.snl-item:focus-visible .snl-tip{opacity:1;--tx:0px}",
   `.snl-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:${T.accent};` +
-    `color:${T.accentInk};font:600 11px/14px ${T.font};text-align:center;border:2px solid rgba(24,24,28,.9)}`,
+    `color:${T.accentInk};font:600 11px/14px ${T.font};text-align:center;border:2px solid var(--sn-bg)}`,
   ".snl-badge:empty{display:none}",
   `.snl-badge.snl-bump{animation:snl-bump .45s ${SPRING}}`,
   "@keyframes snl-bump{from{transform:scale(.4)}}",
-  // Notes popover: opens diagonally from the middle item, outside the arc.
-  ".snl-notes{position:absolute;width:340px;max-width:calc(100vw - 96px);border-radius:12px;padding:6px;opacity:0;pointer-events:none;transform:scale(.94);" +
+  // Popovers (Notes, Settings): open diagonally from the middle item, outside the arc.
+  ".snl-pop{position:absolute;width:340px;max-width:calc(100vw - 96px);border-radius:12px;padding:6px;opacity:0;pointer-events:none;transform:scale(.94);" +
     `transition:opacity .14s ease,transform .3s ${SPRING};--d:calc(var(--r) * .71 + 30px)}`,
-  ".snl-notes.snl-show{opacity:1;pointer-events:auto;transform:none}",
-  '.snl[data-corner="bl"] .snl-notes{left:var(--d);bottom:var(--d);transform-origin:0 100%}',
-  '.snl[data-corner="br"] .snl-notes{right:var(--d);bottom:var(--d);transform-origin:100% 100%}',
-  '.snl[data-corner="tl"] .snl-notes{left:var(--d);top:var(--d);transform-origin:0 0}',
-  '.snl[data-corner="tr"] .snl-notes{right:var(--d);top:var(--d);transform-origin:100% 0}',
-  ".snl-notes h4{margin:6px 8px;font-size:13px;font-weight:600}",
+  ".snl-pop.snl-show{opacity:1;pointer-events:auto;transform:none}",
+  '.snl[data-corner="bl"] .snl-pop{left:var(--d);bottom:var(--d);transform-origin:0 100%}',
+  '.snl[data-corner="br"] .snl-pop{right:var(--d);bottom:var(--d);transform-origin:100% 100%}',
+  '.snl[data-corner="tl"] .snl-pop{left:var(--d);top:var(--d);transform-origin:0 0}',
+  '.snl[data-corner="tr"] .snl-pop{right:var(--d);top:var(--d);transform-origin:100% 0}',
+  ".snl-pop h4{margin:6px 8px;font-size:13px;font-weight:600}",
   ".snl-notes ol{list-style:none;margin:0;padding:0;max-height:240px;overflow:auto}",
   ".snl-notes li{display:grid;grid-template-columns:20px 1fr;gap:2px 8px;padding:8px;border-radius:8px;cursor:pointer}",
-  ".snl-notes li:hover{background:rgba(255,255,255,.06)}",
+  ".snl-notes li:hover{background:var(--sn-hover)}",
   `.snl-num{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
     `font:600 11px/20px ${T.font};text-align:center}`,
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",
   ".snl-fw+span{overflow:hidden;text-overflow:ellipsis}",
-  ".snl-txt{font-size:12px;color:#a1a1aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
-  ".snl-empty{margin:4px 8px 10px;font-size:12px;color:#a1a1aa;line-height:1.5}",
+  ".snl-txt{font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+  ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
   ".snl-notes li.snl-lost{grid-template-columns:20px 1fr auto;cursor:default}",
-  ".snl-lost .snl-num{background:#3f3f46;color:#a1a1aa}",
-  `.snl-lost-tag{flex:none;margin-left:6px;font:500 11px/16px ${T.font};color:#fb923c}`,
+  ".snl-lost .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
+  `.snl-lost-tag{flex:none;margin-left:6px;font:500 11px/16px ${T.font};color:var(--sn-lost)}`,
   ".snl-lost .snl-src,.snl-lost .snl-txt{grid-column:2}",
   ".snl-acts{grid-column:3;grid-row:1/span 2;display:flex;align-items:center;gap:2px}",
   ".snl-acts button{display:grid;place-items:center;width:26px;height:26px;padding:0;border:none;border-radius:6px;" +
-    "background:none;color:#a1a1aa;cursor:pointer}",
-  ".snl-acts button:hover{background:rgba(255,255,255,.08);color:#f2f2f3}",
+    "background:none;color:var(--sn-sub);cursor:pointer}",
+  ".snl-acts button:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
+  // Settings: one row per setting, label left, control right.
+  ".snl-settings{width:300px}",
+  ".snl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px}",
+  ".snl-lbl{font-size:12px;color:var(--sn-sub)}",
+  ".snl-swatches{display:flex;gap:6px}",
+  ".snl-swatches button{width:20px;height:20px;padding:0;border-radius:50%;border:none;background:var(--c);cursor:pointer;" +
+    "box-shadow:0 0 0 2px transparent;transition:box-shadow .12s ease}",
+  '.snl-swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--sn-bg),0 0 0 4px var(--sn-glass-text)}',
+  ".snl-seg{display:flex;padding:2px;border-radius:8px;background:var(--sn-hover-strong)}",
+  ".snl-seg button{padding:3px 9px;border:none;border-radius:6px;background:none;font-size:12px;cursor:pointer;color:var(--sn-sub)}",
+  ".snl-seg button:hover{color:var(--sn-glass-text)}",
+  '.snl-seg button[aria-checked="true"]{background:var(--sn-bg);color:var(--sn-glass-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}',
   "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label,.sn-pin-tip{transition:none}" +
     ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving{animation:none}" +
     ".snl,.snl *{transition-duration:.01s!important;animation:none!important}}",
@@ -170,6 +218,22 @@ export function uiRoot() {
   shadow.append(style);
   document.documentElement.append(host);
   return shadow;
+}
+
+// Apply the accent preset and theme ("system" | "light" | "dark") to the host.
+const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+let look = null;
+export function applyLook(next) {
+  if (!look) darkQuery.addEventListener("change", () => applyLook(look));
+  look = next;
+  const host = uiRoot().host;
+  const a = ACCENTS[look.accent] ?? ACCENTS.yellow;
+  const theme = look.theme === "system" ? (darkQuery.matches ? "dark" : "light") : look.theme;
+  host.setAttribute("data-theme", theme);
+  host.style.setProperty("--sn-accent", a.accent);
+  host.style.setProperty("--sn-accent-rgb", [1, 3, 5].map((i) => parseInt(a.accent.slice(i, i + 2), 16)).join(","));
+  host.style.setProperty("--sn-ink", a.ink);
+  host.style.setProperty("--sn-accent-text", theme === "light" ? a.deep : a.accent);
 }
 
 export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
@@ -195,8 +259,8 @@ export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
 
   b.addEventListener("mouseenter", () => {
     if (b.hasAttribute("data-active")) return; // keep active styling on hover
-    b.style.background = "rgba(255,255,255,0.08)";
-    b.style.color = "#fff";
+    b.style.background = "var(--sn-hover-strong)";
+    b.style.color = "var(--sn-text-strong)";
   });
   b.addEventListener("mouseleave", () => {
     if (b.hasAttribute("data-active")) return;
