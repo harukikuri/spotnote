@@ -786,6 +786,9 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   });
 
   uiRoot().append(panel);
+  // Start the conversation at its latest message (it had no height before now).
+  const threadEl = panel.querySelector(".sn-thread");
+  if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
   positionPanel(target);
   enablePanelDrag(panel);
   refreshPointer();
