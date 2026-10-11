@@ -77,7 +77,16 @@ const CSS = [
   // Note panel: grows out of its target (transform-origin is set per placement)
   // and shrinks back toward it on close.
   `.sn-panel{position:fixed;z-index:2147483647;width:300px;background:${T.bg};border:1px solid ${T.border};border-radius:10px;` +
-    `box-shadow:0 12px 32px var(--sn-shadow);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1)}`,
+    `box-shadow:0 12px 32px var(--sn-shadow);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1);` +
+    "display:flex;flex-direction:column}",
+  // Resized (width/height set): the conversation takes the room, or with none,
+  // the note input does.
+  ".sn-panel.sn-sized .sn-thread{flex:1 1 auto;min-height:0;max-height:none}",
+  ".sn-panel.sn-sized:not(:has(.sn-thread)) .sn-compose{flex:1 1 auto;min-height:0}",
+  ".sn-panel.sn-sized:not(:has(.sn-thread)) .sn-compose [data-spotnote-input]{flex:1 1 auto;max-height:none!important}",
+  // The resize grip, in the bottom-right corner.
+  `.sn-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;color:${T.textIcon};opacity:.5}`,
+  ".sn-resize:hover{opacity:1}",
   ".sn-panel.sn-leaving{animation:sn-pop-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pop-in{from{opacity:0;transform:scale(.95)}}",
   "@keyframes sn-pop-out{to{opacity:0;transform:scale(.95)}}",

@@ -704,6 +704,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
 
   // Note input
   const inputWrap = document.createElement("div");
+  inputWrap.className = "sn-compose";
   inputWrap.style.cssText = "display:flex;flex-direction:column;padding:10px 12px 8px";
   if (talking) inputWrap.style.borderTop = `1px solid ${T.borderSubtle}`; // reply box, below the conversation
   const input = document.createElement("div");
@@ -789,8 +790,10 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   // Start the conversation at its latest message (it had no height before now).
   const threadEl = panel.querySelector(".sn-thread");
   if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
+  applyPanelSize(panel);
   positionPanel(target);
   enablePanelDrag(panel);
+  enablePanelResize(panel);
   refreshPointer();
   setTimeout(() => {
     if (mode === "working") return panel?.focus();
@@ -812,6 +815,18 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
 // Drag the panel from anywhere on it — except the note input (typing / caret /
 // text selection) and buttons (their own clicks). Once moved, it stays put
 // instead of snapping back to the target on scroll.
+// A drag that ends off the panel still fires a click on the page, which would
+// close the panel or pick an element. Eat that one click (it fires right after
+// mouseup, before any timer).
+function swallowNextClick() {
+  const eat = (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  };
+  window.addEventListener("click", eat, { capture: true, once: true });
+  setTimeout(() => window.removeEventListener("click", eat, true), 0);
+}
+
 function enablePanelDrag(panelEl) {
   panelEl.addEventListener("mousedown", (e) => {
     if (
@@ -836,6 +851,62 @@ function enablePanelDrag(panelEl) {
     const onUp = () => {
       document.removeEventListener("mousemove", onMove, true);
       document.removeEventListener("mouseup", onUp, true);
+      swallowNextClick();
+    };
+    document.addEventListener("mousemove", onMove, true);
+    document.addEventListener("mouseup", onUp, true);
+  });
+}
+
+// ── Panel size: drag the bottom-right grip; every note's panel keeps it ──
+const SIZE_KEY = "data-spotnote-panel-size";
+const MIN_W = 260;
+const MIN_H = 140;
+function savedPanelSize() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SIZE_KEY) || "null");
+    return s && s.w > 0 && s.h > 0 ? s : null;
+  } catch {
+    return null;
+  }
+}
+function applyPanelSize(panelEl) {
+  const s = savedPanelSize();
+  if (!s) return;
+  panelEl.classList.add("sn-sized");
+  panelEl.style.width = Math.max(MIN_W, Math.min(s.w, innerWidth - 16)) + "px";
+  panelEl.style.height = Math.max(MIN_H, Math.min(s.h, innerHeight - 16)) + "px";
+}
+function enablePanelResize(panelEl) {
+  const grip = document.createElement("div");
+  grip.className = "sn-resize";
+  // hardcoded SVG: two diagonal strokes
+  grip.innerHTML =
+    '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M13 7l-6 6M13 11l-2 2"/></svg>';
+  panelEl.append(grip);
+  grip.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // not a panel drag
+    const r = panelEl.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    panelDragged = true; // stay where it is, don't re-anchor to the target
+    panelEl.style.left = r.left + "px";
+    panelEl.style.top = r.top + "px";
+    panelEl.classList.add("sn-sized");
+    const onMove = (ev) => {
+      panelEl.style.width = Math.max(MIN_W, Math.min(r.width + ev.clientX - startX, innerWidth - r.left - 8)) + "px";
+      panelEl.style.height = Math.max(MIN_H, Math.min(r.height + ev.clientY - startY, innerHeight - r.top - 8)) + "px";
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove, true);
+      document.removeEventListener("mouseup", onUp, true);
+      swallowNextClick();
+      try {
+        localStorage.setItem(SIZE_KEY, JSON.stringify({ w: panelEl.offsetWidth, h: panelEl.offsetHeight }));
+      } catch {
+        /* ignore */
+      }
     };
     document.addEventListener("mousemove", onMove, true);
     document.addEventListener("mouseup", onUp, true);
