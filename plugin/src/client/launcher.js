@@ -173,7 +173,9 @@ export function mountLauncher(ctrl) {
     list.textContent = "";
     all.forEach((n, i) => {
       const li = el("li", [n.lost && "snl-lost", n.state !== "open" && `snl-${n.state}`].filter(Boolean).join(" "), list);
-      el("span", "snl-num", li).textContent = n.mark ?? String(i + 1); // same as its pin
+      const num = el("span", "snl-num", li); // same as its pin: its number, or a state icon
+      if (n.mark) num.innerHTML = n.mark; // hardcoded SVG constants, not user input
+      else num.textContent = String(i + 1);
       const src = el("span", "snl-src", li);
       const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
       const mark = el("span", "snl-fw", src);

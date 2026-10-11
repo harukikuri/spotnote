@@ -4,7 +4,7 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createIconBtn, ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
+import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
 import { getSettings, onSettings } from "./settings.js";
 import { connectRemote } from "./remote.js";
@@ -34,6 +34,7 @@ let panelSave = null; // saves an edited note when its panel closes
 let panelDraft = null; // () => true while the note has unsent text
 let panelKey = null; // the open panel's note key
 let panelRefresh = null; // redraws the open panel's conversation
+let panelMode = null; // what the open panel was built for (see noteMode)
 let remote = null; // the link to spotnote-mcp (remote.js)
 let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
@@ -76,7 +77,7 @@ const controller = {
       index: p.index,
       note: p.note,
       state: pinState(p),
-      mark: STATE_MARK[pinState(p)],
+      mark: STATE_ICONS[pinState(p)], // SVG markup, or none for a plain number
       agent: lastAgentMsg(p)?.text,
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
     })),
@@ -591,14 +592,41 @@ function panelLabel(el) {
   return wrap;
 }
 
-function openPanel(target, prefillNote) {
-  closePanel();
+// What a note's panel is for:
+//   "edit"     write or change the note (also a new one, with no pin yet)
+//   "working"  an agent has it: show the conversation, no input until it answers
+//   "talking"  the agent has answered: show the conversation, the input replies
+function noteMode(pin) {
+  if (!pin) return "edit";
+  if (pin.working) return "working";
+  return pin.thread?.length > 0 || pin.done || pin.dismissed ? "talking" : "edit";
+}
+
+// The open note changed (from the server): redraw its conversation, or rebuild
+// the panel in place when it moved between edit, working and talking.
+function refreshPanel() {
+  if (!panelKey || panelMode === "new") return; // a note still being written isn't on the server yet
+  const pin = pins.get(panelKey);
+  if (!pin) return closePanel(); // deleted, here or in another browser
+  if (noteMode(pin) === panelMode) return panelRefresh?.();
+  const moved = panelDragged && { left: panel.style.left, top: panel.style.top };
+  openPanel(panelTarget, undefined, { instant: true });
+  if (moved) {
+    Object.assign(panel.style, moved);
+    panelDragged = true;
+  }
+}
+
+function openPanel(target, prefillNote, { instant = false } = {}) {
+  closePanel({ instant });
   const occ = occInfo(target);
   const key = refKey(occ.loc, occ.index);
   const isEdit = pins.has(key); // reopened an existing note
-  // Once the agent has answered, the panel is a conversation: the input replies
-  // instead of editing the note.
-  const talking = isEdit && (pins.get(key).thread?.length > 0 || !!pins.get(key).done || !!pins.get(key).dismissed);
+  const mode = noteMode(pins.get(key));
+  panelMode = isEdit ? mode : "new";
+  // Once an agent has the note, the panel is a conversation: the input replies
+  // instead of editing the note (and waits while the agent works).
+  const talking = mode !== "edit";
   // Clicking an element that already has a note edits it, so start from that
   // note — otherwise the save-on-close would overwrite it with fresh text.
   prefillNote = talking ? null : (prefillNote ?? pins.get(key)?.note);
@@ -616,6 +644,7 @@ function openPanel(target, prefillNote) {
   panel = document.createElement("div");
   panel.setAttribute("data-spotnote-ui", "");
   panel.className = "sn-panel";
+  if (instant) panel.style.animation = "none"; // a rebuild in place, not a new panel
 
   // Header: label + icon buttons
   const header = document.createElement("div");
@@ -686,6 +715,22 @@ function openPanel(target, prefillNote) {
   if (prefillNote) input.textContent = prefillNote;
   inputWrap.append(input);
   panel.append(inputWrap);
+  if (mode === "working") {
+    // Nothing to type while the agent works: its answer rebuilds the panel.
+    input.remove();
+    const busy = document.createElement("div");
+    busy.className = "sn-busy";
+    busy.append(document.createElement("span"), "Agent is on it…");
+    inputWrap.append(busy);
+    // Keep the focus here and swallow typing, so a half-typed word can't reach
+    // the page (Esc still closes: it's handled on window, in the capture phase).
+    panel.tabIndex = -1;
+    panel.style.outline = "none";
+    panel.addEventListener("keydown", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+  }
 
   function doSend() {
     const note = (input.textContent || "").trim();
@@ -713,14 +758,14 @@ function openPanel(target, prefillNote) {
   send.className = "sn-send";
   send.innerHTML = `<kbd>↵</kbd>${talking ? "Reply" : isEdit ? "Save &amp; copy" : "Add &amp; copy"}`;
   send.addEventListener("click", doSend);
-  inputWrap.append(send);
+  if (mode !== "working") inputWrap.append(send);
   const updateSend = () => (send.disabled = !(input.textContent || "").trim());
   input.addEventListener("input", updateSend);
   updateSend();
   // Unsent text — a new note, or an edit that differs from the saved note.
   panelDraft = () => {
     const note = (input.textContent || "").trim();
-    return !!note && (talking || note !== pins.get(key)?.note);
+    return mode !== "working" && !!note && (talking || note !== pins.get(key)?.note);
   };
   if (isEdit && !talking) {
     panelSave = () => {
@@ -745,6 +790,7 @@ function openPanel(target, prefillNote) {
   enablePanelDrag(panel);
   refreshPointer();
   setTimeout(() => {
+    if (mode === "working") return panel?.focus();
     input.focus();
     // With a prefilled note, drop the caret at the END so editing continues
     // naturally (browsers otherwise place it at the start).
@@ -831,19 +877,21 @@ function nudgePanel() {
   );
 }
 
-function closePanel() {
+function closePanel({ instant = false } = {}) {
   if (!panel) return;
   panelSave?.();
   panelSave = null;
   panelDraft = null;
   panelKey = null;
   panelRefresh = null;
+  panelMode = null;
   document.removeEventListener("mousedown", onDocDown, true);
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so
   // keystrokes can't land in it while it fades.
   const leaving = panel;
   leaving.inert = true;
+  if (instant) leaving.remove(); // replaced in place (see refreshPanel)
   leaving.classList.add("sn-leaving");
   const done = () => leaving.remove();
   leaving.addEventListener("animationend", done, { once: true });
@@ -862,16 +910,13 @@ function closePanel() {
 }
 
 // ── Pins: persistent markers left on elements that have a note ────────
-// A pin = [number, hover preview of the note]. The number is filled in by
-// repositionPins, since deleting a pin renumbers the rest.
-function makePinEl(note) {
+// A pin holds its number (or a state icon), filled in by repositionPins, since
+// deleting a pin renumbers the rest.
+function makePinEl() {
   const m = document.createElement("div");
   m.setAttribute("data-spotnote-ui", "");
   m.className = "sn-pin";
-  const tip = document.createElement("div");
-  tip.className = "sn-pin-tip";
-  tip.textContent = note;
-  m.append(document.createElement("span"), tip);
+  m.append(document.createElement("span"));
   return m;
 }
 
@@ -919,7 +964,7 @@ function wire(key, p) {
 function applySnapshot(list) {
   const next = new Map();
   for (const n of list) {
-    const pin = pins.get(n.key) ?? { marker: makePinMarker(n.key, n.loc, n.index, n.note) };
+    const pin = pins.get(n.key) ?? { marker: makePinMarker(n.key, n.loc, n.index) };
     Object.assign(pin, { loc: n.loc, index: n.index, note: n.note, url: n.url, prompt: n.prompt, thread: n.thread, done: n.done, dismissed: n.dismissed, working: n.working, updated: n.updated });
     showState(pin);
     next.set(n.key, pin);
@@ -930,8 +975,7 @@ function applySnapshot(list) {
   savePins(); // the offline copy
   repositionPins();
   notify();
-  if (panelKey && !pins.has(panelKey)) closePanel();
-  else panelRefresh?.();
+  refreshPanel();
 }
 
 // ── The conversation on a note (see spotnote-mcp) ──────────────────────────
@@ -947,7 +991,6 @@ function pinState(pin) {
   if (pin.thread?.at(-1)?.from === "agent") return "asked";
   return pin.working ? "working" : "open";
 }
-const STATE_MARK = { done: "✓", dismissed: "–", asked: "?", working: "…" };
 
 // Your answer to the agent. Replying on a done note reopens it.
 function replyNote(key, text) {
@@ -964,9 +1007,6 @@ function replyNote(key, text) {
 function showState(pin) {
   const state = pinState(pin);
   for (const s of ["done", "dismissed", "asked", "working"]) pin.marker.classList.toggle(`sn-${s}`, state === s);
-  // The hover preview: the note, then where it stands.
-  const status = { open: "", working: "Agent is on it…" }[state] ?? `${STATE_MARK[state]} ${lastAgentMsg(pin)?.text ?? ""}`;
-  pin.marker.lastChild.textContent = status ? `${pin.note}\n${status}` : pin.note;
 }
 function restorePins() {
   let saved = [];
@@ -977,7 +1017,7 @@ function restorePins() {
   }
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
-    const marker = makePinMarker(s.key, s.loc, s.index, s.note);
+    const marker = makePinMarker(s.key, s.loc, s.index);
     const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, dismissed: s.dismissed, thread: s.thread, updated: s.updated, marker };
     pins.set(s.key, pin);
     showState(pin);
@@ -995,8 +1035,8 @@ function openNoteWhenReady(key, tries = 20) {
 }
 
 // Build a pin's DOM marker + its reopen-on-click handler.
-function makePinMarker(key, loc, index, note) {
-  const marker = makePinEl(note);
+function makePinMarker(key, loc, index) {
+  const marker = makePinEl();
   marker.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1012,7 +1052,7 @@ function upsertPin(occ, note) {
   const key = refKey(occ.loc, occ.index);
   let pin = pins.get(key);
   if (!pin) {
-    const marker = makePinMarker(key, occ.loc, occ.index, note);
+    const marker = makePinMarker(key, occ.loc, occ.index);
     pin = { loc: occ.loc, index: occ.index, note, url: pageUrl(), marker };
     pins.set(key, pin);
   } else {
@@ -1061,16 +1101,21 @@ function repositionPins() {
   let n = 0;
   for (const [, pin] of pins) {
     n++; // same order as the launcher's notes list
-    const num = STATE_MARK[pinState(pin)] ?? String(n);
-    if (pin.marker.firstChild.textContent !== num) pin.marker.firstChild.textContent = num;
+    // Its number, or an icon for where it stands. data-mark skips redundant redraws.
+    const state = pinState(pin);
+    const label = STATE_ICONS[state] ? state : String(n);
+    const span = pin.marker.firstChild;
+    if (span.dataset.mark !== label) {
+      span.dataset.mark = label;
+      if (STATE_ICONS[state]) span.innerHTML = STATE_ICONS[state]; // hardcoded SVG constants
+      else span.textContent = label;
+    }
     const el = resolveRef(pin.loc, pin.index);
     if (pinsVisible && el && el.isConnected) {
       const r = el.getBoundingClientRect();
       pin.marker.style.display = "";
       pin.marker.style.left = r.left + window.scrollX - 11 + "px";
       pin.marker.style.top = r.top + window.scrollY - 11 + "px";
-      // Flip the preview left when it would run past the viewport's right edge.
-      pin.marker.classList.toggle("sn-tip-left", r.left + 280 > window.innerWidth);
     } else {
       pin.marker.style.display = "none";
     }

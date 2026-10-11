@@ -88,15 +88,13 @@ const CSS = [
   `.sn-send:hover{color:${T.accentText}}`,
   `.sn-send:disabled{opacity:0;pointer-events:none}`,
   `.sn-send kbd{font:11px ${T.mono};padding:0 4px;border:1px solid ${T.border};border-radius:4px;color:inherit}`,
-  // Pins: numbered, pop in with a slight overshoot, shrink away on delete, and
-  // preview their note on hover. .sn-tip-left flips the preview near the right
-  // edge so it can't widen the page.
+  // Pins: numbered, pop in with a slight overshoot, shrink away on delete.
   `.sn-pin{position:absolute;z-index:2147483647;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
     `border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:${T.accentInk};font:600 11px/18px ${T.font};text-align:center;` +
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
+  ".sn-pin>span:first-child{display:grid;place-items:center;height:100%;line-height:1}", // number or state icon, centred
   `.sn-pin:hover{box-shadow:0 0 0 3px rgba(${T.accentRgb},.35),0 2px 6px rgba(0,0,0,.35)}`,
   ".sn-pin.sn-done{background:var(--sn-bg);color:var(--sn-accent-text)}",
-  ".sn-pin.sn-done .sn-pin-tip,.sn-pin.sn-asked .sn-pin-tip,.sn-pin.sn-dismissed .sn-pin-tip{-webkit-line-clamp:5}", // note + the agent's last word
   // An agent has it: a ring spins around the pin until it answers.
   ".sn-pin.sn-working{background:var(--sn-bg);color:var(--sn-accent-text)}",
   `.sn-pin.sn-working::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid transparent;` +
@@ -112,16 +110,13 @@ const CSS = [
   `.sn-msg{color:${T.text};font:13px/18px ${T.font};white-space:pre-wrap;word-break:break-word}`,
   `.sn-msg-agent{padding-left:8px;border-left:2px solid ${T.accent}}`,
   `.sn-who{display:block;font-size:11px;line-height:16px;color:${T.textMuted}}`,
+  // In place of the input while an agent works on the note.
+  `.sn-busy{display:flex;align-items:center;gap:8px;min-height:20px;color:${T.textMuted};font:13px/18px ${T.font}}`,
+  `.sn-busy span{flex:none;width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(${T.accentRgb},.3);` +
+    `border-top-color:${T.accent};animation:sn-spin .9s linear infinite}`,
   ".sn-pin.sn-leaving{animation:sn-pin-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pin-in{from{transform:scale(0)}}",
   "@keyframes sn-pin-out{to{transform:scale(0);opacity:0}}",
-  `.sn-pin-tip{position:absolute;left:28px;top:-3px;width:max-content;max-width:240px;padding:6px 9px;border-radius:8px;` +
-    `background:${T.bg};border:1px solid ${T.border};color:${T.text};font:400 12px/16px ${T.font};text-align:left;` +
-    "box-shadow:0 8px 24px var(--sn-shadow);white-space:pre-wrap;word-break:break-word;overflow:hidden;" +
-    "display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;pointer-events:none;" +
-    "opacity:0;transform:translateX(-4px);transition:opacity .12s ease,transform .12s ease}",
-  ".sn-pin.sn-tip-left .sn-pin-tip{left:auto;right:28px;transform:translateX(4px)}",
-  ".sn-pin:hover .sn-pin-tip{opacity:1;transform:none}",
   // Launcher: a core button in a viewport corner (--x/--y = its centre). Opening
   // swings the items clockwise along a spiral into their slots on a quarter arc
   // (--start = the corner's first edge); closing reverses it.
@@ -190,7 +185,7 @@ const CSS = [
   ".snl-notes li{display:grid;grid-template-columns:20px 1fr;gap:2px 8px;padding:8px;border-radius:8px;cursor:pointer}",
   ".snl-notes li:hover{background:var(--sn-hover)}",
   `.snl-num{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
-    `font:600 11px/20px ${T.font};text-align:center}`,
+    `font:600 11px/1 ${T.font};display:grid;place-items:center}`,
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",
@@ -201,7 +196,10 @@ const CSS = [
   ".snl-asked .snl-sum{font-weight:500}",
   ".snl-working .snl-sum,.snl-dismissed .snl-sum{color:var(--sn-sub)}",
   ".snl-dismissed .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
-  ".snl-working .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
+  // Working: the same spinner as on its pin, on a faint track.
+  `.snl-working .snl-num{position:relative;background:none;box-shadow:inset 0 0 0 1.5px rgba(${T.accentRgb},.3);color:var(--sn-accent-text)}`,
+  `.snl-working .snl-num::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid transparent;` +
+    `border-top-color:${T.accent};animation:sn-spin .9s linear infinite}`,
   ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
   ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
@@ -225,9 +223,9 @@ const CSS = [
   ".snl-seg button{padding:3px 9px;border:none;border-radius:6px;background:none;font-size:12px;cursor:pointer;color:var(--sn-sub)}",
   ".snl-seg button:hover{color:var(--sn-glass-text)}",
   '.snl-seg button[aria-checked="true"]{background:var(--sn-bg);color:var(--sn-glass-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}',
-  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label,.sn-pin-tip{transition:none}" +
-    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after{animation:none}" +
-    ".snl,.snl *{transition-duration:.01s!important;animation:none!important}}",
+  "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}" +
+    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after,.sn-busy span{animation:none}" +
+    ".snl,.snl *,.snl-working .snl-num::after{transition-duration:.01s!important;animation:none!important}}",
 ].join("\n");
 
 // All Spotnote UI lives in one shadow root, so the host page's CSS can't restyle
@@ -325,6 +323,17 @@ export function fwIcon(kind, size = 12) {
     : '<path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M8 6l-6 6 6 6M16 6l6 6-6 6"/>';
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;display:block">${body}</svg>`;
 }
+
+// A note's state on its pin and in the notes list, in place of its number.
+// Drawn, not typed: glyphs like "…" sit on the text baseline, below centre.
+const mark = (body, paint = 'fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"') =>
+  `<svg width="12" height="12" viewBox="0 0 24 24" ${paint} aria-hidden="true" style="display:block">${body}</svg>`;
+export const STATE_ICONS = {
+  done: mark('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  dismissed: mark('<path d="M6 12h12"/>'),
+  asked: mark('<path d="M8.8 8.8a3.3 3.3 0 1 1 4.6 3c-1 .5-1.4 1.2-1.4 2.4"/><path d="M12 19h.01"/>'),
+  working: mark('<circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/>', 'fill="currentColor"'),
+};
 
 export const ICONS = {
   copy:
