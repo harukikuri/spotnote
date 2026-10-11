@@ -54,6 +54,15 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
+  mcp:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ~1.30.1
+        version: 1.30.1(zod@4.4.3)
+      zod:
+        specifier: ^4.1.0
+        version: 4.4.3
+
   playground:
     dependencies:
       react:
@@ -96,18 +105,12 @@ importers:
       '@babel/core':
         specifier: ^7.26.0
         version: 7.29.7
-      '@modelcontextprotocol/sdk':
-        specifier: ~1.30.1
-        version: 1.30.1(zod@4.4.3)
       magic-string:
         specifier: ^0.30.0
         version: 0.30.21
       vite:
         specifier: '>=5'
         version: 5.4.21
-      zod:
-        specifier: ^4.1.0
-        version: 4.4.3
 
 packages:
 

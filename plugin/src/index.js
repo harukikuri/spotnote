@@ -9,13 +9,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import path from "node:path";
 import MagicString from "magic-string";
-import { mountMcp, MCP_PATH } from "./mcp.js";
 
 const require = createRequire(import.meta.url);
 const babelVisitor = require("./plugin.cjs"); // the JSX-stamping Babel plugin
 const clientEntry = fileURLToPath(new URL("./client/inspector.js", import.meta.url));
 
 const VIRTUAL = "virtual:spotnote-client";
+const MCP_PORT = Number(process.env.SPOTNOTE_PORT) || 4848; // spotnote-mcp's port (see mcp/)
 const RESOLVED = "\0" + VIRTUAL;
 
 const warnedParse = new Set(); // files we couldn't parse (warn once each)
@@ -169,15 +169,20 @@ export default function spotnote() {
       root = config.root; // so stamped paths are relative to the app root
       jsx = jsxFramework(config.plugins);
     },
+    // Tell pages whether spotnote-mcp is running, so they connect to it only
+    // then: a page retrying a closed port would fill its console with errors.
     configureServer(server) {
-      mountMcp(server);
-      // List the MCP endpoint under Vite's own URLs.
-      const printUrls = server.printUrls;
-      server.printUrls = () => {
-        printUrls();
-        const local = server.resolvedUrls?.local[0];
-        if (local) server.config.logger.info(`  ➜  Spotnote MCP: ${new URL(MCP_PATH, local)}`);
+      let up = false;
+      const check = async () => {
+        const now = await fetch(`http://127.0.0.1:${MCP_PORT}/health`)
+          .then((r) => r.json())
+          .then((j) => j.spotnote === 1, () => false);
+        if (now !== up) server.ws.send("spotnote:mcp", { up: (up = now) });
       };
+      const timer = setInterval(check, 2000);
+      check();
+      server.ws.on("spotnote:mcp?", (_, client) => client.send("spotnote:mcp", { up }));
+      server.httpServer?.on("close", () => clearInterval(timer));
     },
     async buildStart() {
       ({ transformSync } = await import("@babel/core"));
@@ -189,7 +194,7 @@ export default function spotnote() {
     },
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root, port: MCP_PORT })});`;
       }
     },
 

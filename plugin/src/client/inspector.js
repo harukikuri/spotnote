@@ -7,6 +7,7 @@
 import { T, createIconBtn, ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
 import { getSettings, onSettings } from "./settings.js";
+import { connectRemote } from "./remote.js";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -33,11 +34,11 @@ let panelSave = null; // saves an edited note when its panel closes
 let panelDraft = null; // () => true while the note has unsent text
 let panelKey = null; // the open panel's note key
 let panelRefresh = null; // redraws the open panel's conversation
+let remote = null; // the link to spotnote-mcp (remote.js)
 let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
-const BROWSER_KEY = "data-spotnote-browser"; // tells this browser's notes apart on the dev server
 const pins = new Map(); // refKey (loc@index) -> { loc, index, note, url, marker }
 let pinsVisible = true; // hidden while the launcher is minimized
 
@@ -75,6 +76,7 @@ const controller = {
       index: p.index,
       note: p.note,
       state: pinState(p),
+      mark: STATE_MARK[pinState(p)],
       agent: lastAgentMsg(p)?.text,
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
     })),
@@ -114,7 +116,7 @@ const controller = {
   },
 };
 
-export function initInspector({ jsx = null } = {}) {
+export function initInspector({ jsx = null, root = "", port = 4848 } = {}) {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   jsxFramework = jsx;
@@ -178,7 +180,6 @@ export function initInspector({ jsx = null } = {}) {
   }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-spotnote"] });
 
   if (import.meta.hot) {
-    import.meta.hot.on("spotnote:agent", applyAgent);
     import.meta.hot.on("vite:afterUpdate", () => {
       rebindSelection();
       repositionPins();
@@ -186,6 +187,20 @@ export function initInspector({ jsx = null } = {}) {
   }
 
   restorePins(); // bring back notes saved on a previous visit to this page/app
+  // With spotnote-mcp running, its notes are the truth. On connecting, hand it
+  // the notes kept here meanwhile (the newer copy of each wins).
+  remote = connectRemote({
+    root,
+    port,
+    onSnapshot: applySnapshot,
+    onOnline(on) {
+      if (on) return remote.send({ op: "merge", notes: [...pins].map(([key, p]) => wire(key, p)) });
+      // The server (and with it the agent) went away: nobody is working on anything.
+      pins.forEach((pin) => (pin.working = false) || showState(pin));
+      repositionPins();
+      notify();
+    },
+  });
   launcher = mountLauncher(controller);
 
   // If we arrived here from a cross-page "open note", show it once it mounts.
@@ -583,7 +598,7 @@ function openPanel(target, prefillNote) {
   const isEdit = pins.has(key); // reopened an existing note
   // Once the agent has answered, the panel is a conversation: the input replies
   // instead of editing the note.
-  const talking = isEdit && (pins.get(key).thread?.length > 0 || !!pins.get(key).done);
+  const talking = isEdit && (pins.get(key).thread?.length > 0 || !!pins.get(key).done || !!pins.get(key).dismissed);
   // Clicking an element that already has a note edits it, so start from that
   // note — otherwise the save-on-close would overwrite it with fresh text.
   prefillNote = talking ? null : (prefillNote ?? pins.get(key)?.note);
@@ -649,7 +664,7 @@ function openPanel(target, prefillNote) {
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
         const who = document.createElement("span");
         who.className = "sn-who";
-        who.textContent = m.from === "agent" ? (m.resolves ? "Agent · done" : "Agent") : "You";
+        who.textContent = m.from === "agent" ? (m.resolves ? "Agent · done" : m.dismisses ? "Agent · won't do" : "Agent") : "You";
         msg.append(who, m.text);
         thread.append(msg);
       }
@@ -874,85 +889,84 @@ function savePins() {
       url: p.url,
       prompt: p.prompt,
       done: p.done,
+      dismissed: p.dismissed,
       thread: p.thread,
+      updated: p.updated,
     }));
     localStorage.setItem(PINS_KEY, JSON.stringify(data));
   } catch {
     /* ignore quota / serialization errors */
   }
-  syncNotes();
 }
 
-// Hand the notes to the dev server, for coding agents on its MCP endpoint.
-let browserId;
-function syncNotes() {
-  if (!import.meta.hot) return;
-  try {
-    browserId ??= localStorage.getItem(BROWSER_KEY);
-    if (!browserId) localStorage.setItem(BROWSER_KEY, (browserId = Math.random().toString(36).slice(2)));
-  } catch {
-    browserId ??= "unsaved"; // storage blocked: still sync, under a fixed id
+// A note as spotnote-mcp gets it.
+function wire(key, p) {
+  return {
+    key,
+    loc: p.loc,
+    index: p.index,
+    url: p.url,
+    note: p.note,
+    prompt: p.prompt ? p.prompt : savedPrompt(p),
+    thread: p.thread ?? [],
+    done: !!p.done,
+    dismissed: !!p.dismissed,
+    updated: p.updated ?? 0,
+  };
+}
+
+// The server's notes replace ours: same order, same pins where the key matches.
+function applySnapshot(list) {
+  const next = new Map();
+  for (const n of list) {
+    const pin = pins.get(n.key) ?? { marker: makePinMarker(n.key, n.loc, n.index, n.note) };
+    Object.assign(pin, { loc: n.loc, index: n.index, note: n.note, url: n.url, prompt: n.prompt, thread: n.thread, done: n.done, dismissed: n.dismissed, working: n.working, updated: n.updated });
+    showState(pin);
+    next.set(n.key, pin);
   }
-  import.meta.hot.send("spotnote:notes", {
-    browser: browserId,
-    notes: [...pins.entries()].map(([key, p], i) => ({
-      key,
-      n: i + 1, // the pin's number
-      note: p.note,
-      url: p.url,
-      prompt: p.prompt ? p.prompt : savedPrompt(p),
-      done: !!p.done,
-      thread: p.thread ?? [],
-    })),
-  });
+  for (const [key, pin] of pins) if (!next.has(key)) pin.marker.remove();
+  pins.clear();
+  next.forEach((pin, key) => pins.set(key, pin));
+  savePins(); // the offline copy
+  repositionPins();
+  notify();
+  if (panelKey && !pins.has(panelKey)) closePanel();
+  else panelRefresh?.();
 }
 
-// ── The conversation on a note (see mcp.js) ──────────────────────────
-// pin.thread: [{ id, from: "agent" | "you", text, at, resolves? }]. The note
-// itself is the opening message; resolves marks the agent's "done" summary.
+// ── The conversation on a note (see spotnote-mcp) ──────────────────────────
+// pin.thread: [{ id, from: "agent" | "you", text, at, resolves?, dismisses? }].
+// The note itself is the opening message; resolves marks the agent's "done"
+// summary, dismisses its reason for not making the change.
 const lastAgentMsg = (pin) => pin.thread?.findLast((m) => m.from === "agent");
-// "done" (resolved), "asked" (the agent is waiting on you) or "open".
+// "done", "dismissed" (the agent won't), "asked" (it's waiting on you),
+// "working" (an agent has it) or "open".
 function pinState(pin) {
   if (pin.done) return "done";
-  return pin.thread?.at(-1)?.from === "agent" ? "asked" : "open";
+  if (pin.dismissed) return "dismissed";
+  if (pin.thread?.at(-1)?.from === "agent") return "asked";
+  return pin.working ? "working" : "open";
 }
-
-// Messages from the agent. The broadcast reaches every browser, so keep only
-// ones for our own notes (same key and text).
-function applyAgent(list) {
-  let changed = false;
-  for (const { key, note, msg } of list) {
-    const pin = pins.get(key);
-    if (!pin || pin.note !== note || pin.thread?.some((m) => m.id === msg.id)) continue;
-    (pin.thread ??= []).push(msg);
-    if (msg.resolves) pin.done = true;
-    showState(pin);
-    changed = true;
-    if (panelKey === key) panelRefresh?.();
-  }
-  if (!changed) return;
-  savePins();
-  repositionPins(); // number → ✓ / ?
-  notify();
-}
+const STATE_MARK = { done: "✓", dismissed: "–", asked: "?", working: "…" };
 
 // Your answer to the agent. Replying on a done note reopens it.
 function replyNote(key, text) {
   const pin = pins.get(key);
   (pin.thread ??= []).push({ id: Math.random().toString(36).slice(2), from: "you", text, at: Date.now() });
-  pin.done = false;
+  Object.assign(pin, { done: false, dismissed: false, working: false, updated: Date.now() });
   showState(pin);
   savePins();
+  remote?.send({ op: "reply", key, text });
   repositionPins();
   notify();
 }
 
 function showState(pin) {
   const state = pinState(pin);
-  pin.marker.classList.toggle("sn-done", state === "done");
-  pin.marker.classList.toggle("sn-asked", state === "asked");
-  const last = state === "open" ? null : lastAgentMsg(pin);
-  pin.marker.lastChild.textContent = last ? `${pin.note}\n${state === "done" ? "✓" : "?"} ${last.text}` : pin.note; // the hover preview
+  for (const s of ["done", "dismissed", "asked", "working"]) pin.marker.classList.toggle(`sn-${s}`, state === s);
+  // The hover preview: the note, then where it stands.
+  const status = { open: "", working: "Agent is on it…" }[state] ?? `${STATE_MARK[state]} ${lastAgentMsg(pin)?.text ?? ""}`;
+  pin.marker.lastChild.textContent = status ? `${pin.note}\n${status}` : pin.note;
 }
 function restorePins() {
   let saved = [];
@@ -964,12 +978,11 @@ function restorePins() {
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
     const marker = makePinMarker(s.key, s.loc, s.index, s.note);
-    const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, thread: s.thread, marker };
+    const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, dismissed: s.dismissed, thread: s.thread, updated: s.updated, marker };
     pins.set(s.key, pin);
     showState(pin);
   }
   repositionPins();
-  syncNotes();
 }
 
 // After a cross-page jump the target element may not be mounted yet (frameworks
@@ -1005,8 +1018,7 @@ function upsertPin(occ, note) {
   } else {
     if (note !== pin.note) {
       // A rewritten note is a new request: start its conversation over.
-      pin.done = false;
-      pin.thread = [];
+      Object.assign(pin, { done: false, dismissed: false, working: false, thread: [] });
     }
     pin.note = note;
     showState(pin);
@@ -1015,7 +1027,9 @@ function upsertPin(occ, note) {
   // moves its element away (see savedPrompt).
   const el = resolveRef(occ.loc, occ.index);
   if (el) pin.prompt = buildPrompt(el, note);
+  pin.updated = Date.now();
   savePins();
+  remote?.send({ op: "upsert", note: wire(key, pin) });
   repositionPins();
   notify();
 }
@@ -1039,6 +1053,7 @@ function deletePin(key) {
   setTimeout(() => m.remove(), 200);
   pins.delete(key);
   savePins();
+  remote?.send({ op: "remove", key });
   repositionPins(); // renumber the rest
 }
 
@@ -1046,7 +1061,7 @@ function repositionPins() {
   let n = 0;
   for (const [, pin] of pins) {
     n++; // same order as the launcher's notes list
-    const num = { done: "✓", asked: "?" }[pinState(pin)] ?? String(n);
+    const num = STATE_MARK[pinState(pin)] ?? String(n);
     if (pin.marker.firstChild.textContent !== num) pin.marker.firstChild.textContent = num;
     const el = resolveRef(pin.loc, pin.index);
     if (pinsVisible && el && el.isConnected) {

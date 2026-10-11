@@ -96,7 +96,14 @@ const CSS = [
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
   `.sn-pin:hover{box-shadow:0 0 0 3px rgba(${T.accentRgb},.35),0 2px 6px rgba(0,0,0,.35)}`,
   ".sn-pin.sn-done{background:var(--sn-bg);color:var(--sn-accent-text)}",
-  ".sn-pin.sn-done .sn-pin-tip,.sn-pin.sn-asked .sn-pin-tip{-webkit-line-clamp:5}", // note + the agent's last word
+  ".sn-pin.sn-done .sn-pin-tip,.sn-pin.sn-asked .sn-pin-tip,.sn-pin.sn-dismissed .sn-pin-tip{-webkit-line-clamp:5}", // note + the agent's last word
+  // An agent has it: a ring spins around the pin until it answers.
+  ".sn-pin.sn-working{background:var(--sn-bg);color:var(--sn-accent-text)}",
+  `.sn-pin.sn-working::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid transparent;` +
+    `border-top-color:${T.accent};animation:sn-spin .9s linear infinite;pointer-events:none}`,
+  "@keyframes sn-spin{to{transform:rotate(360deg)}}",
+  // The agent won't make the change: greyed out.
+  ".sn-pin.sn-dismissed{background:var(--sn-lost-num);color:var(--sn-sub)}",
   // The agent asked something: a slow pulse until you answer.
   `.sn-pin.sn-asked{animation:sn-ask 1.6s ease-in-out infinite}`,
   `@keyframes sn-ask{50%{box-shadow:0 0 0 5px rgba(${T.accentRgb},.4),0 2px 6px rgba(0,0,0,.35)}}`,
@@ -192,6 +199,9 @@ const CSS = [
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
   // A note an agent resolved over MCP: a check instead of its number, and its summary.
   ".snl-asked .snl-sum{font-weight:500}",
+  ".snl-working .snl-sum,.snl-dismissed .snl-sum{color:var(--sn-sub)}",
+  ".snl-dismissed .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
+  ".snl-working .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
   ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
   ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
@@ -216,7 +226,7 @@ const CSS = [
   ".snl-seg button:hover{color:var(--sn-glass-text)}",
   '.snl-seg button[aria-checked="true"]{background:var(--sn-bg);color:var(--sn-glass-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}',
   "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label,.sn-pin-tip{transition:none}" +
-    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked{animation:none}" +
+    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after{animation:none}" +
     ".snl,.snl *{transition-duration:.01s!important;animation:none!important}}",
 ].join("\n");
 
