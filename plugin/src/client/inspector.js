@@ -35,6 +35,7 @@ let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
+const BROWSER_KEY = "data-spotnote-browser"; // tells this browser's notes apart on the dev server
 const pins = new Map(); // refKey (loc@index) -> { loc, index, note, url, marker }
 let pinsVisible = true; // hidden while the launcher is minimized
 
@@ -71,6 +72,8 @@ const controller = {
       loc: p.loc,
       index: p.index,
       note: p.note,
+      done: !!p.done,
+      summary: p.summary,
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
     })),
   copyNote(key) {
@@ -173,6 +176,7 @@ export function initInspector({ jsx = null } = {}) {
   }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-spotnote"] });
 
   if (import.meta.hot) {
+    import.meta.hot.on("spotnote:resolve", resolveNotes);
     import.meta.hot.on("vite:afterUpdate", () => {
       rebindSelection();
       repositionPins();
@@ -829,11 +833,56 @@ function savePins() {
       note: p.note,
       url: p.url,
       prompt: p.prompt,
+      done: p.done,
+      summary: p.summary,
     }));
     localStorage.setItem(PINS_KEY, JSON.stringify(data));
   } catch {
     /* ignore quota / serialization errors */
   }
+  syncNotes();
+}
+
+// Hand the notes to the dev server, for coding agents on its MCP endpoint.
+let browserId;
+function syncNotes() {
+  if (!import.meta.hot) return;
+  try {
+    browserId ??= localStorage.getItem(BROWSER_KEY);
+    if (!browserId) localStorage.setItem(BROWSER_KEY, (browserId = Math.random().toString(36).slice(2)));
+  } catch {
+    browserId ??= "unsaved"; // storage blocked: still sync, under a fixed id
+  }
+  import.meta.hot.send("spotnote:notes", {
+    browser: browserId,
+    notes: [...pins.entries()].map(([key, p], i) => ({
+      key,
+      n: i + 1, // the pin's number
+      note: p.note,
+      url: p.url,
+      prompt: p.prompt ? p.prompt : savedPrompt(p),
+      done: !!p.done,
+    })),
+  });
+}
+
+// An agent marked notes done (see mcp.js): check their pins, keep its summary.
+function resolveNotes(list) {
+  const mine = list.filter(({ key }) => pins.has(key)); // the broadcast reaches every browser
+  if (!mine.length) return;
+  for (const { key, summary } of mine) {
+    const pin = pins.get(key);
+    pin.done = true;
+    pin.summary = summary;
+    showDone(pin);
+  }
+  savePins();
+  repositionPins(); // number → ✓
+  notify();
+}
+function showDone(pin) {
+  pin.marker.classList.toggle("sn-done", !!pin.done);
+  pin.marker.lastChild.textContent = pin.done ? `${pin.note}\n✓ ${pin.summary}` : pin.note; // the hover preview
 }
 function restorePins() {
   let saved = [];
@@ -845,9 +894,12 @@ function restorePins() {
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
     const marker = makePinMarker(s.key, s.loc, s.index, s.note);
-    pins.set(s.key, { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, marker });
+    const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, summary: s.summary, marker };
+    pins.set(s.key, pin);
+    if (pin.done) showDone(pin);
   }
   repositionPins();
+  syncNotes();
 }
 
 // After a cross-page jump the target element may not be mounted yet (frameworks
@@ -881,8 +933,9 @@ function upsertPin(occ, note) {
     pin = { loc: occ.loc, index: occ.index, note, url: pageUrl(), marker };
     pins.set(key, pin);
   } else {
+    if (note !== pin.note) pin.done = false; // a changed note is a new request
     pin.note = note;
-    pin.marker.lastChild.textContent = note; // the hover preview
+    showDone(pin);
   }
   // Keep the last full prompt, so the note can still be copied after an edit
   // moves its element away (see savedPrompt).
@@ -918,7 +971,8 @@ function deletePin(key) {
 function repositionPins() {
   let n = 0;
   for (const [, pin] of pins) {
-    const num = String(++n); // same order as the launcher's notes list
+    n++; // same order as the launcher's notes list
+    const num = pin.done ? "✓" : String(n);
     if (pin.marker.firstChild.textContent !== num) pin.marker.firstChild.textContent = num;
     const el = resolveRef(pin.loc, pin.index);
     if (pinsVisible && el && el.isConnected) {

@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import path from "node:path";
 import MagicString from "magic-string";
+import { mountMcp, MCP_PATH } from "./mcp.js";
 
 const require = createRequire(import.meta.url);
 const babelVisitor = require("./plugin.cjs"); // the JSX-stamping Babel plugin
@@ -167,6 +168,16 @@ export default function spotnote() {
     configResolved(config) {
       root = config.root; // so stamped paths are relative to the app root
       jsx = jsxFramework(config.plugins);
+    },
+    configureServer(server) {
+      mountMcp(server);
+      // List the MCP endpoint under Vite's own URLs.
+      const printUrls = server.printUrls;
+      server.printUrls = () => {
+        printUrls();
+        const local = server.resolvedUrls?.local[0];
+        if (local) server.config.logger.info(`  ➜  Spotnote MCP: ${new URL(MCP_PATH, local)}`);
+      };
     },
     async buildStart() {
       ({ transformSync } = await import("@babel/core"));

@@ -95,6 +95,8 @@ const CSS = [
     `border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:${T.accentInk};font:600 11px/18px ${T.font};text-align:center;` +
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
   `.sn-pin:hover{box-shadow:0 0 0 3px rgba(${T.accentRgb},.35),0 2px 6px rgba(0,0,0,.35)}`,
+  ".sn-pin.sn-done{background:var(--sn-bg);color:var(--sn-accent-text)}",
+  ".sn-pin.sn-done .sn-pin-tip{-webkit-line-clamp:5}", // note + the agent's summary
   ".sn-pin.sn-leaving{animation:sn-pin-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pin-in{from{transform:scale(0)}}",
   "@keyframes sn-pin-out{to{transform:scale(0);opacity:0}}",
@@ -180,6 +182,9 @@ const CSS = [
   ".snl-fw+span{overflow:hidden;text-overflow:ellipsis}",
   ".snl-txt{font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
+  // A note an agent resolved over MCP: a check instead of its number, and its summary.
+  ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
+  ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
   ".snl-notes li.snl-lost{grid-template-columns:20px 1fr auto;cursor:default}",
   ".snl-lost .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
