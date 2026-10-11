@@ -1,0 +1,54 @@
+---
+title: Connect Your Agent (MCP)
+description: Let Claude Code and other local agents read your notes and mark them done, without copy and paste.
+---
+
+The Spotnote plugin also runs an **MCP server** on your dev server. A coding agent connected to it reads your open notes directly, and marks each one done once it has made the change. So instead of copying and pasting every note, you write several notes and ask your agent once.
+
+Copying still works as before, for agents without MCP.
+
+## Connect
+
+Start the dev server. Vite lists the endpoint with its other URLs:
+
+```
+  ➜  Local:   http://localhost:5173/
+  ➜  Spotnote MCP: http://localhost:5173/__spotnote/mcp
+```
+
+Add it to your agent once:
+
+```bash tab="Claude Code"
+claude mcp add --transport http spotnote http://localhost:5173/__spotnote/mcp
+```
+
+Any other agent that supports MCP over HTTP can use the same URL.
+
+<Callout type="info" title="Keep the port fixed">
+  The URL contains the port. If Vite moves to another port (for example `5174`
+  because `5173` is taken), the agent can't reach it. Pin the port in your Vite
+  config with `server.port` and `server.strictPort: true`.
+</Callout>
+
+## Use it
+
+1. Write notes in the browser as usual.
+2. Ask your agent: "Handle my Spotnote notes."
+3. The agent reads the notes, makes the changes, and marks each note done.
+
+A done note shows a ✓ instead of its number, on its pin and in the notes list, with the agent's summary of what it changed. Check the change in the page, then delete the note. If you change a done note's text and send it again, it's open again.
+
+The page doesn't need to stay open. Once the app has loaded in a browser, the dev server has its notes, and a page that was closed when a note was resolved catches up the next time it opens. Restarting the dev server forgets the notes until you open the app again.
+
+Each browser keeps its own notes ([Storage](/reference/storage)); the agent sees the notes of every browser that has opened the app since the dev server started.
+
+## Tools
+
+| Tool | What it does |
+| --- | --- |
+| `list_notes` | Returns the open notes, each with its id, its page, and the same prompt that copying gives you. |
+| `resolve_note` | Takes a note's id and a short summary of the change, and marks the note done. |
+
+## Who can connect
+
+The endpoint only answers requests made from your own machine to `localhost`. It stays closed to other devices on your network, even when you run `vite --host`.
