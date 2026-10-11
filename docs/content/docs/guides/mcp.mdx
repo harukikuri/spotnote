@@ -3,31 +3,26 @@ title: Connect Your Agent (MCP)
 description: Let Claude Code and other local agents pick up your notes, ask you questions and mark them done, while you stay in the browser.
 ---
 
-The Spotnote plugin also runs an **MCP server** on your dev server. A coding agent connected to it reads your open notes directly, and marks each one done once it has made the change. So instead of copying and pasting every note, you write several notes and ask your agent once.
+**spotnote-mcp** is Spotnote's MCP server. A coding agent connected to it picks up your notes directly, asks you questions on them, and marks each one done once it has made the change. So instead of copying and pasting every note, you write notes in the browser and the agent works through them.
 
 Copying still works as before, for agents without MCP.
 
 ## Connect
 
-Start the dev server. Vite lists the endpoint with its other URLs:
-
-```
-  ➜  Local:   http://localhost:5173/
-  ➜  Spotnote MCP: http://localhost:5173/__spotnote/mcp
-```
-
 Add it to your agent once:
 
 ```bash tab="Claude Code"
-claude mcp add --transport http spotnote http://localhost:5173/__spotnote/mcp
+claude mcp add --scope user spotnote -- npx -y spotnote-mcp
 ```
 
-Any other agent that supports MCP over HTTP can use the same URL.
+Any other agent that supports MCP servers over stdio can run the same command, `npx -y spotnote-mcp`.
 
-<Callout type="info" title="Keep the port fixed">
-  The URL contains the port. If Vite moves to another port (for example `5174`
-  because `5173` is taken), the agent can't reach it. Pin the port in your Vite
-  config with `server.port` and `server.strictPort: true`.
+The agent starts the server itself, so there's nothing else to run. While it runs, the Spotnote launcher in your app connects to it on its own (on `127.0.0.1:4848`).
+
+<Callout type="info" title="Port 4848 taken?">
+  Set `SPOTNOTE_PORT` to another port in both places: for the MCP server
+  (`claude mcp add --scope user spotnote -e SPOTNOTE_PORT=4900 -- npx -y spotnote-mcp`)
+  and in the environment you start the dev server from.
 </Callout>
 
 ## Hands-free
@@ -40,9 +35,21 @@ Watch my Spotnote notes.
 
 From then on you stay in the browser:
 
-1. Write a note. The agent picks it up within a few seconds and makes the change.
+1. Write a note. Within a few seconds the agent picks it up and its pin shows **…** with a spinning ring while it works.
 2. If the request is unclear, the agent asks on the note: its pin shows **?** and pulses. Click the pin, read the question, and type your answer in the panel.
 3. When the agent is done, the pin shows **✓**, and the note shows the agent's summary of what it changed.
+
+## Where a note stands
+
+| Pin | Meaning |
+| --- | --- |
+| Number | Waiting for an agent. |
+| **…** (spinning) | An agent has it and is working on it. |
+| **?** (pulsing) | The agent asked you something. Answer in the panel. |
+| **✓** | Done. The note shows what the agent changed. |
+| **–** (grey) | The agent won't make the change, and the note shows why. |
+
+The notes list shows the same marks, with the agent's last message under each note.
 
 The agent keeps watching until you tell it to stop. While nothing happens, it checks in about once a minute, and each check-in is a short turn that uses some tokens, so tell it to stop when you're done for a while.
 
@@ -51,15 +58,18 @@ The agent keeps watching until you tell it to stop. While nothing happens, it ch
 Once the agent has written on a note, its panel shows the conversation: your note, then the agent's and your messages. The input below sends a reply instead of editing the note, and replies aren't copied to the clipboard.
 
 - **Not quite right?** Reply on a done note ("a bit darker"). It's open again, and a watching agent picks it up.
+- **Disagree with a "won't do"?** Reply with what the agent was missing. The note opens again the same way.
 - **Want to start over?** Delete the note and write a new one.
 
 You can also ask for one batch instead of watching: "Handle my Spotnote notes." The agent works through the open notes and stops.
 
 ## Where notes live
 
-The page doesn't need to stay open. Once the app has loaded in a browser, the dev server has its notes, and anything the agent writes while the page is closed shows up the next time it opens. Restarting the dev server forgets the notes until you open the app again.
+While spotnote-mcp runs, it holds the notes, and every browser with the app open shows the same ones. It saves them in `~/.spotnote/`, so they outlive the dev server, your `node_modules` and the browser tab, and an agent sees them even before you open the app.
 
-Each browser keeps its own notes ([Storage](/reference/storage)); the agent sees the notes of every browser that has opened the app since the dev server started.
+When it isn't running, Spotnote works from your browser's own copy, as without MCP. Notes you write meanwhile join the server's the next time it runs; for a note on the same element in both, the newer one wins.
+
+An agent only sees notes from apps inside the folder it works in.
 
 ## Tools
 
@@ -67,11 +77,12 @@ Each browser keeps its own notes ([Storage](/reference/storage)); the agent sees
 | --- | --- |
 | `watch_notes` | Waits up to 50 seconds for notes that need the agent (new notes, and your replies), then returns them. The agent calls it in a loop. |
 | `list_notes` | Returns every open note. |
-| `reply_note` | Writes a message to you on a note: a question, or why the agent won't make the change. |
+| `reply_note` | Writes a message to you on a note, usually a question. |
+| `dismiss_note` | Closes a note without making the change, with the reason. |
 | `resolve_note` | Marks a note done, with a short summary of the change. |
 
 Each note comes with its id, its page, the same prompt that copying gives you, and the conversation so far.
 
 ## Who can connect
 
-The endpoint only answers requests made from your own machine to `localhost`. It stays closed to other devices on your network, even when you run `vite --host`.
+spotnote-mcp listens on `127.0.0.1` only, so other devices on your network can't reach it. Browsers can only reach it from pages served on `localhost`.
