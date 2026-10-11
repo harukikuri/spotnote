@@ -5,7 +5,7 @@ import { CodeBlockTabsTrigger } from 'fumadocs-ui/components/codeblock';
 import { SiNpm, SiPnpm, SiYarn, SiReact, SiSolid, SiVuedotjs, SiSvelte } from 'react-icons/si';
 import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
-import { StampFlow, PickFlow } from './workflow-chart';
+import { Diagram } from './diagram';
 import { SpotnoteFullDemo } from './spotnote-full-demo';
 
 const tabIcons: Record<string, ReactNode> = {
@@ -37,8 +37,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     CodeBlockTabsTrigger: CustomCodeBlockTabsTrigger,
     BrowserFrame,
     SpotnoteDemo,
-    StampFlow,
-    PickFlow,
+    Diagram,
     SpotnoteFullDemo,
     ...components,
   };

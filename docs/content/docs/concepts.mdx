@@ -7,12 +7,12 @@ Spotnote has two halves. While Vite compiles your code, the **plugin** writes ea
 
 ## Stamps
 
-<StampFlow />
+<Diagram name="stamps" width={844} height={476} alt="Line 12 of components/ProductCard.jsx goes through vite dev, where Spotnote stamps it before your framework compiles it, and reaches the browser with the stamp components/ProductCard.jsx:12:5." />
 
 A **stamp** is a `data-spotnote` attribute holding the element's source location, relative to your Vite root:
 
 ```html
-<button data-spotnote="components/ProductCard.jsx:12:6" data-spotnote-name="ProductCard">
+<button data-spotnote="components/ProductCard.jsx:12:5" data-spotnote-name="ProductCard">
 ```
 
 The plugin adds it to every **host element** (a real DOM tag such as `<div>` or `<button>`) written in your own source. Components (`<ProductCard>`) aren't stamped, because a component doesn't always pass attributes down to a DOM node. Their elements are stamped inside their own file instead.
@@ -31,7 +31,7 @@ See [Attributes](/reference/attributes) for the exact formats.
 
 ## The client
 
-<PickFlow />
+<Diagram name="pick" width={914} height={200} alt="Select, click, send, paste: pick an element, write the note, and paste the copied prompt into your agent." />
 
 The plugin also adds a script to the page Vite serves, so the client starts without an import in your app. It draws everything (the launcher, outlines, panel and pins) inside a shadow root, so your app's CSS doesn't affect it and its CSS doesn't leak into your app.
 
