@@ -8,6 +8,7 @@
     "test:e2e": "pnpm -r --if-present run test:e2e",
     "lint": "pnpm -r --if-present run lint",
     "format": "pnpm -r --if-present run format",
-    "format:check": "pnpm -r --if-present run format:check"
+    "format:check": "pnpm -r --if-present run format:check",
+    "dev:svelte4": "pnpm --filter spotnote-playground-svelte4 run dev"
   }
 }

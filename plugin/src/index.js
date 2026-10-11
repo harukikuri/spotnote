@@ -130,12 +130,15 @@ function stampSvelte(code, file, root, parse) {
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
   let touched = false;
-  // `fragment` is the markup root (Svelte 5 modern AST); walking it
-  // skips the <script>/<style> ASTs.
-  walkSvelte(ast.fragment, (node) => {
-    // RegularElement = a native DOM tag;
-    // components (capitalized) and <svelte:*> are other node types → skipped.
-    if (node.type !== "RegularElement" || !node.name) return;
+  // The markup root: `fragment` in Svelte 5's modern AST, `html` in Svelte 4's
+  // (which ignores `modern`). Walking only it skips the <script>/<style> ASTs.
+  // A native DOM tag is a RegularElement in Svelte 5 and an Element in Svelte 4;
+  // components and <svelte:*> are other node types (in Svelte 4, <svelte:element>
+  // is an Element named "svelte:element") → skipped.
+  const markup = ast.fragment ?? ast.html;
+  const isTag = ast.fragment ? (n) => n.type === "RegularElement" : (n) => n.type === "Element" && !n.name.includes(":");
+  walkSvelte(markup, (node) => {
+    if (!node.name || !isTag(node)) return;
     if (typeof node.start !== "number") return;
     const already = (node.attributes || []).some((a) => a && a.name === "data-spotnote");
     if (already) return;

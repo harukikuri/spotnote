@@ -1,0 +1,17 @@
+{
+  "name": "spotnote-playground-svelte4",
+  "private": true,
+  "type": "module",
+  "description": "Svelte 4 demo app for the local spotnote plugin (Svelte 4 has its own parser AST).",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "spotnote": "workspace:*",
+    "svelte": "^4.2.20"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "vite": "^5.4.11"
+  }
+}

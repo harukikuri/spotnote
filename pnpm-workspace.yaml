@@ -2,6 +2,7 @@ packages:
   - plugin
   - mcp
   - playground
+  - playground/svelte4
   - docs
 onlyBuiltDependencies:
   - esbuild

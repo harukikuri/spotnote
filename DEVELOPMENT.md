@@ -13,7 +13,8 @@ pnpm install                                  # from the repo root — links the
 pnpm dev                                      # React playground (multi-page demo) + picker
 pnpm --filter spotnote-playground dev:solid   # Solid playground
 pnpm --filter spotnote-playground dev:vue     # Vue playground
-pnpm --filter spotnote-playground dev:svelte  # Svelte playground
+pnpm --filter spotnote-playground dev:svelte  # Svelte 5 playground
+pnpm dev:svelte4                              # Svelte 4 playground (own package)
 pnpm --filter spotnote-playground build       # production build (picker excluded — apply:'serve')
 ```
 
@@ -26,6 +27,8 @@ Plugin layout (`plugin/`):
 Playground layout (`playground/`):
 
 - `<framework>/` — a demo app per framework (`react`, `solid`, `vue`, `svelte`)
+- `svelte4/` — a Svelte 4 app in its own package (Svelte 4 and 5 can't share
+  one `node_modules`), with its own `vite.config.js`
 - `vite.config.js` — boots the `SPOTNOTE_FW`-selected app with `spotnote()` +
   the framework plugin; imports the plugin via the `spotnote` workspace link
 
