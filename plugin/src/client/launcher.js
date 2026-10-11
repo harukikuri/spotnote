@@ -167,6 +167,32 @@ export function mountLauncher(ctrl) {
       if (show) (p === notesPop ? renderNotes : renderSettings)();
     }
   }
+  // A press on the page closes an open popover, and does only that: it neither
+  // picks an element nor follows a link. Spotnote's own UI (a pin, the note
+  // panel) isn't "outside": pressing it leaves the popover open.
+  let swallowClick = false;
+  addEventListener(
+    "pointerdown",
+    (e) => {
+      swallowClick = false;
+      if (!root.querySelector(".snl-pop.snl-show") || e.composedPath().includes(root.getRootNode().host)) return;
+      togglePop(null);
+      swallowClick = true;
+      e.preventDefault(); // also suppresses the mousedown that would follow
+      e.stopPropagation();
+    },
+    true,
+  );
+  addEventListener(
+    "click",
+    (e) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    },
+    true,
+  );
   function renderNotes() {
     const all = ctrl.notes();
     popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
