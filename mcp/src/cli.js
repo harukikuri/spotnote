@@ -16,6 +16,7 @@ import { createHttpServer } from "./http.js";
 const PORT = Number(process.env.SPOTNOTE_PORT) || 4848;
 const BASE = `http://127.0.0.1:${PORT}`;
 const cwd = process.cwd(); // the agent's project: it only sees notes from apps in here
+const agent = Math.random().toString(36).slice(2); // this agent session, for "working" (see store.js)
 const log = (msg) => console.error(`[spotnote-mcp] ${msg}`); // stdout is the MCP channel
 
 let owner = null; // { store, runTool } once this process owns the port
@@ -41,9 +42,9 @@ async function isSpotnote() {
 }
 
 async function call(name, args, signal) {
-  if (owner) return owner.runTool(name, args, cwd, signal);
+  if (owner) return owner.runTool(name, args, cwd, signal, agent);
   try {
-    const res = await fetch(`${BASE}/rpc`, { method: "POST", body: JSON.stringify({ tool: name, args, cwd }), signal });
+    const res = await fetch(`${BASE}/rpc`, { method: "POST", body: JSON.stringify({ tool: name, args, cwd, agent }), signal });
     return await res.json();
   } catch {
     if (signal?.aborted) return { text: "Cancelled." };

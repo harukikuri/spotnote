@@ -74,10 +74,10 @@ export function createHttpServer(store, runTool) {
         // The result, so the page needn't wait for it on /events.
         res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(store.snapshot(op.root)));
       } else if (req.method === "POST" && url.pathname === "/rpc" && !fromPage) {
-        const { tool, args, cwd } = await body(req);
+        const { tool, args, cwd, agent } = await body(req);
         const abort = new AbortController();
         res.on("close", () => abort.abort()); // the relay's agent cancelled
-        const r = await runTool(tool, args, cwd, abort.signal);
+        const r = await runTool(tool, args, cwd, abort.signal, agent);
         if (!res.writableEnded) res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(r));
       } else {
         res.writeHead(404).end();

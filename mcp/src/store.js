@@ -7,7 +7,9 @@
 //   key       "path:line:col@index" — one note per element
 //   thread    [{ id, from: "agent" | "you", text, at, resolves?, dismisses? }]
 //   done      the agent made the change; dismissed: it won't, and said why
-//   working   an agent has it (set when a tool hands it out; not saved)
+//   working   the id of the agent that has it (set when a tool hands it out; not saved)
+//   reopened  "done" / "dismissed": what a reply reopened, to restore if the agent
+//             lets it go without answering (a "thanks!" needs no change)
 //   updated   last change, in ms (newer wins when a browser brings offline notes)
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
@@ -89,7 +91,7 @@ export function createStore() {
         delete a.deleted[n.key];
       } else {
         // A rewritten note is a new request: start its conversation over.
-        if (old.note !== n.note) Object.assign(old, { thread: [], done: false, dismissed: false, working: false });
+        if (old.note !== n.note) Object.assign(old, { thread: [], done: false, dismissed: false, working: false, reopened: null });
         Object.assign(old, fromBrowser(n), { updated: Date.now() });
       }
       changed(root);
@@ -105,6 +107,7 @@ export function createStore() {
       if (!n) return;
       n.thread.push({ id: id(), from: "you", text, at: Date.now() });
       // Replying reopens a done or dismissed note, for the agent to pick up again.
+      n.reopened = n.done ? "done" : n.dismissed ? "dismissed" : n.reopened;
       Object.assign(n, { done: false, dismissed: false, working: false });
       n.updated = Date.now();
       changed(root);
@@ -136,16 +139,31 @@ export function createStore() {
       if (msg.resolves) n.done = true;
       if (msg.dismisses) n.dismissed = true;
       n.working = false; // it answered: the ball is with the developer
+      n.reopened = null;
       n.updated = Date.now();
       changed(root);
       return true;
     },
     // An agent was handed these notes (see tools.js).
-    working(root, keys) {
-      const fresh = app(root).notes.filter((n) => keys.includes(n.key) && !n.working);
+    working(root, keys, agent) {
+      const fresh = app(root).notes.filter((n) => keys.includes(n.key) && n.working !== agent);
       if (!fresh.length) return;
-      fresh.forEach((n) => (n.working = true));
+      fresh.forEach((n) => (n.working = agent));
       changed(root);
+    },
+    // The agent moved on without answering these: it's not working on them any
+    // more, and a note a reply reopened goes back to how it was.
+    release(agent) {
+      for (const a of apps.values()) {
+        const held = a.notes.filter((n) => n.working === agent);
+        if (!held.length) continue;
+        for (const n of held) {
+          n.working = false;
+          if (n.reopened) n[n.reopened] = true;
+          n.reopened = null;
+        }
+        changed(a.root);
+      }
     },
   };
 }

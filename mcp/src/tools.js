@@ -14,8 +14,9 @@ export const INSTRUCTIONS =
   "names the exact source file, line and column. To work through them hands-free, call watch_notes in a loop: handle " +
   "what it returns, then call it again. A wait that ends with nothing is normal: keep watching until the developer " +
   "tells you to stop. The developer is looking at the browser, not at this chat: ask questions with reply_note (they " +
-  "answer in the browser and the answer comes back through watch_notes), and finish each note with resolve_note, or " +
-  "with dismiss_note when you won't make the change.";
+  "answer in the browser and the answer comes back through watch_notes). End every note you get with resolve_note, " +
+  "dismiss_note or reply_note, even when there's nothing to change: if the developer only says thanks or confirms, " +
+  "call resolve_note with a short summary like \"Nothing to change.\"";
 
 // An app is the agent's business when it's inside the agent's folder (or the
 // agent works inside the app). Its notes' ids carry the app's path from there,
@@ -42,9 +43,9 @@ export function createRunner(store) {
   // Open, and the agent hasn't had the last word.
   const needsAgent = (v) => open(v) && v.thread.at(-1)?.from !== "agent";
   // Show the developer an agent has these, until it replies, resolves or dismisses.
-  function handOut(list) {
+  function handOut(list, agent) {
     for (const root of new Set(list.map((v) => v.root)))
-      store.working(root, list.filter((v) => v.root === root).map((v) => v.key));
+      store.working(root, list.filter((v) => v.root === root).map((v) => v.key), agent);
   }
   const signature = (v) => `${v.root}\n${v.key}\n${v.note}\n${v.thread.length}`;
 
@@ -69,7 +70,10 @@ export function createRunner(store) {
   const empty = "No notes yet. Write one in the browser: open the app with the Spotnote launcher and click an element.";
 
   const tools = {
-    async watch_notes({ timeout_seconds = MAX_WAIT_S } = {}, cwd, signal) {
+    async watch_notes({ timeout_seconds = MAX_WAIT_S } = {}, cwd, signal, agent) {
+      // Watching again means the last batch is handled; whatever it left unanswered
+      // isn't being worked on (see store.release).
+      store.release(agent);
       const end = Date.now() + Math.min(timeout_seconds, MAX_WAIT_S) * 1000;
       const fresh = () => notes(cwd).filter((v) => needsAgent(v) && !delivered.has(signature(v)));
       while (!fresh().length && Date.now() < end && !signal?.aborted) await change(end - Date.now(), signal);
@@ -79,13 +83,13 @@ export function createRunner(store) {
       while (Date.now() < batchEnd && !signal?.aborted) await change(batchEnd - Date.now(), signal);
       const batch = fresh();
       batch.forEach((v) => delivered.add(signature(v)));
-      handOut(batch);
+      handOut(batch, agent);
       return ok(batch.map(format).join("\n\n---\n\n"));
     },
-    list_notes(_, cwd) {
+    list_notes(_, cwd, signal, agent) {
       const all = notes(cwd);
       const list = all.filter(open);
-      handOut(list.filter((v) => v.thread.at(-1)?.from !== "agent")); // not the ones waiting on the developer
+      handOut(list.filter((v) => v.thread.at(-1)?.from !== "agent"), agent); // not the ones waiting on the developer
       return ok(list.length ? list.map(format).join("\n\n---\n\n") : all.length ? "No open notes." : empty);
     },
     reply_note({ id, message }, cwd) {
@@ -105,9 +109,10 @@ export function createRunner(store) {
     },
   };
 
-  return async function runTool(name, args, cwd, signal) {
+  // `agent` tells agent sessions apart (each spotnote-mcp process has its own id).
+  return async function runTool(name, args, cwd, signal, agent) {
     if (!tools[name]) return err(`Unknown tool ${name}.`);
-    return tools[name](args ?? {}, cwd, signal);
+    return tools[name](args ?? {}, cwd, signal, agent);
   };
 }
 
@@ -123,7 +128,8 @@ export function registerTools(mcp, call) {
   tool("watch_notes", {
     description:
       "Wait for notes that need you: new notes, and developer replies on notes you asked about or resolved. Returns " +
-      "them in a batch, or nothing after the timeout. Call it again after handling each batch to keep working hands-free.",
+      "them in a batch, or nothing after the timeout. Answer each note it returns with resolve_note, dismiss_note or " +
+      "reply_note (resolve it if nothing needs changing), then call it again to keep working hands-free.",
     inputSchema: {
       timeout_seconds: z.number().int().min(1).max(MAX_WAIT_S).optional().describe(`How long to wait. Default and max ${MAX_WAIT_S}.`),
     },
