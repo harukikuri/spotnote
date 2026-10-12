@@ -59,6 +59,8 @@ The agent keeps watching until you tell it to stop. While nothing happens, it ch
 
 Once the agent has written on a note, its panel shows the conversation: your note, then the agent's and your messages. Each of the agent's messages is labelled with the agent's name (Claude Code, Codex, …), with its mark for Claude Code, Cursor, Gemini, Windsurf and GitHub Copilot. The input below sends a reply instead of editing the note, and replies aren't copied to the clipboard. While the agent works on the note, the panel shows its message as "Thinking…" (and similar words), with no input until it answers.
 
+When the agent is offline (spotnote-mcp isn't running), the panel says so, and you can still reply: your message shows **not sent yet**, and goes to the agent once it's back.
+
 The agent's messages show as Markdown: paragraphs, lists, `code` and code blocks, **bold**. Code is syntax-coloured, and markup the agent writes without backticks (`<span class="btn">`) shows as code too. A file it mentions, such as `router.jsx:28`, is a link: click it to open the file at that line in your editor. Which editor is up to [Settings → Open files in](/guides/settings#open-files-in).
 
 - **Not quite right?** Reply on a done note ("a bit darker"). It's open again, and a watching agent picks it up.
