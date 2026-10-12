@@ -36,6 +36,7 @@ let panelDraft = null; // () => true while the note has unsent text
 let panelKey = null; // the open panel's note key
 let panelRefresh = null; // redraws the open panel's conversation
 let panelMode = null; // what the open panel was built for (see noteMode)
+let panelSync = null; // updates the open panel when the agent (dis)connects
 let remote = null; // the link to spotnote-mcp (remote.js)
 let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
@@ -200,7 +201,10 @@ export function initInspector({ jsx = null, root = "", port = 4848, about = null
     root,
     port,
     onSnapshot: applySnapshot,
-    onStatus: notify, // the launcher's Settings shows it
+    onStatus() {
+      notify(); // the launcher's Settings shows it
+      panelSync?.(); // copy or not, in the open panel
+    },
     onOnline(on) {
       if (on) return remote.send({ op: "merge", notes: [...pins].map(([key, p]) => wire(key, p)) });
       // The server (and with it the agent) went away: nobody is working on anything.
@@ -657,6 +661,9 @@ function fileProblem(button, text, missing = false) {
   button.after(hint);
 }
 
+// Is the coding agent connected (spotnote-mcp has our notes)?
+const agentConnected = () => remote?.status() === "on";
+
 // The open note changed (from the server): redraw its conversation, or rebuild
 // the panel in place when it moved between edit, working and talking.
 function refreshPanel() {
@@ -705,8 +712,9 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   const header = document.createElement("div");
   header.style.cssText = `display:flex;align-items:center;gap:4px;padding:7px 7px 7px 12px;border-bottom:1px solid ${T.borderSubtle};cursor:move`;
   header.append(panelLabel(target));
+  let copyBtn = null;
   if (isEdit) {
-    const copyBtn = createIconBtn({
+    copyBtn = createIconBtn({
       svg: ICONS.copy,
       title: "Copy prompt",
       parent: header,
@@ -807,8 +815,11 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       return;
     }
     const prompt = buildPrompt(target, note);
-    navigator.clipboard?.writeText(prompt).catch(() => {});
-    console.log("[spotnote] copied prompt:\n" + prompt);
+    // With the agent connected, it gets the note directly: leave the clipboard be.
+    if (!agentConnected()) {
+      navigator.clipboard?.writeText(prompt).catch(() => {});
+      console.log("[spotnote] copied prompt:\n" + prompt);
+    }
     upsertPin(occ, note); // leave a marker on the element
     closePanel(); // selection mode stays on while the launcher is open
     launcher?.flash(); // ✓ on the launcher core
@@ -819,7 +830,14 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   // only kept once sent, so half-typed text never becomes a pin.
   const send = document.createElement("button");
   send.className = "sn-send";
-  send.innerHTML = `<kbd>↵</kbd>${talking ? "Reply" : isEdit ? "Save &amp; copy" : "Add &amp; copy"}`;
+  // Copying is for handing the prompt over by hand: not needed (and not shown)
+  // while the agent is connected over MCP.
+  panelSync = () => {
+    const copy = !agentConnected();
+    send.innerHTML = `<kbd>↵</kbd>${talking ? "Reply" : isEdit ? "Save" : "Add"}${copy && !talking ? " &amp; copy" : ""}`;
+    if (copyBtn) copyBtn.style.display = copy ? "flex" : "none"; // its inline display beats [hidden]
+  };
+  panelSync();
   send.addEventListener("click", doSend);
   if (mode !== "working") inputWrap.append(send);
   const updateSend = () => (send.disabled = !(input.textContent || "").trim());
@@ -1021,6 +1039,7 @@ function closePanel({ instant = false } = {}) {
   panelKey = null;
   panelRefresh = null;
   panelMode = null;
+  panelSync = null;
   document.removeEventListener("mousedown", onDocDown, true);
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so
