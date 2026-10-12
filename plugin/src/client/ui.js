@@ -37,7 +37,7 @@ const THEMES = {
     hover: "rgba(255,255,255,.06)", "hover-strong": "rgba(255,255,255,.08)", "text-strong": "#fff",
     glass: "rgba(24,24,28,.74)", "glass-border": "rgba(255,255,255,.10)", "glass-inset": "rgba(255,255,255,.06)",
     "glass-text": "#f2f2f3", "glass-hover": "rgba(44,44,50,.86)", track: "#a1a1aa",
-    "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)", pop: "rgba(24,24,28,.97)",
+    "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)", pop: "rgba(24,24,28,.97)", foot: "rgba(0,0,0,.3)",
     "fw-react": "#61dafb", "fw-solid": "#76b3e1", "fw-vue": "#42b883", "fw-svelte": "#ff3e00", "fw-jsx": "#a1a1aa",
   },
   light: {
@@ -46,7 +46,7 @@ const THEMES = {
     hover: "rgba(0,0,0,.04)", "hover-strong": "rgba(0,0,0,.06)", "text-strong": "#000",
     glass: "rgba(255,255,255,.8)", "glass-border": "rgba(0,0,0,.08)", "glass-inset": "rgba(255,255,255,.7)",
     "glass-text": "#18181b", "glass-hover": "rgba(244,244,245,.94)", track: "#71717a",
-    "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)", pop: "rgba(255,255,255,.98)",
+    "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)", pop: "rgba(255,255,255,.98)", foot: "rgba(0,0,0,.04)",
     "fw-react": "#087ea4", "fw-solid": "#2c4f7c", "fw-vue": "#2f9768", "fw-svelte": "#e63900", "fw-jsx": "#71717a",
   },
 };
@@ -261,7 +261,12 @@ const CSS = [
   ".snl-icon-btn{display:grid;place-items:center;width:28px;height:28px;margin-right:-6px;padding:0;border:none;border-radius:7px;background:none;color:var(--sn-sub);cursor:pointer;text-decoration:none}",
   ".snl-icon-btn:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
   ".snl-back{margin:0 0 0 -8px}",
-  ".snl-foot{display:flex;align-items:center;justify-content:space-between;height:34px;margin:4px 0 -6px;border-top:1px solid var(--sn-glass-border);font-size:11px;color:var(--sn-sub)}",
+  // Footer: version and GitHub, centred on a darker band across the panel's
+  // bottom (the negative margins undo the panel's padding).
+  ".snl-foot{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;margin:6px -14px -10px;" +
+    "border-top:1px solid var(--sn-glass-border);border-radius:0 0 12px 12px;background:var(--sn-foot);font-size:11px;color:var(--sn-sub)}",
+  ".snl-foot .snl-icon-btn{width:22px;height:22px;margin:0;border-radius:6px}",
+  ".snl-foot svg{width:13px;height:13px}",
   ".snl-srow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:40px;padding:0;" +
     "border:none;background:none;text-align:left;font:inherit;color:inherit}",
   ".snl-srow.snl-stack{flex-direction:column;align-items:stretch;justify-content:center;gap:10px;padding:10px 0 12px}",
