@@ -188,7 +188,7 @@ const CSS = [
   ".sn-file.sn-file-missing{color:inherit;text-decoration:line-through;cursor:default}",
   ".sn-file-hint{display:inline-grid;place-items:center;vertical-align:-2px;margin-left:4px;color:#f59e0b;cursor:help;border-radius:3px;outline:none}",
   `.sn-file-hint:focus-visible{box-shadow:0 0 0 2px ${T.accent}}`,
-  `.sn-tip{position:fixed;z-index:2147483647;width:max-content;max-width:220px;padding:6px 8px;border-radius:6px;background:var(--sn-text);color:var(--sn-bg);` +
+  `.sn-tip{position:fixed;z-index:2147483647;width:max-content;max-width:220px;padding:6px 8px;border-radius:6px;background:var(--sn-pop);color:var(--sn-glass-text);border:1px solid var(--sn-glass-border);` +
     `font:400 11px/15px ${T.font};pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.25);animation:sn-fade .12s ease-out}`,
   // The panel header's file:line: a button that opens it in your editor.
   `.sn-loc{all:unset;display:inline-flex;align-items:center;align-self:center;flex-shrink:0;cursor:pointer;color:${T.textMuted};font:11px ${T.mono};border-radius:4px}`,
@@ -375,7 +375,7 @@ const CSS = [
   ".snl-help svg{opacity:.7}", // on the icon only: the tooltip inside must stay opaque
   ".snl-help:hover svg,.snl-help:focus-visible svg{opacity:1}",
   `.snl-help-tip{position:absolute;left:50%;bottom:calc(100% + 6px);width:max-content;max-width:200px;padding:6px 8px;border-radius:6px;` +
-    `background:var(--sn-text);color:var(--sn-bg);font:400 11px/15px ${T.font};text-align:left;pointer-events:none;` +
+    `background:var(--sn-pop);color:var(--sn-glass-text);border:1px solid var(--sn-glass-border);font:400 11px/15px ${T.font};text-align:left;pointer-events:none;` +
     "box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transform:translate(-50%,2px);transition:opacity .12s ease,transform .12s ease;z-index:2}",
   ".snl-help:hover .snl-help-tip,.snl-help:focus-visible .snl-help-tip{opacity:1;transform:translate(-50%,0)}",
   ".snl-swatches{display:flex;gap:7px}",
