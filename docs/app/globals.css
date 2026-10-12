@@ -44,6 +44,11 @@
   background-color: var(--sn-marker);
 }
 
+/* Light mode: the sidebar on the same white as the page, set apart by its border. */
+html:not(.dark) #nd-sidebar {
+  background-color: var(--color-fd-background);
+}
+
 /* The current page in the sidebar reads as highlighted text. */
 #nd-sidebar a[data-active='true'] {
   background-color: var(--sn-marker);
