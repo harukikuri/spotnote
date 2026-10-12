@@ -39,6 +39,8 @@ const THEMES = {
     hover: "rgba(255,255,255,.06)", "hover-strong": "rgba(255,255,255,.08)", "text-strong": "#fff",
     glass: "rgba(24,24,28,.74)", "glass-border": "rgba(255,255,255,.10)", "glass-inset": "rgba(255,255,255,.06)",
     "glass-text": "#f2f2f3", "glass-hover": "rgba(44,44,50,.86)", track: "#a1a1aa",
+    // the Spotnote mark, as in docs/public/brand/spotnote-mark-dark.svg
+    mark: "#FAFAFA", "mark-fold": "#71717A",
     "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)", pop: "rgba(24,24,28,.97)", foot: "rgba(0,0,0,.3)",
     "fw-react": "#61dafb", "fw-solid": "#76b3e1", "fw-vue": "#42b883", "fw-svelte": "#ff3e00", "fw-jsx": "#a1a1aa",
     // code in the agent's messages (GitHub's dark palette)
@@ -51,6 +53,8 @@ const THEMES = {
     hover: "rgba(0,0,0,.04)", "hover-strong": "rgba(0,0,0,.06)", "text-strong": "#000",
     glass: "rgba(255,255,255,.8)", "glass-border": "rgba(0,0,0,.08)", "glass-inset": "rgba(255,255,255,.7)",
     "glass-text": "#18181b", "glass-hover": "rgba(244,244,245,.94)", track: "#71717a",
+    // the Spotnote mark, as in docs/public/brand/spotnote-mark-light.svg
+    mark: "#18181B", "mark-fold": "#A1A1AA",
     "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)", pop: "rgba(255,255,255,.98)", foot: "rgba(0,0,0,.04)",
     "fw-react": "#087ea4", "fw-solid": "#2c4f7c", "fw-vue": "#2f9768", "fw-svelte": "#e63900", "fw-jsx": "#71717a",
     // code in the agent's messages (GitHub's light palette)
@@ -228,12 +232,15 @@ const CSS = [
     "padding:0;cursor:grab;touch-action:none;transition:background-color .25s ease,color .25s ease,box-shadow .25s ease}",
   ".snl-dragging .snl-core{cursor:grabbing}",
   `.snl-core svg{grid-area:1/1;transition:transform .55s ${SPRING},opacity .15s ease}`,
-  '.snl[data-open="true"] .snl-plus{transform:rotate(135deg)}',
+  // Closed, the mark; open, it turns away and the × turns in.
+  ".snl-plus{opacity:0;transform:rotate(45deg) scale(.6)}",
+  '.snl[data-open="true"] .snl-plus{opacity:1;transform:rotate(135deg)}',
+  '.snl[data-open="true"] .snl-logo{opacity:0;transform:rotate(-45deg) scale(.6)}',
   // The core's colour is the mode: accent = selecting, glass = paused / closed.
   `.snl[data-open="true"][data-paused="false"] .snl-core{background:${T.accent};color:${T.accentInk};border-color:transparent;` +
     `box-shadow:0 0 0 6px rgba(${T.accentRgb},.38),0 10px 28px rgba(0,0,0,.28)}`,
   ".snl-check{opacity:0;transform:scale(.4)}",
-  ".snl-done .snl-plus{opacity:0}",
+  ".snl-done .snl-plus,.snl-done .snl-logo{opacity:0}",
   ".snl-done .snl-check{opacity:1;transform:none}",
   `.snl-track{position:absolute;pointer-events:none;overflow:visible;transform:rotate(var(--start));transition:transform .6s ${SPRING}}`,
   // A zero-length dash still paints its round cap, so it's hidden while closed.
@@ -361,6 +368,8 @@ const CSS = [
   ".snl-foot{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;margin:6px -14px -10px;" +
     "border-top:1px solid var(--sn-glass-border);border-radius:0 0 12px 12px;background:var(--sn-foot);font-size:11px;color:var(--sn-sub)}",
   ".snl-foot .snl-icon-btn{width:22px;height:22px;margin:0;border-radius:6px}",
+  ".snl-ver{color:inherit;text-decoration:underline dotted;text-underline-offset:2px}", // like the file links
+  ".snl-ver:hover{color:var(--sn-glass-text)}",
   ".snl-foot svg{width:13px;height:13px}",
   ".snl-srow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:40px;padding:0;" +
     "border:none;background:none;text-align:left;font:inherit;color:inherit}",

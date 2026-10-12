@@ -38,7 +38,10 @@ const SET_ICON = {
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
 };
 const ICON = {
-  // Rotated 135° when open, the "+" reads as "×".
+  // The core, closed: the Spotnote mark (docs/public/brand/spotnote-mark-*.svg),
+  // in the theme's mark colours.
+  mark: '<svg class="snl-logo" width="20" height="20" viewBox="56 56 188 188" aria-hidden="true"><path fill="var(--sn-mark)" fill-rule="evenodd" d="M56 56h188v124l-64 64H56z M150 124a26 26 0 1 0-52 0a26 26 0 1 0 52 0z"/><path fill="var(--sn-mark-fold)" d="M244 180h-64v64z"/></svg>',
+  // Open, a "+" turned 135° reads as "×".
   plus: svg('class="snl-plus" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"', '<path d="M12 5v14M5 12h14"/>'),
   check: svg('class="snl-check" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"', '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   pause: svg(LINE, '<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>'),
@@ -95,7 +98,7 @@ export function mountLauncher(ctrl) {
   const gear = item(2, ICON.gear, "Settings", () => togglePop(settingsPop));
 
   const core = el("button", "snl-core snl-glass", root);
-  core.innerHTML = ICON.plus + ICON.check;
+  core.innerHTML = ICON.mark + ICON.plus + ICON.check;
 
   const popover = (cls, label) => {
     const p = el("div", `snl-pop ${cls} snl-glass`, root);
@@ -411,7 +414,15 @@ export function mountLauncher(ctrl) {
     const about = ctrl.about;
     if (!about) return;
     const foot = el("div", "snl-foot", settingsPop);
-    el("span", "", foot).textContent = `Spotnote v${about.version}`;
+    // The version links to the releases: what changed in it.
+    const title = el("span", "", foot);
+    title.append("Spotnote ");
+    const ver = el("a", "snl-ver", title);
+    ver.href = `${about.repo}/releases`;
+    ver.target = "_blank";
+    ver.rel = "noopener noreferrer";
+    ver.title = "Releases on GitHub";
+    ver.textContent = `v${about.version}`;
     const gh = el("a", "snl-icon-btn", foot);
     gh.href = about.repo;
     gh.target = "_blank";
