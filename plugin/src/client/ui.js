@@ -242,15 +242,33 @@ const CSS = [
   '.snl[data-corner="br"] .snl-pop{right:var(--d);bottom:var(--d);transform-origin:100% 100%}',
   '.snl[data-corner="tl"] .snl-pop{left:var(--d);top:var(--d);transform-origin:0 0}',
   '.snl[data-corner="tr"] .snl-pop{right:var(--d);top:var(--d);transform-origin:100% 0}',
-  ".snl-pop h4{margin:6px 8px;font-size:13px;font-weight:600}",
-  ".snl-notes ol{list-style:none;margin:0;padding:0;max-height:240px;overflow:auto}",
-  ".snl-notes li{display:grid;grid-template-columns:20px 1fr;gap:2px 8px;padding:8px;border-radius:8px;cursor:pointer}",
+  // The header's rule runs edge to edge: undo each popover's side padding, and
+  // put it back inside so the title lines up with the rows below (14px in).
+  ".snl-notes .snl-head{margin:0 -6px;padding:0 14px}",
+  ".snl-count{font-size:12px;color:var(--sn-sub);font-variant-numeric:tabular-nums}",
+  // The list spans the popover edge to edge and runs to its bottom: rows and
+  // page headings are full-width bands (the 14px moves into each row).
+  ".snl-notes{padding-bottom:0;overflow:hidden}", // overflow: the bottom row's hover keeps the rounded corners
+  ".snl-notes ol{list-style:none;margin:0 -6px;padding:0;max-height:240px;overflow:auto}",
+  ".snl-notes li{display:grid;grid-template-columns:20px 1fr;gap:2px 8px;padding:9px 14px;cursor:pointer;border-top:1px solid var(--sn-glass-border)}",
+  ".snl-notes li:first-child{border-top:none}", // right under the header's rule
   ".snl-notes li:hover{background:var(--sn-hover)}",
-  // Page headings in the notes list: "This page", then each other page's path.
-  `.snl-notes li.snl-group{display:block;padding:10px 8px 4px;font:500 11px ${T.font};color:var(--sn-sub);cursor:default;` +
+  // Page headings in the notes list ("This page", then each other page's path):
+  // a band edge to edge, in the Settings footer's colour.
+  `.snl-notes li.snl-group{display:block;margin:0;padding:5px 14px;border-radius:0;background:var(--sn-foot);` +
+    "border-top:1px solid var(--sn-glass-border);font:500 11px/16px " + T.font + ";color:var(--sn-sub);cursor:default;" +
     "white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
-  ".snl-notes li.snl-group:hover{background:none}",
-  ".snl-notes li.snl-group:first-child{padding-top:4px}",
+  ".snl-notes li.snl-group:hover{background:var(--sn-foot)}",
+  // The heading is a button that folds its section.
+  ".snl-notes li.snl-group{padding:0}",
+  ".snl-group button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;width:100%;padding:5px 14px 5px 10px;cursor:pointer}",
+  ".snl-group button:hover{color:var(--sn-glass-text)}",
+  `.snl-group button:focus-visible{outline:2px solid ${T.accent};outline-offset:-2px}`,
+  ".snl-fold{display:grid;transition:transform .15s ease}",
+  ".snl-fold svg{width:12px;height:12px}",
+  '.snl-group button[aria-expanded="true"] .snl-fold{transform:rotate(90deg)}',
+  ".snl-group-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}",
+  ".snl-notes li.snl-group:first-child{margin-top:0;border-top:none}", // right under the header's rule
   `.snl-num{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
     `font:600 11px/1 ${T.font};display:grid;place-items:center}`,
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
@@ -282,8 +300,10 @@ const CSS = [
   // Settings: a header, then rows of label · value split by thin rules; help
   // behind each (?).
   ".snl-settings{width:292px;padding:6px 14px 10px}",
+  ".snl-settings .snl-head{margin:0 -14px 2px;padding:0 14px}",
   ".snl-head{display:flex;align-items:center;gap:6px;height:40px;margin-bottom:2px;border-bottom:1px solid var(--sn-glass-border)}",
-  ".snl-title{flex:1;font-size:13px;font-weight:600}",
+  ".snl-title{font-size:13px;font-weight:600}",
+  ".snl-head>.snl-icon-btn:last-child{margin-left:auto}", // a trailing button (theme) sits at the right
   ".snl-icon-btn{display:grid;place-items:center;width:28px;height:28px;margin-right:-6px;padding:0;border:none;border-radius:7px;background:none;color:var(--sn-sub);cursor:pointer;text-decoration:none}",
   ".snl-icon-btn:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
   ".snl-back{margin:0 0 0 -8px}",

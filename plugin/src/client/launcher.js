@@ -102,7 +102,10 @@ export function mountLauncher(ctrl) {
   };
   const notesPop = popover("snl-notes", "Notes");
   notesPop.item = notes.b;
-  const popTitle = el("h4", "", notesPop);
+  // Same header as Settings: a title (with the count, muted) over a rule.
+  const notesHead = el("div", "snl-head", notesPop);
+  el("span", "snl-title", notesHead).textContent = "Notes";
+  const notesCount = el("span", "snl-count", notesHead);
   const list = el("ol", "", notesPop);
   const empty = el("p", "snl-empty", notesPop);
   const settingsPop = popover("snl-settings", "Settings");
@@ -191,9 +194,10 @@ export function mountLauncher(ctrl) {
     if (shown) menuLayer.show(root, shown);
     else menuLayer.hide();
   }
+  const collapsed = new Set(); // folded sections of the notes list: "here" or a page's url
   function renderNotes() {
     const all = ctrl.notes();
-    popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
+    notesCount.textContent = all.length || "";
     list.textContent = "";
     // This page's notes first, then each other page's under its path. Numbers
     // stay as on the pins.
@@ -201,13 +205,25 @@ export function mountLauncher(ctrl) {
     const here = numbered.filter((n) => n.here);
     const pages = new Map();
     for (const n of numbered) if (!n.here) pages.set(n.url, [...(pages.get(n.url) ?? []), n]);
-    const heading = (text) => (el("li", "snl-group", list).textContent = text);
-    if (here.length) heading("This page");
-    here.forEach(addRow);
-    for (const [url, notes] of pages) {
-      heading(url);
-      notes.forEach(addRow);
-    }
+    // Each heading folds its section: click to collapse or expand (remembered
+    // while the page is open).
+    const section = (key, title, notes) => {
+      const li = el("li", "snl-group", list);
+      const b = el("button", "", li);
+      const open = !collapsed.has(key);
+      b.setAttribute("aria-expanded", open);
+      el("span", "snl-fold", b).innerHTML = SET_ICON.next; // hardcoded SVG constants
+      el("span", "snl-group-title", b).textContent = title;
+      el("span", "snl-count", b).textContent = notes.length;
+      b.addEventListener("click", () => {
+        if (open) collapsed.add(key);
+        else collapsed.delete(key);
+        renderNotes();
+      });
+      if (open) notes.forEach(addRow);
+    };
+    if (here.length) section("here", "This page", here);
+    for (const [url, notes] of pages) section(url, url, notes);
     empty.hidden = all.length > 0;
   }
   function addRow(n) {
