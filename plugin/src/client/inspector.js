@@ -625,8 +625,9 @@ async function openFile({ path, line, column }, button) {
   const res = await fetch(`/__spotnote/open?${q}`).catch(() => null);
   const body = res && (await res.json().catch(() => null));
   if (res?.status === 404) return fileProblem(button, "Couldn't find this file in your project", true);
-  if (res?.status === 409) return fileProblem(button, "No editor is running. Pick yours in Settings → Editor.");
+  if (res?.status === 409) return fileProblem(button, "No editor is running. Pick yours in Settings → Open files in.");
   if (!res?.ok || !body?.file) return fileProblem(button, "Couldn't open this file.");
+  clearFileProblem(button); // it worked this time: drop what an earlier try said
   // An editor picked in Settings, or the running one whose command-line tool
   // isn't installed (the dev server says which): open it through its URL.
   const scheme = editor.scheme ?? body.scheme;
@@ -637,9 +638,15 @@ async function openFile({ path, line, column }, button) {
     a.click();
   }
 }
+function clearFileProblem(button) {
+  button.classList.remove("sn-file-missing");
+  if (button.dataset.title != null) button.title = button.dataset.title;
+  if (button.nextSibling?.className === "sn-file-hint") button.nextSibling.remove();
+}
 // Say why a file link didn't open, right after it (once).
 function fileProblem(button, text, missing = false) {
   if (missing) button.classList.add("sn-file-missing");
+  button.dataset.title ??= button.title; // to put back once it opens
   button.title = text;
   if (button.nextSibling?.className === "sn-file-hint") return;
   const hint = document.createElement("span");
