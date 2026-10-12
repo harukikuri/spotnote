@@ -1,4 +1,7 @@
-# Spotnote
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/harukikuri/spotnote/main/docs/public/brand/spotnote-logo-dark.svg">
+  <img src="https://raw.githubusercontent.com/harukikuri/spotnote/main/docs/public/brand/spotnote-logo-light.svg" alt="Spotnote" height="48">
+</picture>
 
 A dev-only tool: click an element in your running app, write a note, and get a
 ready-to-paste prompt with the **exact source location** copied to your
