@@ -9,7 +9,7 @@
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
 //     copyNote, deleteNote, fileKind, mcpStatus, onChange }
 import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
-import { getSettings, setSetting } from "./settings.js";
+import { getSettings, setSetting, EDITORS } from "./settings.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
@@ -279,6 +279,16 @@ export function mountLauncher(ctrl) {
     });
     const seg = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
     choices(row("Theme"), "snl-seg", "theme", seg, (b, _, label) => (b.textContent = label));
+    // Where file links in the agent's messages open.
+    const select = el("select", "snl-select", row("Editor"));
+    select.setAttribute("aria-label", "Editor");
+    for (const [key, { name }] of Object.entries(EDITORS)) {
+      const o = el("option", "", select);
+      o.value = key;
+      o.textContent = name;
+    }
+    select.value = getSettings().editor;
+    select.addEventListener("change", () => setSetting("editor", select.value));
     mcpRow = row("Agent (MCP)");
     shownMcp = null;
     renderMcp();

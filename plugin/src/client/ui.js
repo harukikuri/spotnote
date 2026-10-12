@@ -69,7 +69,7 @@ const CSS = [
   // faded in/out via .sn-on. .sn-snap moves them without animating.
   ".sn-hover,.sn-hover-label{position:fixed;left:0;top:0;pointer-events:none;opacity:0;" +
     "transition:transform .12s cubic-bezier(.2,0,0,1),width .12s cubic-bezier(.2,0,0,1),height .12s cubic-bezier(.2,0,0,1),opacity .12s ease}",
-  `.sn-hover{z-index:2147483645;border-radius:3px;border:2px dashed ${T.accent};background:rgba(${T.accentRgb},0.10)}`,
+  `.sn-hover{z-index:2147483644;border-radius:3px;border:2px dashed ${T.accent};background:rgba(${T.accentRgb},0.10)}`,
   `.sn-hover-label{z-index:2147483646;display:flex;gap:6px;align-items:center;background:${T.accent};color:${T.accentInk};` +
     `font-family:${T.font};font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)}`,
   ".sn-on{opacity:1}",
@@ -98,9 +98,10 @@ const CSS = [
   `.sn-send:disabled{opacity:0;pointer-events:none}`,
   `.sn-send kbd{font:11px ${T.mono};padding:0 4px;border:1px solid ${T.border};border-radius:4px;color:inherit}`,
   // Pins: numbered, pop in with a slight overshoot, shrink away on delete.
-  // Stacking, bottom to top: pins, the hover outline, its label, then the note
-  // panel and the launcher with its menus (ties would go to whichever came later).
-  `.sn-pin{position:absolute;z-index:2147483644;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
+  // Stacking, bottom to top: the hover and selection outlines, pins (they sit on
+  // an element's corner), the hover label, then the note panel and the launcher
+  // with its menus (ties would go to whichever came later).
+  `.sn-pin{position:absolute;z-index:2147483645;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
     `border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:${T.accentInk};font:600 11px/18px ${T.font};text-align:center;` +
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
   ".sn-pin>span:first-child{display:grid;place-items:center;height:100%;line-height:1}", // number or state icon, centred
@@ -120,6 +121,30 @@ const CSS = [
   ".sn-thread{max-height:220px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}",
   `.sn-msg{color:${T.text};font:13px/18px ${T.font};white-space:pre-wrap;word-break:break-word}`,
   `.sn-msg-agent{padding-left:8px;border-left:2px solid ${T.accent}}`,
+  // The agent's Markdown (markdown.js): compact, to fit the panel.
+  ".sn-md{white-space:normal}",
+  ".sn-md p,.sn-md ul,.sn-md ol,.sn-md pre{margin:0 0 6px}",
+  ".sn-md>:last-child{margin-bottom:0}",
+  ".sn-md ul,.sn-md ol{padding-left:18px}",
+  ".sn-md li{margin:2px 0}",
+  ".sn-md .sn-md-h{font-weight:600}",
+  ".sn-md strong{font-weight:600}",
+  `.sn-md code{font:12px ${T.mono};padding:1px 4px;border-radius:4px;background:var(--sn-hover-strong)}`,
+  `.sn-md pre{font:12px/17px ${T.mono};padding:6px 8px;border-radius:6px;background:var(--sn-bg-input);overflow-x:auto;white-space:pre}`,
+  // A file the agent mentioned: click to open it in your editor.
+  `.sn-file{all:unset;cursor:pointer;color:${T.accentText};text-decoration:underline dotted;text-underline-offset:2px}`,
+  ".sn-file:hover{text-decoration-style:solid}",
+  ".sn-file.sn-file-missing{color:inherit;text-decoration:line-through;cursor:default}",
+  `.sn-file-hint{color:${T.textMuted};font-size:12px}`,
+  // The panel header's file:line: a button that opens it in your editor.
+  `.sn-loc{all:unset;display:inline-flex;align-items:center;align-self:center;flex-shrink:0;cursor:pointer;color:${T.textMuted};font:11px ${T.mono};border-radius:4px}`,
+  `.sn-loc:hover{color:${T.text}}`,
+  // Dotted like the file links in the agent's messages; solid on hover.
+  ".sn-loc span>span:last-child{text-decoration:underline dotted;text-underline-offset:2px}",
+  ".sn-loc:hover span>span:last-child{text-decoration-style:solid}",
+  `.sn-loc:focus-visible{outline:2px solid ${T.accent};outline-offset:2px}`,
+  // Settings → Editor
+  ".snl-select{font:inherit;font-size:12px;color:var(--sn-glass-text);background:var(--sn-hover-strong);border:none;border-radius:6px;padding:4px 6px;cursor:pointer}",
   `.sn-who{display:block;font-size:11px;line-height:16px;color:${T.textMuted}}`,
   // In place of the input while an agent works on the note.
   `.sn-busy{display:flex;align-items:center;gap:8px;min-height:20px;color:${T.textMuted};font:13px/18px ${T.font}}`,

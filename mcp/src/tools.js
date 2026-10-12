@@ -16,7 +16,9 @@ export const INSTRUCTIONS =
   "tells you to stop. The developer is looking at the browser, not at this chat: ask questions with reply_note (they " +
   "answer in the browser and the answer comes back through watch_notes). End every note you get with resolve_note, " +
   "dismiss_note or reply_note, even when there's nothing to change: if the developer only says thanks or confirms, " +
-  "call resolve_note with a short summary like \"Nothing to change.\"";
+  "call resolve_note with a short summary like \"Nothing to change.\" Messages show as Markdown in a narrow panel: " +
+  "keep them short, split points into paragraphs or a \"- \" list, put code and props in `backticks`, and write files " +
+  "as path:line (the developer can click them to open the file).";
 
 // An app is the agent's business when it's inside the agent's folder (or the
 // agent works inside the app). Its notes' ids carry the app's path from there,
@@ -147,7 +149,7 @@ export function registerTools(mcp, call) {
       "They see it on the note in the browser; their answer comes back through watch_notes.",
     inputSchema: {
       id: z.string().describe("The note's id."),
-      message: z.string().describe("What to tell or ask the developer. Short and plain."),
+      message: z.string().describe("What to tell or ask the developer. Short Markdown: a paragraph or two, or a list; `code`; files as path:line."),
     },
   });
   tool("dismiss_note", {
@@ -157,7 +159,7 @@ export function registerTools(mcp, call) {
       "To ask something instead, use reply_note.",
     inputSchema: {
       id: z.string().describe("The note's id."),
-      reason: z.string().describe("Why you won't make the change. One or two sentences."),
+      reason: z.string().describe("Why you won't make the change. One or two sentences, Markdown."),
     },
   });
   tool("resolve_note", {
@@ -166,7 +168,7 @@ export function registerTools(mcp, call) {
       "the note. If they reply that it isn't right, the note comes back through watch_notes.",
     inputSchema: {
       id: z.string().describe("The note's id."),
-      summary: z.string().describe("One or two sentences: what you changed, and in which file."),
+      summary: z.string().describe("One or two sentences, Markdown: what you changed, and in which file (path:line)."),
     },
   });
 }

@@ -6,8 +6,9 @@
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
 import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
-import { getSettings, onSettings } from "./settings.js";
+import { getSettings, onSettings, EDITORS } from "./settings.js";
 import { connectRemote } from "./remote.js";
+import { renderMarkdown } from "./markdown.js";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -465,8 +466,9 @@ function rebindSelection() {
 function mkBox() {
   const box = document.createElement("div");
   box.setAttribute("data-spotnote-ui", "");
+  // z-index: under pins (see the stacking note in ui.js).
   box.style.cssText =
-    "position:absolute;pointer-events:none;z-index:2147483646;box-sizing:border-box;border-radius:3px;" +
+    "position:absolute;pointer-events:none;z-index:2147483644;box-sizing:border-box;border-radius:3px;" +
     `border:2px solid ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
   return box;
 }
@@ -584,12 +586,14 @@ function panelLabel(el) {
     wrap.append(c);
   }
 
+  // The element's file:line, as a button that opens it in your editor.
   const l = parseLoc(el.getAttribute("data-spotnote"));
-  const loc = fileTag(l.file, l.line);
-  loc.style.color = T.textMuted;
-  loc.style.fontFamily = MONO;
-  loc.style.fontSize = "11px";
-  loc.style.alignSelf = "center";
+  const loc = document.createElement("button");
+  loc.type = "button";
+  loc.className = "sn-loc";
+  loc.title = `Open ${l.file}:${l.line} in your editor`;
+  loc.append(fileTag(l.file, l.line));
+  loc.addEventListener("click", () => openFile({ path: l.file, line: String(l.line), column: String(l.column) }, loc));
   wrap.append(loc);
   return wrap;
 }
@@ -602,6 +606,44 @@ function noteMode(pin) {
   if (!pin) return "edit";
   if (pin.working) return "working";
   return pin.thread?.length > 0 || pin.done || pin.dismissed ? "talking" : "edit";
+}
+
+// A file the agent mentioned → open it in your editor: the one picked in
+// Settings (through its URL), or with "Auto" the one running (the dev server
+// launches it). A bare name ("router.jsx") is looked up among the page's stamps
+// first; the dev server then finds it on disk (see /__spotnote/open).
+async function openFile({ path, line, column }, button) {
+  if (!path.includes("/")) {
+    const known = new Set([...document.querySelectorAll("[data-spotnote]")].map((e) => parseLoc(e.getAttribute("data-spotnote")).file));
+    const hits = [...known].filter((f) => f.split("/").pop() === path);
+    if (hits.length === 1) path = hits[0];
+  }
+  const editor = EDITORS[getSettings().editor] ?? EDITORS.auto;
+  const q = new URLSearchParams({ path, ...(line && { line }), ...(column && { column }), ...(editor.scheme && { resolve: "1" }) });
+  const res = await fetch(`/__spotnote/open?${q}`).catch(() => null);
+  const body = res && (await res.json().catch(() => null));
+  if (res?.status === 404) return fileProblem(button, "Couldn't find this file in your project", true);
+  if (res?.status === 409) return fileProblem(button, "No editor is running. Pick yours in Settings → Editor.");
+  if (!res?.ok || !body?.file) return fileProblem(button, "Couldn't open this file.");
+  // An editor picked in Settings, or the running one whose command-line tool
+  // isn't installed (the dev server says which): open it through its URL.
+  const scheme = editor.scheme ?? body.scheme;
+  if (scheme) {
+    const p = body.file.replace(/\\/g, "/");
+    const a = document.createElement("a");
+    a.href = `${scheme}://file${p.startsWith("/") ? "" : "/"}${p}${line ? `:${line}` : ""}${line && column ? `:${column}` : ""}`;
+    a.click();
+  }
+}
+// Say why a file link didn't open, right after it (once).
+function fileProblem(button, text, missing = false) {
+  if (missing) button.classList.add("sn-file-missing");
+  button.title = text;
+  if (button.nextSibling?.className === "sn-file-hint") return;
+  const hint = document.createElement("span");
+  hint.className = "sn-file-hint";
+  hint.textContent = ` (${text})`;
+  button.after(hint);
 }
 
 // The open note changed (from the server): redraw its conversation, or rebuild
@@ -696,7 +738,14 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
         const who = document.createElement("span");
         who.className = "sn-who";
         who.textContent = m.from === "agent" ? (m.resolves ? "Agent · done" : m.dismisses ? "Agent · won't do" : "Agent") : "You";
-        msg.append(who, m.text);
+        msg.append(who);
+        // The agent writes Markdown; what you typed stays as typed.
+        if (m.from === "agent") {
+          const body = document.createElement("div");
+          body.className = "sn-md";
+          body.append(renderMarkdown(m.text, openFile));
+          msg.append(body);
+        } else msg.append(m.text);
         thread.append(msg);
       }
       thread.scrollTop = thread.scrollHeight;
@@ -1116,6 +1165,9 @@ function makePinMarker(key, loc, index) {
   marker.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // A pin toggles its note: closes it when it's the one open (like ×),
+    // otherwise opens it (moving the panel over from another note).
+    if (panelKey === key) return closePanel();
     const p = pins.get(key);
     const el = resolveRef(loc, index);
     if (el && p) openPanel(el, p.note);
