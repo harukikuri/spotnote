@@ -7,7 +7,7 @@
 //
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
-//     copyNote, deleteNote, fileKind, onChange }
+//     copyNote, deleteNote, fileKind, mcpStatus, onChange }
 import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
 import { getSettings, setSetting } from "./settings.js";
 
@@ -148,6 +148,7 @@ export function mountLauncher(ctrl) {
       shownCount = count;
     }
     if (notesPop.classList.contains("snl-show")) renderNotes();
+    if (settingsPop.classList.contains("snl-show")) renderMcp();
   }
 
   function setOpen(v) {
@@ -270,7 +271,7 @@ export function mountLauncher(ctrl) {
     return r;
   }
   function renderSettings() {
-    settingsPop.querySelectorAll(".snl-row").forEach((n) => n.remove());
+    settingsPop.querySelectorAll(".snl-row,.snl-mcp-help").forEach((n) => n.remove());
     choices(row("Color"), "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, name) => {
       b.style.setProperty("--c", ACCENTS[k].accent);
       b.title = name;
@@ -278,6 +279,38 @@ export function mountLauncher(ctrl) {
     });
     const seg = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
     choices(row("Theme"), "snl-seg", "theme", seg, (b, _, label) => (b.textContent = label));
+    mcpRow = row("Agent (MCP)");
+    shownMcp = null;
+    renderMcp();
+  }
+
+  // Whether spotnote-mcp is running and has our notes. Off, it shows how to add it.
+  const MCP_TEXT = { on: "Connected", connecting: "Connecting…", off: "Not running" };
+  const MCP_CMD = "claude mcp add spotnote -- npx -y spotnote-mcp";
+  let mcpRow = null;
+  let shownMcp = null;
+  function renderMcp() {
+    const status = ctrl.mcpStatus();
+    if (!mcpRow || status === shownMcp) return;
+    shownMcp = status;
+    mcpRow.querySelector(".snl-mcp")?.remove();
+    const value = el("span", `snl-mcp snl-mcp-${status}`, mcpRow);
+    el("span", "snl-dot", value);
+    value.append(MCP_TEXT[status]);
+    settingsPop.querySelector(".snl-mcp-help")?.remove();
+    if (status !== "off") return;
+    const help = el("div", "snl-mcp-help", settingsPop);
+    help.append("Starts with your agent. To add it to Claude Code:");
+    const cmd = el("div", "snl-cmd", help);
+    el("code", "", cmd).textContent = MCP_CMD;
+    const copy = el("button", "", cmd);
+    copy.title = "Copy";
+    copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
+    copy.addEventListener("click", () => {
+      navigator.clipboard?.writeText(MCP_CMD).catch(() => {});
+      copy.innerHTML = ICONS.check;
+      setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
+    });
   }
 
   // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──

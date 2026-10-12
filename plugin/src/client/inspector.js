@@ -70,6 +70,7 @@ const controller = {
   // `lost`: the note was written on this page, but no element has its source
   // location any more (an edit moved or removed it).
   fileKind,
+  mcpStatus: () => remote?.status() ?? "off",
   notes: () =>
     [...pins.entries()].map(([key, p]) => ({
       key,
@@ -194,6 +195,7 @@ export function initInspector({ jsx = null, root = "", port = 4848 } = {}) {
     root,
     port,
     onSnapshot: applySnapshot,
+    onStatus: notify, // the launcher's Settings shows it
     onOnline(on) {
       if (on) return remote.send({ op: "merge", notes: [...pins].map(([key, p]) => wire(key, p)) });
       // The server (and with it the agent) went away: nobody is working on anything.

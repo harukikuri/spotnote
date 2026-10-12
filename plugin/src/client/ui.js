@@ -228,6 +228,18 @@ const CSS = [
   ".snl-swatches button{width:20px;height:20px;padding:0;border-radius:50%;border:none;background:var(--c);cursor:pointer;" +
     "box-shadow:0 0 0 2px transparent;transition:box-shadow .12s ease}",
   '.snl-swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--sn-bg),0 0 0 4px var(--sn-glass-text)}',
+  // Agent (MCP) status: a dot and a word; when off, how to add it.
+  ".snl-mcp{display:flex;align-items:center;gap:6px;font-size:12px}",
+  ".snl-dot{width:8px;height:8px;border-radius:50%;background:var(--sn-sub)}",
+  ".snl-mcp-on .snl-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}",
+  `.snl-mcp-connecting .snl-dot{background:${T.accent};animation:snl-blink 1s ease-in-out infinite}`,
+  "@keyframes snl-blink{50%{opacity:.3}}",
+  ".snl-mcp-off{color:var(--sn-sub)}",
+  ".snl-mcp-help{margin:-2px 8px 8px;font-size:11px;line-height:16px;color:var(--sn-sub)}",
+  `.snl-cmd{display:flex;align-items:center;gap:4px;margin-top:4px;padding:4px 4px 4px 8px;border-radius:6px;background:var(--sn-hover-strong)}`,
+  `.snl-cmd code{flex:1;min-width:0;font:11px/15px ${T.mono};color:var(--sn-glass-text);overflow-wrap:anywhere}`,
+  ".snl-cmd button{display:grid;place-items:center;width:22px;height:22px;padding:0;border:none;border-radius:5px;background:none;color:var(--sn-sub);cursor:pointer}",
+  ".snl-cmd button:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
   ".snl-seg{display:flex;padding:2px;border-radius:8px;background:var(--sn-hover-strong)}",
   ".snl-seg button{padding:3px 9px;border:none;border-radius:6px;background:none;font-size:12px;cursor:pointer;color:var(--sn-sub)}",
   ".snl-seg button:hover{color:var(--sn-glass-text)}",

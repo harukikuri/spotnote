@@ -2,9 +2,13 @@
 // are the truth: we send it our edits and mirror its snapshots. The dev server
 // tells us when it's up ("spotnote:mcp"), so a page never polls a closed port
 // (each failed attempt would print an error in the console).
-export function connectRemote({ root, port, onSnapshot, onOnline }) {
+//
+// status: "off" (not running), "connecting", or "on" (our notes are synced).
+export function connectRemote({ root, port, onSnapshot, onOnline, onStatus }) {
   const base = `http://127.0.0.1:${port}`;
   let es = null;
+  let status = "off";
+  const setStatus = (s) => s !== status && onStatus?.((status = s));
   let lastV = -1; // snapshots can overtake each other: keep only newer ones
 
   function apply(snap) {
@@ -15,6 +19,7 @@ export function connectRemote({ root, port, onSnapshot, onOnline }) {
   function setUp(up) {
     if (up && !es) {
       lastV = -1; // a new server counts from 0
+      setStatus("connecting");
       es = new EventSource(`${base}/events?root=${encodeURIComponent(root)}`);
       es.addEventListener("snapshot", (e) => online && apply(JSON.parse(e.data)));
       es.onopen = () => onOnline(true);
@@ -29,12 +34,14 @@ export function connectRemote({ root, port, onSnapshot, onOnline }) {
     es.close();
     es = null;
     online = false;
+    setStatus("off");
     onOnline(false);
   }
   import.meta.hot?.on("spotnote:mcp", ({ up }) => setUp(up));
   import.meta.hot?.send("spotnote:mcp?");
 
   return {
+    status: () => status,
     // Ops: upsert { note }, remove { key }, reply { key, text }, merge { notes }.
     async send(op) {
       if (!es) return;
@@ -43,6 +50,7 @@ export function connectRemote({ root, port, onSnapshot, onOnline }) {
         const res = await fetch(`${base}/op`, { method: "POST", body: JSON.stringify({ root, ...op }) });
         if (res.ok) {
           online = true; // the first op is the merge: from here on, snapshots are the truth
+          setStatus("on");
           apply(await res.json());
         }
       } catch {
