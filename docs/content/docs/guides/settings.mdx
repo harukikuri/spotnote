@@ -1,17 +1,27 @@
 ---
 title: Settings
-description: Change Spotnote's accent color, theme and editor, and see whether your agent is connected.
+description: See whether your coding agent is connected, and change Spotnote's look and where files open.
 ---
 
-Open the launcher and click the gear (the third button) to open **Settings**. Changes apply right away and are saved in your browser, per app (see [Storage](/reference/storage)).
+Open the launcher and click the gear (the third button) to open **Settings**. Each row has a **?**: hover it for what the setting does. Changes apply right away and are saved in your browser, per app (see [Storage](/reference/storage)).
 
-## Color
+## Coding agent
 
-The accent used for the outline, the label, pins and the launcher. Yellow is the default; switch to pink, cyan, green, orange or violet when yellow blends into your app.
+The row shows whether your agent is connected through [spotnote-mcp](/guides/mcp), updated live. Click it for its page: what connecting gives you, and when it isn't connected, the command to add it to Claude Code, with a copy button.
+
+| Status | Meaning |
+| --- | --- |
+| Connected | Your agent picks up notes as you write them. |
+| Connecting… | It just started; your notes are syncing. |
+| Not connected | No agent is running spotnote-mcp. |
+
+## Accent color
+
+The color of the outline, the labels and the pins. Yellow is the default; switch to pink, cyan, green, orange or violet when yellow blends into your app.
 
 ## Theme
 
-The look of Spotnote's own UI (the launcher, note panel and lists), not your app's.
+The icon at the top right of Settings. Click it to cycle through the options. It sets the look of Spotnote's own panels (the launcher, note panel and lists), not your app's.
 
 | Option | Effect |
 | --- | --- |
@@ -19,10 +29,9 @@ The look of Spotnote's own UI (the launcher, note panel and lists), not your app
 | Light | Light panels. |
 | Dark | Dark panels. The default. |
 
+## Open files in
 
-## Editor
-
-Where a file opens when you click it: the file name in the note panel's header, or a file the agent mentions (`router.jsx:28`).
+Where a file opens when you click its name: in the note panel's header, or in the agent's messages (`router.jsx:28`).
 
 | Option | Effect |
 | --- | --- |
@@ -31,12 +40,6 @@ Where a file opens when you click it: the file name in the note panel's header, 
 
 If Auto finds no editor, the link says so: pick yours here. Set `LAUNCH_EDITOR` when starting the dev server to name an editor Auto doesn't recognise.
 
-## Agent (MCP)
+## Footer
 
-Whether [spotnote-mcp](/guides/mcp) is running, updated live:
-
-| Status | Meaning |
-| --- | --- |
-| Connected | It's running and has this browser's notes. Your agent can pick them up. |
-| Connecting… | It just started; the notes are syncing. |
-| Not running | No agent has started it. Settings shows the command that adds it to Claude Code, with a copy button. |
+The bottom of Settings shows which Spotnote version you're running, with a link to its GitHub repository.
