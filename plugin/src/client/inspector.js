@@ -604,6 +604,42 @@ function panelLabel(el) {
   return wrap;
 }
 
+// "✳ Claude Code" over an agent's message: its mark (when we have one) and its
+// name; just "Agent" when it didn't say which it is.
+function agentLabel(client) {
+  const who = document.createElement("span");
+  who.className = "sn-who";
+  const mark = agentMark(client);
+  if (mark?.svg) {
+    const i = document.createElement("span");
+    i.className = "sn-agent-mark";
+    i.innerHTML = mark.svg; // hardcoded SVG constants, not user input
+    who.append(i);
+  }
+  who.append(mark?.name ?? "Agent");
+  return who;
+}
+
+// The agent's message while it works: "Thinking…", "Reading the code…", … in
+// turn, with moving dots (still under reduced motion: just "Thinking").
+const THINKING = ["Thinking", "Reading the code", "Looking around", "Working on it", "Weighing it up", "Almost there"];
+function thinkingMsg(client) {
+  const msg = document.createElement("div");
+  msg.className = "sn-msg sn-msg-agent sn-thinking";
+  const text = document.createElement("span");
+  text.className = "sn-msg-body sn-thinking-text";
+  text.textContent = THINKING[0];
+  msg.append(agentLabel(client), text);
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let i = 0;
+    const t = setInterval(() => {
+      if (!text.isConnected) return clearInterval(t);
+      text.textContent = THINKING[(i = (i + 1) % THINKING.length)];
+    }, 2400);
+  }
+  return msg;
+}
+
 // What a note's panel is for:
 //   "edit"     write or change the note (also a new one, with no pin yet)
 //   "working"  an agent has it: show the conversation, no input until it answers
@@ -752,31 +788,20 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       for (const m of [{ from: "you", text: pin.note }, ...(pin.thread ?? [])]) {
         const msg = document.createElement("div");
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
-        const who = document.createElement("span");
-        who.className = "sn-who";
-        if (m.from === "agent") {
-          // The agent by name ("Claude Code"), after its mark when we have one;
-          // just "Agent" when it didn't say which it is.
-          const mark = agentMark(m.client);
-          if (mark?.svg) {
-            const i = document.createElement("span");
-            i.className = "sn-agent-mark";
-            i.innerHTML = mark.svg; // hardcoded SVG constants, not user input
-            who.append(i);
-          }
-          who.append(mark?.name ?? "Agent");
-          if (m.dismisses) who.append(" · won't do");
-        } else who.textContent = "You";
+        const who = m.from === "agent" ? agentLabel(m.client) : Object.assign(document.createElement("span"), { className: "sn-who", textContent: "You" });
+        if (m.dismisses) who.append(" · won't do");
         msg.append(who);
         // The agent writes Markdown; what you typed stays as typed.
         if (m.from === "agent") {
           const body = document.createElement("div");
-          body.className = "sn-md";
+          body.className = "sn-msg-body sn-md";
           body.append(renderMarkdown(m.text, openFile));
           msg.append(body);
-        } else msg.append(m.text);
+        } else msg.append(Object.assign(document.createElement("div"), { className: "sn-msg-body", textContent: m.text }));
         thread.append(msg);
       }
+      // While an agent works on it: a message from the agent, still being written.
+      if (pin.working) thread.append(thinkingMsg(pin.working.client));
       thread.scrollTop = thread.scrollHeight;
     };
     panelRefresh();
@@ -785,7 +810,6 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   // Note input
   const inputWrap = document.createElement("div");
   inputWrap.className = "sn-compose";
-  inputWrap.style.cssText = "display:flex;flex-direction:column;padding:10px 12px 8px";
   if (talking) inputWrap.style.borderTop = `1px solid ${T.borderSubtle}`; // reply box, below the conversation
   const input = document.createElement("div");
   input.contentEditable = "true";
@@ -797,12 +821,9 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   inputWrap.append(input);
   panel.append(inputWrap);
   if (mode === "working") {
-    // Nothing to type while the agent works: its answer rebuilds the panel.
-    input.remove();
-    const busy = document.createElement("div");
-    busy.className = "sn-busy";
-    busy.append(document.createElement("span"), "Agent is on it…");
-    inputWrap.append(busy);
+    // Nothing to type while the agent works (the conversation shows it thinking);
+    // its answer rebuilds the panel.
+    inputWrap.remove();
     // Keep the focus here and swallow typing, so a half-typed word can't reach
     // the page (Esc still closes: it's handled on window, in the capture phase).
     panel.tabIndex = -1;

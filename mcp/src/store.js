@@ -8,7 +8,8 @@
 //   thread    [{ id, from: "agent" | "you", text, at, resolves?, dismisses?, client? }]
 //             (client: the agent's name for itself, e.g. "claude-code")
 //   done      the agent made the change; dismissed: it won't, and said why
-//   working   the id of the agent that has it (set when a tool hands it out; not saved)
+//   working   { agent, client } of the agent that has it — its session id and its name
+//             for itself ("claude-code") — or false (set when a tool hands it out; not saved)
 //   reopened  "done" / "dismissed": what a reply reopened, to restore if the agent
 //             lets it go without answering (a "thanks!" needs no change)
 //   updated   last change, in ms (newer wins when a browser brings offline notes)
@@ -146,17 +147,17 @@ export function createStore() {
       return true;
     },
     // An agent was handed these notes (see tools.js).
-    working(root, keys, agent) {
-      const fresh = app(root).notes.filter((n) => keys.includes(n.key) && n.working !== agent);
+    working(root, keys, agent, client) {
+      const fresh = app(root).notes.filter((n) => keys.includes(n.key) && n.working?.agent !== agent);
       if (!fresh.length) return;
-      fresh.forEach((n) => (n.working = agent));
+      fresh.forEach((n) => (n.working = { agent, client: client ?? null }));
       changed(root);
     },
     // The agent moved on without answering these: it's not working on them any
     // more, and a note a reply reopened goes back to how it was.
     release(agent) {
       for (const a of apps.values()) {
-        const held = a.notes.filter((n) => n.working === agent);
+        const held = a.notes.filter((n) => n.working?.agent === agent);
         if (!held.length) continue;
         for (const n of held) {
           n.working = false;

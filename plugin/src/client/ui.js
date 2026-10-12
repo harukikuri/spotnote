@@ -91,7 +91,7 @@ const CSS = [
   // the note input does.
   ".sn-panel.sn-sized .sn-thread{flex:1 1 auto;min-height:0;max-height:none}",
   ".sn-panel.sn-sized:not(:has(.sn-thread)) .sn-compose{flex:1 1 auto;min-height:0}",
-  ".sn-panel.sn-sized:not(:has(.sn-thread)) .sn-compose [data-spotnote-input]{flex:1 1 auto;max-height:none!important}",
+  ".sn-panel.sn-sized:not(:has(.sn-thread)) .sn-compose [data-spotnote-input]{align-self:stretch;flex:1 1 auto;max-height:none!important}",
   // The resize grip, in the bottom-right corner.
   `.sn-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;color:${T.textIcon};opacity:.5}`,
   ".sn-resize:hover{opacity:1}",
@@ -100,7 +100,11 @@ const CSS = [
   "@keyframes sn-pop-out{to{opacity:0;transform:scale(.95)}}",
   // The note's send action: a quiet "↵ Add & copy" under the input, hidden
   // until there's text to send.
-  `.sn-send{display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:2px 4px;border:none;border-radius:5px;` +
+  // The input and its "↵ Add & copy" share a row: the hint sits at the right,
+  // on the input's last line, so an empty input leaves no gap below it.
+  ".sn-compose{display:flex;align-items:flex-end;gap:8px;padding:10px 12px}",
+  ".sn-compose [data-spotnote-input]{flex:1;min-width:0}",
+  `.sn-send{flex:none;display:flex;align-items:center;gap:6px;margin:0;padding:1px 4px;border:none;border-radius:5px;` +
     `background:none;color:${T.textMuted};font:12px ${T.font};cursor:pointer;transition:opacity .14s,color .14s}`,
   `.sn-send:hover{color:${T.accentText}}`,
   `.sn-send:disabled{opacity:0;pointer-events:none}`,
@@ -128,8 +132,11 @@ const CSS = [
   `@keyframes sn-ask{50%{box-shadow:0 0 0 5px rgba(${T.accentRgb},.4),0 2px 6px rgba(0,0,0,.35)}}`,
   // The note panel's conversation, above the reply input.
   ".sn-thread{max-height:220px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}",
+  // A line down the left of each message's text (not its "You" / agent label):
+  // grey for yours, the accent for the agent's.
   `.sn-msg{color:${T.text};font:13px/18px ${T.font};white-space:pre-wrap;word-break:break-word}`,
-  `.sn-msg-agent{padding-left:8px;border-left:2px solid ${T.accent}}`,
+  `.sn-msg-body{display:block;margin:2px 0 0 4px;padding-left:8px;border-left:2px solid ${T.border}}`,
+  `.sn-msg-agent .sn-msg-body{border-left-color:${T.accent}}`,
   // The agent's Markdown (markdown.js): compact, to fit the panel.
   ".sn-md{white-space:normal}",
   ".sn-md p,.sn-md ul,.sn-md ol,.sn-md pre{margin:0 0 6px}",
@@ -172,10 +179,11 @@ const CSS = [
   ".snl-select option{color:initial}",
   `.sn-who{display:flex;align-items:center;gap:5px;font-size:11px;line-height:16px;color:${T.textMuted}}`,
   ".sn-agent-mark{display:inline-grid;color:var(--sn-text)}",
-  // In place of the input while an agent works on the note.
-  `.sn-busy{display:flex;align-items:center;gap:8px;min-height:20px;color:${T.textMuted};font:13px/18px ${T.font}}`,
-  `.sn-busy span{flex:none;width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(${T.accentRgb},.3);` +
-    `border-top-color:${T.accent};animation:sn-spin .9s linear infinite}`,
+  // The agent's message while it works: its words pulse gently, dots move.
+  ".sn-thinking-text{color:var(--sn-muted);animation:sn-pulse 1.6s ease-in-out infinite}",
+  ".sn-thinking-text::after{content:'';display:inline-block;width:1.2em;text-align:left;animation:sn-dots 1.2s steps(4) infinite}",
+  "@keyframes sn-pulse{50%{color:color-mix(in srgb,var(--sn-muted) 55%,transparent)}}", // the text only, not the line
+  "@keyframes sn-dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}",
   ".sn-pin.sn-leaving{animation:sn-pin-out .12s ease-in forwards;pointer-events:none}",
   "@keyframes sn-pin-in{from{transform:scale(0)}}",
   "@keyframes sn-pin-out{to{transform:scale(0);opacity:0}}",
@@ -363,7 +371,7 @@ const CSS = [
   ".snl-seg button:hover{color:var(--sn-glass-text)}",
   '.snl-seg button[aria-checked="true"]{background:var(--sn-bg);color:var(--sn-glass-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}',
   "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}" +
-    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after,.sn-busy span{animation:none}" +
+    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after,.sn-thinking-text,.sn-thinking-text::after{animation:none}" +
     ".snl,.snl *,.snl-working .snl-num::after{transition-duration:.01s!important;animation:none!important}}",
 ].join("\n");
 

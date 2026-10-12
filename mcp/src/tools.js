@@ -15,8 +15,9 @@ export const INSTRUCTIONS =
   "what it returns, then call it again. A wait that ends with nothing is normal: keep watching until the developer " +
   "tells you to stop. The developer is looking at the browser, not at this chat: ask questions with reply_note (they " +
   "answer in the browser and the answer comes back through watch_notes). End every note you get with resolve_note, " +
-  "dismiss_note or reply_note, even when there's nothing to change: if the developer only says thanks or confirms, " +
-  "call resolve_note with a short summary like \"Nothing to change.\" Messages show as Markdown in a narrow panel: " +
+  "dismiss_note or reply_note, even when there's nothing to change. A note can be a question (\"what does this do?\"): " +
+  "answer it in resolve_note's summary. If the developer only says thanks or confirms, resolve it with a word or two. " +
+  "Messages show as Markdown in a narrow panel: " +
   "keep them short, split points into paragraphs or a \"- \" list, put code and props in `backticks`, and write files " +
   "as path:line (the developer can click them to open the file).";
 
@@ -45,9 +46,9 @@ export function createRunner(store) {
   // Open, and the agent hasn't had the last word.
   const needsAgent = (v) => open(v) && v.thread.at(-1)?.from !== "agent";
   // Show the developer an agent has these, until it replies, resolves or dismisses.
-  function handOut(list, agent) {
+  function handOut(list, agent, client) {
     for (const root of new Set(list.map((v) => v.root)))
-      store.working(root, list.filter((v) => v.root === root).map((v) => v.key), agent);
+      store.working(root, list.filter((v) => v.root === root).map((v) => v.key), agent, client);
   }
   const signature = (v) => `${v.root}\n${v.key}\n${v.note}\n${v.thread.length}`;
 
@@ -72,7 +73,7 @@ export function createRunner(store) {
   const empty = "No notes yet. Write one in the browser: open the app with the Spotnote launcher and click an element.";
 
   const tools = {
-    async watch_notes({ timeout_seconds = MAX_WAIT_S } = {}, cwd, signal, agent) {
+    async watch_notes({ timeout_seconds = MAX_WAIT_S } = {}, cwd, signal, agent, client) {
       // Watching again means the last batch is handled; whatever it left unanswered
       // isn't being worked on (see store.release).
       store.release(agent);
@@ -85,13 +86,13 @@ export function createRunner(store) {
       while (Date.now() < batchEnd && !signal?.aborted) await change(batchEnd - Date.now(), signal);
       const batch = fresh();
       batch.forEach((v) => delivered.add(signature(v)));
-      handOut(batch, agent);
+      handOut(batch, agent, client);
       return ok(batch.map(format).join("\n\n---\n\n"));
     },
-    list_notes(_, cwd, signal, agent) {
+    list_notes(_, cwd, signal, agent, client) {
       const all = notes(cwd);
       const list = all.filter(open);
-      handOut(list.filter((v) => v.thread.at(-1)?.from !== "agent"), agent); // not the ones waiting on the developer
+      handOut(list.filter((v) => v.thread.at(-1)?.from !== "agent"), agent, client); // not the ones waiting on the developer
       return ok(list.length ? list.map(format).join("\n\n---\n\n") : all.length ? "No open notes." : empty);
     },
     reply_note({ id, message }, cwd, signal, agent, client) {
@@ -165,11 +166,11 @@ export function registerTools(mcp, call) {
   });
   tool("resolve_note", {
     description:
-      "Mark a note done after you've made the change. The developer sees a check mark on its pin and your summary on " +
+      "Mark a note done after you've made the change, or answered its question. The developer sees a check mark on its pin and your summary on " +
       "the note. If they reply that it isn't right, the note comes back through watch_notes.",
     inputSchema: {
       id: z.string().describe("The note's id."),
-      summary: z.string().describe("One or two sentences, Markdown: what you changed, and in which file (path:line)."),
+      summary: z.string().describe("Markdown: what you changed, and in which file (path:line); or, for a question, the answer."),
     },
   });
 }
