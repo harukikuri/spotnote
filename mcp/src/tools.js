@@ -94,27 +94,28 @@ export function createRunner(store) {
       handOut(list.filter((v) => v.thread.at(-1)?.from !== "agent"), agent); // not the ones waiting on the developer
       return ok(list.length ? list.map(format).join("\n\n---\n\n") : all.length ? "No open notes." : empty);
     },
-    reply_note({ id, message }, cwd) {
+    reply_note({ id, message }, cwd, signal, agent, client) {
       const v = notes(cwd).find((x) => x.id === id);
-      if (!v || !store.say(v.root, v.key, { text: message })) return unknown(id);
+      if (!v || !store.say(v.root, v.key, { text: message, client })) return unknown(id);
       return ok(`Sent to the developer on note ${v.n}.`);
     },
-    dismiss_note({ id, reason }, cwd) {
+    dismiss_note({ id, reason }, cwd, signal, agent, client) {
       const v = notes(cwd).find((x) => x.id === id);
-      if (!v || !store.say(v.root, v.key, { text: reason, dismisses: true })) return unknown(id);
+      if (!v || !store.say(v.root, v.key, { text: reason, dismisses: true, client })) return unknown(id);
       return ok(`Dismissed note ${v.n}.`);
     },
-    resolve_note({ id, summary }, cwd) {
+    resolve_note({ id, summary }, cwd, signal, agent, client) {
       const v = notes(cwd).find((x) => x.id === id);
-      if (!v || !store.say(v.root, v.key, { text: summary, resolves: true })) return unknown(id);
+      if (!v || !store.say(v.root, v.key, { text: summary, resolves: true, client })) return unknown(id);
       return ok(`Marked note ${v.n} done.`);
     },
   };
 
-  // `agent` tells agent sessions apart (each spotnote-mcp process has its own id).
-  return async function runTool(name, args, cwd, signal, agent) {
+  // `agent` tells agent sessions apart (each spotnote-mcp process has its own id);
+  // `client` is the agent's own name for itself ("claude-code"), kept on what it writes.
+  return async function runTool(name, args, cwd, signal, agent, client) {
     if (!tools[name]) return err(`Unknown tool ${name}.`);
-    return tools[name](args ?? {}, cwd, signal, agent);
+    return tools[name](args ?? {}, cwd, signal, agent, client);
   };
 }
 

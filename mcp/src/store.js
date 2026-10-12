@@ -5,7 +5,8 @@
 //
 // A note: { key, loc, index, url, note, prompt, thread, done, dismissed, working, updated }
 //   key       "path:line:col@index" — one note per element
-//   thread    [{ id, from: "agent" | "you", text, at, resolves?, dismisses? }]
+//   thread    [{ id, from: "agent" | "you", text, at, resolves?, dismisses?, client? }]
+//             (client: the agent's name for itself, e.g. "claude-code")
 //   done      the agent made the change; dismissed: it won't, and said why
 //   working   the id of the agent that has it (set when a tool hands it out; not saved)
 //   reopened  "done" / "dismissed": what a reply reopened, to restore if the agent
