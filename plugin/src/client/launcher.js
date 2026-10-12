@@ -10,6 +10,7 @@
 //     copyNote, deleteNote, fileKind, mcpStatus, about, onChange }
 import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
 import { getSettings, setSetting, EDITORS } from "./settings.js";
+import { createLayer } from "./layers.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
@@ -173,41 +174,23 @@ export function mountLauncher(ctrl) {
   }
 
   // ── Popovers: at most one open; togglePop(null) closes it ──
+  // The open one is a light-dismiss layer (layers.js): it stacks with the note
+  // panel, Esc closes it, and a press on the page closes it.
+  const menuLayer = createLayer({ close: () => togglePop(null), lightDismiss: true });
   function togglePop(which) {
+    let shown = null;
     for (const p of [notesPop, settingsPop]) {
       const show = p === which && !p.classList.contains("snl-show");
       p.classList.toggle("snl-show", show);
       p.item.setAttribute("aria-expanded", show);
       if (show && p === settingsPop) page = "main";
       if (show) (p === notesPop ? renderNotes : renderSettings)();
+      if (show) shown = p;
     }
+    // The launcher root is the popovers' stacking context, so it takes the z-index.
+    if (shown) menuLayer.show(root, shown);
+    else menuLayer.hide();
   }
-  // A press on the page closes an open popover, and does only that: it neither
-  // picks an element nor follows a link. Spotnote's own UI (a pin, the note
-  // panel) isn't "outside": pressing it leaves the popover open.
-  let swallowClick = false;
-  addEventListener(
-    "pointerdown",
-    (e) => {
-      swallowClick = false;
-      if (!root.querySelector(".snl-pop.snl-show") || e.composedPath().includes(root.getRootNode().host)) return;
-      togglePop(null);
-      swallowClick = true;
-      e.preventDefault(); // also suppresses the mousedown that would follow
-      e.stopPropagation();
-    },
-    true,
-  );
-  addEventListener(
-    "click",
-    (e) => {
-      if (!swallowClick) return;
-      swallowClick = false;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    },
-    true,
-  );
   function renderNotes() {
     const all = ctrl.notes();
     popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
@@ -269,11 +252,6 @@ export function mountLauncher(ctrl) {
     del.title = "Delete note";
     del.innerHTML = ICONS.trash;
     del.addEventListener("click", () => ctrl.deleteNote(n.key));
-  }
-  function closePopover() {
-    if (!root.querySelector(".snl-pop.snl-show")) return false;
-    togglePop(null);
-    return true;
   }
 
   // ── Settings popover ──
@@ -487,5 +465,5 @@ export function mountLauncher(ctrl) {
   place(false);
   drawTrack();
   setOpen(false);
-  return { flash, open: () => setOpen(true), closePopover };
+  return { flash, open: () => setOpen(true) };
 }

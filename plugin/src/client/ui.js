@@ -71,8 +71,8 @@ const CSS = [
   // faded in/out via .sn-on. .sn-snap moves them without animating.
   ".sn-hover,.sn-hover-label{position:fixed;left:0;top:0;pointer-events:none;opacity:0;" +
     "transition:transform .12s cubic-bezier(.2,0,0,1),width .12s cubic-bezier(.2,0,0,1),height .12s cubic-bezier(.2,0,0,1),opacity .12s ease}",
-  `.sn-hover{z-index:2147483644;border-radius:3px;border:2px dashed ${T.accent};background:rgba(${T.accentRgb},0.10)}`,
-  `.sn-hover-label{z-index:2147483646;display:flex;gap:6px;align-items:center;background:${T.accent};color:${T.accentInk};` +
+  `.sn-hover{z-index:2147483640;border-radius:3px;border:2px dashed ${T.accent};background:rgba(${T.accentRgb},0.10)}`,
+  `.sn-hover-label{z-index:2147483642;display:flex;gap:6px;align-items:center;background:${T.accent};color:${T.accentInk};` +
     `font-family:${T.font};font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25)}`,
   ".sn-on{opacity:1}",
   ".sn-snap{transition:none}",
@@ -101,9 +101,10 @@ const CSS = [
   `.sn-send kbd{font:11px ${T.mono};padding:0 4px;border:1px solid ${T.border};border-radius:4px;color:inherit}`,
   // Pins: numbered, pop in with a slight overshoot, shrink away on delete.
   // Stacking, bottom to top: the hover and selection outlines, pins (they sit on
-  // an element's corner), the hover label, then the note panel and the launcher
-  // with its menus (ties would go to whichever came later).
-  `.sn-pin{position:absolute;z-index:2147483645;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
+  // an element's corner), the hover label, then the layers — the note panel and
+  // the launcher with its menus — which take the top z-indices in the order you
+  // last used them (layers.js).
+  `.sn-pin{position:absolute;z-index:2147483641;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
     `border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:${T.accentInk};font:600 11px/18px ${T.font};text-align:center;` +
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
   ".sn-pin>span:first-child{display:grid;place-items:center;height:100%;line-height:1}", // number or state icon, centred

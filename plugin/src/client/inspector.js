@@ -9,6 +9,7 @@ import { mountLauncher } from "./launcher.js";
 import { getSettings, onSettings, EDITORS } from "./settings.js";
 import { connectRemote } from "./remote.js";
 import { renderMarkdown } from "./markdown.js";
+import { createLayer, closeTopLayer } from "./layers.js";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -37,6 +38,7 @@ let panelKey = null; // the open panel's note key
 let panelRefresh = null; // redraws the open panel's conversation
 let panelMode = null; // what the open panel was built for (see noteMode)
 let panelSync = null; // updates the open panel when the agent (dis)connects
+const panelLayer = createLayer({ close: () => closePanel() }); // stacking + Esc (layers.js)
 let remote = null; // the link to spotnote-mcp (remote.js)
 let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
@@ -151,26 +153,22 @@ export function initInspector({ jsx = null, root = "", port = 4848, about = null
       syncActive();
     }
   });
-  // Esc exits selection mode (closes the panel + turns off inspect) and is
-  // consumed (capture) so it can't cascade — but only when something is active,
-  // so a bare Esc still reaches the page.
+  // Esc backs out one step at a time: the frontmost surface (the note panel or a
+  // launcher menu, see layers.js), then selection mode. It's consumed (capture)
+  // so it can't cascade — but only when it did something, so a bare Esc still
+  // reaches the page.
   window.addEventListener(
     "keydown",
     (e) => {
       if (e.key !== "Escape") return;
-      // Esc backs out one layer at a time: the launcher's notes popover, then
-      // the panel, then selection mode.
-      const closedPopover = launcher?.closePopover();
-      if (!closedPopover && !panel && !active) return;
+      const closed = closeTopLayer(); // a closed panel keeps selecting
+      if (!closed && !active) return;
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      if (closedPopover) return;
-      if (panel) closePanel(); // keeps selecting
-      else {
-        sticky = false;
-        syncActive();
-      }
+      if (closed) return;
+      sticky = false;
+      syncActive();
     },
     true,
   );
@@ -476,7 +474,7 @@ function mkBox() {
   box.setAttribute("data-spotnote-ui", "");
   // z-index: under pins (see the stacking note in ui.js).
   box.style.cssText =
-    "position:absolute;pointer-events:none;z-index:2147483644;box-sizing:border-box;border-radius:3px;" +
+    "position:absolute;pointer-events:none;z-index:2147483640;box-sizing:border-box;border-radius:3px;" +
     `border:2px solid ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
   return box;
 }
@@ -867,6 +865,9 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   });
 
   uiRoot().append(panel);
+  // On top — or, rebuilt in place, where it was in the stack.
+  if (instant) panelLayer.swap(panel);
+  else panelLayer.show(panel);
   // Start the conversation at its latest message (it had no height before now).
   const threadEl = panel.querySelector(".sn-thread");
   if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
@@ -1044,6 +1045,7 @@ function closePanel({ instant = false } = {}) {
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so
   // keystrokes can't land in it while it fades.
+  if (!instant) panelLayer.hide(); // a rebuild keeps its place (openPanel swaps it)
   const leaving = panel;
   leaving.inert = true;
   if (instant) leaving.remove(); // replaced in place (see refreshPanel)
