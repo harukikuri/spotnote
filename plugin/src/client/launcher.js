@@ -8,7 +8,7 @@
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
 //     copyNote, deleteNote, fileKind, mcpStatus, about, onChange }
-import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
+import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot, agentMark } from "./ui.js";
 import { getSettings, setSetting, EDITORS } from "./settings.js";
 import { createLayer } from "./layers.js";
 
@@ -285,11 +285,10 @@ export function mountLauncher(ctrl) {
     mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
     el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
     el("span", "snl-txt", li).textContent = n.note;
-    if (n.state !== "open") {
-      // Where it stands: the agent is on it, or its last word (what it changed,
-      // what it's asking, or why it won't).
+    if (n.state === "working") {
+      // Who has it; what the agent then says is on the note, not here.
       const sum = el("span", "snl-sum", li);
-      sum.textContent = sum.title = n.state === "working" ? "Agent is on it…" : n.agent;
+      sum.textContent = sum.title = `${agentMark(n.client)?.name ?? "Agent"} is on it…`;
     }
     if (!n.lost) {
       li.addEventListener("click", () => {

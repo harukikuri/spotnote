@@ -84,7 +84,7 @@ const controller = {
       note: p.note,
       state: pinState(p),
       mark: STATE_ICONS[pinState(p)], // SVG markup, or none for a plain number
-      agent: lastAgentMsg(p)?.text,
+      client: p.working?.client, // the agent working on it
       url: p.url,
       here: !p.url || p.url === pageUrl(), // written on the page you're on
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
@@ -1172,7 +1172,6 @@ function applySnapshot(list) {
 // pin.thread: [{ id, from: "agent" | "you", text, at, resolves?, dismisses? }].
 // The note itself is the opening message; resolves marks the agent's "done"
 // summary, dismisses its reason for not making the change.
-const lastAgentMsg = (pin) => pin.thread?.findLast((m) => m.from === "agent");
 // "done", "dismissed" (the agent won't), "asked" (it's waiting on you),
 // "working" (an agent has it) or "open".
 function pinState(pin) {

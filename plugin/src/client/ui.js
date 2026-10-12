@@ -296,15 +296,13 @@ const CSS = [
   ".snl-txt{font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
   // A note an agent resolved over MCP: a check instead of its number, and its summary.
-  ".snl-asked .snl-sum{font-weight:500}",
-  ".snl-working .snl-sum,.snl-dismissed .snl-sum{color:var(--sn-sub)}",
   ".snl-dismissed .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
   // Working: the same spinner as on its pin, on a faint track.
   `.snl-working .snl-num{position:relative;background:none;box-shadow:inset 0 0 0 1.5px rgba(${T.accentRgb},.3);color:var(--sn-accent-text)}`,
   `.snl-working .snl-num::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid transparent;` +
     `border-top-color:${T.accent};animation:sn-spin .9s linear infinite}`,
   ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
-  ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+  ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
   ".snl-notes li.snl-lost{grid-template-columns:auto 1fr auto;cursor:default}",
   ".snl-lost .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
