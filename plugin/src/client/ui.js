@@ -262,8 +262,9 @@ const CSS = [
   '.snl[data-corner$="l"] .snl-tip{left:100%;margin-left:8px;--tx:-4px}',
   '.snl[data-corner$="r"] .snl-tip{right:100%;margin-right:8px;--tx:4px}',
   ".snl-item:hover .snl-tip,.snl-item:focus-visible .snl-tip{opacity:1;--tx:0px}",
-  `.snl-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:${T.accent};` +
-    `color:${T.accentInk};font:600 11px/14px ${T.font};text-align:center;border:2px solid var(--sn-bg)}`,
+  // A circle for one digit (border-box: the border counts), a pill for more.
+  `.snl-badge{position:absolute;top:-5px;right:-5px;box-sizing:border-box;display:grid;place-items:center;min-width:20px;height:20px;padding:0 4px;` +
+    `border-radius:10px;background:${T.accent};color:${T.accentInk};font:600 11px/1 ${T.font};font-variant-numeric:tabular-nums;border:2px solid var(--sn-bg)}`,
   ".snl-badge:empty{display:none}",
   `.snl-badge.snl-bump{animation:snl-bump .45s ${SPRING}}`,
   "@keyframes snl-bump{from{transform:scale(.4)}}",
