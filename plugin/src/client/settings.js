@@ -19,6 +19,7 @@ export const EDITORS = {
 let current = { ...DEFAULTS };
 try {
   current = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+  if (current.accent === "cyan") current.accent = "blue"; // renamed with the palette
 } catch {
   /* ignore */
 }

@@ -342,7 +342,7 @@ export function mountLauncher(ctrl) {
     });
 
     el("div", "snl-rule", settingsPop);
-    const accent = el("div", "snl-srow snl-stack", settingsPop);
+    const accent = el("div", "snl-srow", settingsPop); // swatches on the right, like the other rows' values
     label(accent, "Accent color", "The outline, labels and pins on your page.");
     choices(accent, "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, n) => {
       b.style.setProperty("--c", ACCENTS[k].accent);

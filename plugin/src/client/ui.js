@@ -18,15 +18,17 @@ export const T = {
   mono: "ui-monospace,SFMono-Regular,Menlo,monospace",
 };
 
-// Accent presets for the Settings menu. All are light enough for dark `ink` on
-// top; `deep` is the same hue dark enough to read as text on the light theme.
+// Accent presets for the Settings menu: the brand yellow, then system-style
+// colours at full strength, in hue order. `ink` is the text on the accent (dark,
+// or white on violet: each ≥ 5:1); `deep` is the hue dark enough to read as
+// text on the light theme (≥ 4.5:1 on white).
 export const ACCENTS = {
   yellow: { name: "Yellow", accent: "#ffd84d", ink: "#1a1600", deep: "#8a6a00" },
-  pink: { name: "Pink", accent: "#ff4d94", ink: "#2a0016", deep: "#be185d" },
-  cyan: { name: "Cyan", accent: "#1ccfe8", ink: "#00222b", deep: "#0e7490" },
-  green: { name: "Green", accent: "#3ddc84", ink: "#00230f", deep: "#15803d" },
-  orange: { name: "Orange", accent: "#ff9419", ink: "#2a1400", deep: "#c2410c" },
-  violet: { name: "Violet", accent: "#a07cff", ink: "#160a33", deep: "#6d28d9" },
+  orange: { name: "Orange", accent: "#ff9500", ink: "#1f1100", deep: "#b25000" },
+  pink: { name: "Pink", accent: "#ff375f", ink: "#1f0008", deep: "#d70f45" },
+  violet: { name: "Violet", accent: "#5e5ce6", ink: "#ffffff", deep: "#5e5ce6" },
+  blue: { name: "Blue", accent: "#0a84ff", ink: "#00142b", deep: "#0062cc" },
+  green: { name: "Green", accent: "#30c85e", ink: "#001f0b", deep: "#1b7f3b" },
 };
 
 // Theme surfaces. Dark is the original look; light mirrors it.
@@ -274,7 +276,6 @@ const CSS = [
   ".snl-foot svg{width:13px;height:13px}",
   ".snl-srow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:40px;padding:0;" +
     "border:none;background:none;text-align:left;font:inherit;color:inherit}",
-  ".snl-srow.snl-stack{flex-direction:column;align-items:stretch;justify-content:center;gap:10px;padding:10px 0 12px}",
   ".snl-link{cursor:pointer}",
   ".snl-link:hover .snl-chev{color:var(--sn-glass-text);transform:translateX(2px)}",
   ".snl-rule{height:1px;background:var(--sn-glass-border)}",
@@ -289,8 +290,8 @@ const CSS = [
     `background:var(--sn-text);color:var(--sn-bg);font:400 11px/15px ${T.font};text-align:left;pointer-events:none;` +
     "box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transform:translate(-50%,2px);transition:opacity .12s ease,transform .12s ease;z-index:2}",
   ".snl-help:hover .snl-help-tip,.snl-help:focus-visible .snl-help-tip{opacity:1;transform:translate(-50%,0)}",
-  ".snl-swatches{display:flex;justify-content:space-between}",
-  ".snl-swatches button{width:22px;height:22px;padding:0;border-radius:50%;border:none;background:var(--c);cursor:pointer;" +
+  ".snl-swatches{display:flex;gap:7px}",
+  ".snl-swatches button{width:18px;height:18px;padding:0;border-radius:50%;border:none;background:var(--c);cursor:pointer;" +
     "box-shadow:0 0 0 2px transparent;transition:box-shadow .12s ease,transform .12s ease}",
   ".snl-swatches button:hover{transform:scale(1.08)}",
   '.snl-swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--sn-pop),0 0 0 4px var(--c)}',
