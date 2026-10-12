@@ -57,9 +57,9 @@ The agent keeps watching until you tell it to stop. While nothing happens, it ch
 
 ## Talking on a note
 
-Once the agent has written on a note, its panel shows the conversation: your note, then the agent's and your messages. The input below sends a reply instead of editing the note, and replies aren't copied to the clipboard.
+Once the agent has written on a note, its panel shows the conversation: your note, then the agent's and your messages. Each of the agent's messages is labelled with the agent's name (Claude Code, Codex, …), with its mark for Claude Code, Cursor, Gemini, Windsurf and GitHub Copilot. The input below sends a reply instead of editing the note, and replies aren't copied to the clipboard.
 
-The agent's messages show as Markdown: paragraphs, lists, `code` and code blocks, **bold**. A file it mentions, such as `router.jsx:28`, is a link: click it to open the file at that line in your editor. Which editor is up to [Settings → Open files in](/guides/settings#open-files-in).
+The agent's messages show as Markdown: paragraphs, lists, `code` and code blocks, **bold**. Code is syntax-coloured, and markup the agent writes without backticks (`<span class="btn">`) shows as code too. A file it mentions, such as `router.jsx:28`, is a link: click it to open the file at that line in your editor. Which editor is up to [Settings → Open files in](/guides/settings#open-files-in).
 
 - **Not quite right?** Reply on a done note ("a bit darker"). It's open again, and a watching agent picks it up.
 - **Disagree with a "won't do"?** Reply with what the agent was missing. The note opens again the same way.
@@ -74,6 +74,8 @@ While spotnote-mcp runs, it holds the notes, and every browser with the app open
 When it isn't running, Spotnote works from your browser's own copy, as without MCP. Notes you write meanwhile join the server's the next time it runs; for a note on the same element in both, the newer one wins.
 
 An agent only sees notes from apps inside the folder it works in.
+
+Each agent session starts its own spotnote-mcp; the first one serves the browsers and the others pass their calls to it. After you update Spotnote, the next session that starts takes over from one still running the old version, so you don't have to close your other sessions.
 
 ## Tools
 
