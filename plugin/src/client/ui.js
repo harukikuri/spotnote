@@ -315,6 +315,9 @@ const CSS = [
   ".snl-head-acts{margin-left:auto;display:flex}",
   ".snl .snl-del{padding:3px 8px;border:none;border-radius:6px;background:none;color:var(--sn-sub);font:500 12px " + T.font + ";cursor:pointer}",
   ".snl .snl-del:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
+  // A trash icon like the other header icons, wider with a "(n)".
+  ".snl .snl-del{display:flex;align-items:center;justify-content:center;gap:3px;min-width:28px;height:28px;margin-right:-6px;padding:0 7px;border-radius:7px}",
+  ".snl-del-n{font-variant-numeric:tabular-nums}",
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",

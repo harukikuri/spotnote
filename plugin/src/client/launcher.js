@@ -204,8 +204,8 @@ export function mountLauncher(ctrl) {
   const collapsed = new Set(); // folded sections of the notes list: "here" or a page's url
   const picked = new Set(); // notes ticked for deleting
 
-  // The header's delete button: "Delete (n)" for the ticked notes, otherwise
-  // "Delete all". Both ask first, over the dimmed list.
+  // The header's delete button, a trash icon: with "(n)" for the ticked notes,
+  // "(all)" for all of them. Both ask first, over the dimmed list.
   function renderNotesActions() {
     const keys = new Set(ctrl.notes().map((n) => n.key));
     for (const k of picked) if (!keys.has(k)) picked.delete(k);
@@ -215,7 +215,10 @@ export function mountLauncher(ctrl) {
     // The ticked notes, or with none ticked, all of them; asked first.
     const doomed = picked.size ? [...picked] : [...keys];
     const count = doomed.length === 1 ? "1 note" : `${doomed.length} notes`;
-    b.textContent = picked.size ? `Delete (${picked.size})` : "Delete all";
+    b.title = picked.size ? `Delete ${count}` : "Delete all";
+    b.setAttribute("aria-label", b.title);
+    b.innerHTML = ICONS.trash; // hardcoded SVG constants, not user input
+    el("span", "snl-del-n", b).textContent = picked.size ? `(${picked.size})` : "(all)";
     b.addEventListener("click", () =>
       confirmOver(notesPop, {
         title: picked.size ? `Delete ${count}?` : `Delete all ${count}?`,
