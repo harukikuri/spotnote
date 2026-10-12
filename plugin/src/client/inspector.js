@@ -82,6 +82,8 @@ const controller = {
       state: pinState(p),
       mark: STATE_ICONS[pinState(p)], // SVG markup, or none for a plain number
       agent: lastAgentMsg(p)?.text,
+      url: p.url,
+      here: !p.url || p.url === pageUrl(), // written on the page you're on
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
     })),
   copyNote(key) {

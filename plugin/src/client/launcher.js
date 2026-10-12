@@ -212,50 +212,63 @@ export function mountLauncher(ctrl) {
     const all = ctrl.notes();
     popTitle.textContent = all.length ? `Notes (${all.length})` : "Notes";
     list.textContent = "";
-    all.forEach((n, i) => {
-      const li = el("li", [n.lost && "snl-lost", n.state !== "open" && `snl-${n.state}`].filter(Boolean).join(" "), list);
-      const num = el("span", "snl-num", li); // same as its pin: its number, or a state icon
-      if (n.mark) num.innerHTML = n.mark; // hardcoded SVG constants, not user input
-      else num.textContent = String(i + 1);
-      const src = el("span", "snl-src", li);
-      const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
-      const mark = el("span", "snl-fw", src);
-      mark.style.color = FRAMEWORKS[kind].color;
-      mark.title = FRAMEWORKS[kind].name;
-      mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
-      el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
-      el("span", "snl-txt", li).textContent = n.note;
-      if (n.state !== "open") {
-        // Where it stands: the agent is on it, or its last word (what it changed,
-        // what it's asking, or why it won't).
-        const sum = el("span", "snl-sum", li);
-        sum.textContent = sum.title = n.state === "working" ? "Agent is on it…" : n.agent;
-      }
-      if (!n.lost) {
-        li.addEventListener("click", () => {
-          togglePop(null);
-          ctrl.openNote(n.key);
-        });
-        return;
-      }
-      // An edit moved or removed its element: it can't be opened, but it can
-      // still be copied (the prompt saved when it was written) or deleted.
-      el("span", "snl-lost-tag", src).textContent = "Not found";
-      const acts = el("span", "snl-acts", li);
-      const copy = el("button", "", acts);
-      copy.title = "Copy prompt";
-      copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
-      copy.addEventListener("click", () => {
-        ctrl.copyNote(n.key);
-        copy.innerHTML = ICONS.check;
-        setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
-      });
-      const del = el("button", "", acts);
-      del.title = "Delete note";
-      del.innerHTML = ICONS.trash;
-      del.addEventListener("click", () => ctrl.deleteNote(n.key));
-    });
+    // This page's notes first, then each other page's under its path. Numbers
+    // stay as on the pins.
+    const numbered = all.map((n, i) => ({ ...n, number: i + 1 }));
+    const here = numbered.filter((n) => n.here);
+    const pages = new Map();
+    for (const n of numbered) if (!n.here) pages.set(n.url, [...(pages.get(n.url) ?? []), n]);
+    const heading = (text) => (el("li", "snl-group", list).textContent = text);
+    if (here.length) heading("This page");
+    here.forEach(addRow);
+    for (const [url, notes] of pages) {
+      heading(url);
+      notes.forEach(addRow);
+    }
     empty.hidden = all.length > 0;
+  }
+  function addRow(n) {
+    const li = el("li", [n.lost && "snl-lost", n.state !== "open" && `snl-${n.state}`].filter(Boolean).join(" "), list);
+    const num = el("span", "snl-num", li); // same as its pin: its number, or a state icon
+    if (n.mark) num.innerHTML = n.mark; // hardcoded SVG constants, not user input
+    else num.textContent = String(n.number);
+    const src = el("span", "snl-src", li);
+    const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
+    const mark = el("span", "snl-fw", src);
+    mark.style.color = FRAMEWORKS[kind].color;
+    mark.title = FRAMEWORKS[kind].name;
+    mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
+    el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
+    el("span", "snl-txt", li).textContent = n.note;
+    if (n.state !== "open") {
+      // Where it stands: the agent is on it, or its last word (what it changed,
+      // what it's asking, or why it won't).
+      const sum = el("span", "snl-sum", li);
+      sum.textContent = sum.title = n.state === "working" ? "Agent is on it…" : n.agent;
+    }
+    if (!n.lost) {
+      li.addEventListener("click", () => {
+        togglePop(null);
+        ctrl.openNote(n.key);
+      });
+      return;
+    }
+    // An edit moved or removed its element: it can't be opened, but it can
+    // still be copied (the prompt saved when it was written) or deleted.
+    el("span", "snl-lost-tag", src).textContent = "Not found";
+    const acts = el("span", "snl-acts", li);
+    const copy = el("button", "", acts);
+    copy.title = "Copy prompt";
+    copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
+    copy.addEventListener("click", () => {
+      ctrl.copyNote(n.key);
+      copy.innerHTML = ICONS.check;
+      setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
+    });
+    const del = el("button", "", acts);
+    del.title = "Delete note";
+    del.innerHTML = ICONS.trash;
+    del.addEventListener("click", () => ctrl.deleteNote(n.key));
   }
   function closePopover() {
     if (!root.querySelector(".snl-pop.snl-show")) return false;

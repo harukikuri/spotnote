@@ -225,6 +225,11 @@ const CSS = [
   ".snl-notes ol{list-style:none;margin:0;padding:0;max-height:240px;overflow:auto}",
   ".snl-notes li{display:grid;grid-template-columns:20px 1fr;gap:2px 8px;padding:8px;border-radius:8px;cursor:pointer}",
   ".snl-notes li:hover{background:var(--sn-hover)}",
+  // Page headings in the notes list: "This page", then each other page's path.
+  `.snl-notes li.snl-group{display:block;padding:10px 8px 4px;font:500 11px ${T.font};color:var(--sn-sub);cursor:default;` +
+    "white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+  ".snl-notes li.snl-group:hover{background:none}",
+  ".snl-notes li.snl-group:first-child{padding-top:4px}",
   `.snl-num{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
     `font:600 11px/1 ${T.font};display:grid;place-items:center}`,
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
