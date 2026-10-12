@@ -106,6 +106,7 @@ export function mountLauncher(ctrl) {
   const notesHead = el("div", "snl-head", notesPop);
   el("span", "snl-title", notesHead).textContent = "Notes";
   const notesCount = el("span", "snl-count", notesHead);
+  const notesActs = el("span", "snl-head-acts", notesHead);
   const list = el("ol", "", notesPop);
   const empty = el("p", "snl-empty", notesPop);
   const settingsPop = popover("snl-settings", "Settings");
@@ -195,9 +196,42 @@ export function mountLauncher(ctrl) {
     else menuLayer.hide();
   }
   const collapsed = new Set(); // folded sections of the notes list: "here" or a page's url
+  const picked = new Set(); // notes ticked for deleting
+
+  // The header's delete button: "Delete (n)" for the ticked notes, otherwise
+  // "Delete all" — which asks once more ("Delete 3?") before it does.
+  let confirmAll = null; // timer while "Delete all" waits for its second click
+  function renderNotesActions() {
+    const keys = new Set(ctrl.notes().map((n) => n.key));
+    for (const k of picked) if (!keys.has(k)) picked.delete(k);
+    notesActs.textContent = "";
+    if (!keys.size) return;
+    const b = el("button", "snl-del", notesActs);
+    if (picked.size) {
+      b.textContent = `Delete (${picked.size})`;
+      b.addEventListener("click", () => {
+        for (const k of [...picked]) ctrl.deleteNote(k);
+        picked.clear();
+      });
+      return;
+    }
+    const sure = confirmAll !== null;
+    b.textContent = sure ? `Delete ${keys.size}?` : "Delete all";
+    b.classList.toggle("snl-del-sure", sure);
+    b.addEventListener("click", () => {
+      if (!sure) {
+        confirmAll = setTimeout(() => ((confirmAll = null), renderNotesActions()), 3000);
+        return renderNotesActions();
+      }
+      clearTimeout(confirmAll);
+      confirmAll = null;
+      for (const k of keys) ctrl.deleteNote(k);
+    });
+  }
+
   function renderNotes() {
     const all = ctrl.notes();
-    notesCount.textContent = all.length || "";
+    notesCount.textContent = all.length ? `(${all.length})` : "";
     list.textContent = "";
     // This page's notes first, then each other page's under its path. Numbers
     // stay as on the pins.
@@ -214,7 +248,7 @@ export function mountLauncher(ctrl) {
       b.setAttribute("aria-expanded", open);
       el("span", "snl-fold", b).innerHTML = SET_ICON.next; // hardcoded SVG constants
       el("span", "snl-group-title", b).textContent = title;
-      el("span", "snl-count", b).textContent = notes.length;
+      el("span", "snl-count", b).textContent = `(${notes.length})`;
       b.addEventListener("click", () => {
         if (open) collapsed.add(key);
         else collapsed.delete(key);
@@ -225,13 +259,25 @@ export function mountLauncher(ctrl) {
     if (here.length) section("here", "This page", here);
     for (const [url, notes] of pages) section(url, url, notes);
     empty.hidden = all.length > 0;
+    renderNotesActions();
   }
   function addRow(n) {
     const li = el("li", [n.lost && "snl-lost", n.state !== "open" && `snl-${n.state}`].filter(Boolean).join(" "), list);
-    const num = el("span", "snl-num", li); // same as its pin: its number, or a state icon
+    // A checkbox to pick notes for deleting (see renderNotesActions).
+    const pick = el("input", "snl-pick", li);
+    pick.type = "checkbox";
+    pick.checked = picked.has(n.key);
+    pick.setAttribute("aria-label", `Select note ${n.number}`);
+    pick.addEventListener("click", (e) => e.stopPropagation()); // not "open the note"
+    pick.addEventListener("change", () => {
+      if (pick.checked) picked.add(n.key);
+      else picked.delete(n.key);
+      renderNotesActions();
+    });
+    const src = el("span", "snl-src", li);
+    const num = el("span", "snl-num", src); // same as its pin: its number, or a state icon
     if (n.mark) num.innerHTML = n.mark; // hardcoded SVG constants, not user input
     else num.textContent = String(n.number);
-    const src = el("span", "snl-src", li);
     const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
     const mark = el("span", "snl-fw", src);
     mark.style.color = FRAMEWORKS[kind].color;

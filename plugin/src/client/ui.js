@@ -250,7 +250,7 @@ const CSS = [
   // page headings are full-width bands (the 14px moves into each row).
   ".snl-notes{padding-bottom:0;overflow:hidden}", // overflow: the bottom row's hover keeps the rounded corners
   ".snl-notes ol{list-style:none;margin:0 -6px;padding:0;max-height:240px;overflow:auto}",
-  ".snl-notes li{display:grid;grid-template-columns:20px 1fr;gap:2px 8px;padding:9px 14px;cursor:pointer;border-top:1px solid var(--sn-glass-border)}",
+  ".snl-notes li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:9px 14px;cursor:pointer;border-top:1px solid var(--sn-glass-border)}",
   ".snl-notes li:first-child{border-top:none}", // right under the header's rule
   ".snl-notes li:hover{background:var(--sn-hover)}",
   // Page headings in the notes list ("This page", then each other page's path):
@@ -267,10 +267,20 @@ const CSS = [
   ".snl-fold{display:grid;transition:transform .15s ease}",
   ".snl-fold svg{width:12px;height:12px}",
   '.snl-group button[aria-expanded="true"] .snl-fold{transform:rotate(90deg)}',
-  ".snl-group-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}",
+  // "This page (2)": the count right after the title; a long path ellipsizes first.
+  ".snl-group-title{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}",
+  ".snl-group .snl-count{flex:none;margin-left:-2px;font-size:11px}",
   ".snl-notes li.snl-group:first-child{margin-top:0;border-top:none}", // right under the header's rule
-  `.snl-num{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
-    `font:600 11px/1 ${T.font};display:grid;place-items:center}`,
+  // The pin's number (or state icon), small, before the file name.
+  `.snl-num{flex:none;width:16px;height:16px;border-radius:50%;background:${T.accent};color:${T.accentInk};` +
+    `font:600 10px/1 ${T.font};display:grid;place-items:center}`,
+  ".snl-num svg{width:10px;height:10px}",
+  // The checkbox in front of each note, and the header's delete button.
+  ".snl-pick{grid-row:span 2;align-self:start;margin:2px 0 0;cursor:pointer}", // the browser's own checkbox
+  ".snl-head-acts{margin-left:auto;display:flex}",
+  ".snl .snl-del{padding:3px 8px;border:none;border-radius:6px;background:none;color:var(--sn-sub);font:500 12px " + T.font + ";cursor:pointer}",
+  ".snl .snl-del:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
+  ".snl .snl-del.snl-del-sure{background:#dc2626;color:#fff}",
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",
@@ -288,7 +298,7 @@ const CSS = [
   ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
   ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-accent-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
-  ".snl-notes li.snl-lost{grid-template-columns:20px 1fr auto;cursor:default}",
+  ".snl-notes li.snl-lost{grid-template-columns:auto 1fr auto;cursor:default}",
   ".snl-lost .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
   `.snl-lost-tag{flex:none;margin-left:6px;font:500 11px/16px ${T.font};color:var(--sn-lost)}`,
   ".snl-lost .snl-src,.snl-lost .snl-txt{grid-column:2}",
