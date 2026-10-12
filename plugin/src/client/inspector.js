@@ -4,7 +4,7 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
+import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook, agentMark } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
 import { getSettings, onSettings, EDITORS } from "./settings.js";
 import { connectRemote } from "./remote.js";
@@ -754,7 +754,19 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
         const who = document.createElement("span");
         who.className = "sn-who";
-        who.textContent = m.from === "agent" ? (m.resolves ? "Agent · done" : m.dismisses ? "Agent · won't do" : "Agent") : "You";
+        if (m.from === "agent") {
+          // The agent by name ("Claude Code"), after its mark when we have one;
+          // just "Agent" when it didn't say which it is.
+          const mark = agentMark(m.client);
+          if (mark?.svg) {
+            const i = document.createElement("span");
+            i.className = "sn-agent-mark";
+            i.innerHTML = mark.svg; // hardcoded SVG constants, not user input
+            who.append(i);
+          }
+          who.append(mark?.name ?? "Agent");
+          if (m.dismisses) who.append(" · won't do");
+        } else who.textContent = "You";
         msg.append(who);
         // The agent writes Markdown; what you typed stays as typed.
         if (m.from === "agent") {

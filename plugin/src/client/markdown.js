@@ -3,7 +3,10 @@
 // headings (shown as a bold line). Built from DOM nodes and text only, never
 // innerHTML, so whatever the agent writes can't run as markup.
 //
-// File references like `router.jsx:28` become links; `onFile(ref, button)` opens them.
+// Code is syntax-coloured (tags, attributes, strings, keywords, numbers,
+// comments), and markup the agent wrote without backticks (<span class="x">)
+// is shown as code anyway. File references like `router.jsx:28` become links;
+// `onFile(ref, button)` opens them.
 
 const FILE_REF = /(?<![\w/.-])((?:[\w.@-]+\/)*[\w.@-]+\.(?:jsx|tsx|js|ts|mjs|cjs|vue|svelte|css|scss|sass|less|html|json|md))(?::(\d+))?(?::(\d+))?(?![\w/])/g;
 
@@ -19,8 +22,7 @@ export function renderMarkdown(text, onFile) {
       const code = [];
       for (i++; i < lines.length && !lines[i].trimStart().startsWith("```"); i++) code.push(lines[i]);
       i++; // the closing fence
-      const pre = el("pre", out);
-      pre.textContent = code.join("\n");
+      paint(el("pre", out), code.join("\n"));
     } else if (/^\s*([-*]|\d+[.)])\s+/.test(line)) {
       const ordered = /^\s*\d/.test(line);
       const list = el(ordered ? "ol" : "ul", out);
@@ -53,17 +55,66 @@ function el(tag, parent, cls) {
   return e;
 }
 
-// `code` and **bold**, with file references linked (also inside `code`).
+// `code` and **bold**; in plain text, bare markup becomes code and file
+// references become links. A `code` span that is just a file is a link too.
 function inline(parent, text, onFile) {
   const re = /`([^`]+)`|\*\*([^*]+)\*\*/g;
   let last = 0;
   for (let m; (m = re.exec(text)); ) {
-    files(parent, text.slice(last, m.index), onFile);
-    if (m[1] != null) files(el("code", parent), m[1], onFile);
-    else files(el("strong", parent), m[2], onFile);
+    prose(parent, text.slice(last, m.index), onFile);
+    if (m[1] != null) code(parent, m[1], onFile);
+    else prose(el("strong", parent), m[2], onFile);
     last = re.lastIndex;
   }
+  prose(parent, text.slice(last), onFile);
+}
+
+// Short code (up to 40 characters) stays on one line; longer code may wrap.
+const chip = (parent, text) => el("code", parent, text.length <= 40 ? "sn-nowrap" : "");
+
+function code(parent, text, onFile) {
+  const c = chip(parent, text);
+  if (new RegExp(`^${FILE_REF.source}$`).test(text)) files(c, text, onFile);
+  else paint(c, text);
+}
+
+// Markup written without backticks: <span className="x">, </a>, <Link to="/" />.
+const BARE_TAG = /<\/?[A-Za-z][\w.:-]*(?:\s+[^<>]*?)?\s*\/?>/g;
+function prose(parent, text, onFile) {
+  let last = 0;
+  for (const m of text.matchAll(BARE_TAG)) {
+    files(parent, text.slice(last, m.index), onFile);
+    paint(chip(parent, m[0]), m[0]);
+    last = m.index + m[0].length;
+  }
   files(parent, text.slice(last), onFile);
+}
+
+// Syntax colour, for JSX/HTML, JS and CSS alike: one pass, a class per token.
+const TOKENS = new RegExp(
+  [
+    /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->)/, // 1 comment
+    /("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/, // 2 string
+    /(<\/?)([A-Za-z][\w.:-]*)/, // 3 bracket, 4 tag name
+    /([A-Za-z_:@][\w:.-]*)(?=\s*=)/, // 5 attribute
+    /\b(const|let|var|function|return|import|export|from|default|if|else|for|while|new|class|extends|async|await|true|false|null|undefined)\b/, // 6 keyword
+    /(#[0-9a-fA-F]{3,8}\b|-?\b\d+(?:\.\d+)?(?:px|rem|em|vh|vw|ms|s|%)?\b)/, // 7 number
+  ]
+    .map((r) => r.source)
+    .join("|"),
+  "g",
+);
+const KIND = { 1: "com", 2: "str", 4: "tag", 5: "attr", 6: "kw", 7: "num" };
+function paint(parent, text) {
+  let last = 0;
+  for (const m of text.matchAll(TOKENS)) {
+    parent.append(text.slice(last, m.index));
+    if (m[3] != null) parent.append(m[3]); // "<" or "</" stays plain
+    const g = [1, 2, 4, 5, 6, 7].find((i) => m[i] != null);
+    el("span", parent, `sn-tk-${KIND[g]}`).textContent = m[g];
+    last = m.index + m[0].length;
+  }
+  parent.append(text.slice(last));
 }
 
 function files(parent, text, onFile) {
