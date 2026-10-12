@@ -321,6 +321,8 @@ const CSS = [
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",
+  // The note (and the agent line) starts under the framework icon, past the pin number: 16px + the 5px gap.
+  ".snl-txt,.snl-sum{padding-left:21px}",
   ".snl-fw+span{overflow:hidden;text-overflow:ellipsis}",
   ".snl-txt{font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
@@ -330,7 +332,8 @@ const CSS = [
   `.snl-working .snl-num{position:relative;background:none;box-shadow:inset 0 0 0 1.5px rgba(${T.accentRgb},.3);color:var(--sn-accent-text)}`,
   `.snl-working .snl-num::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid transparent;` +
     `border-top-color:${T.accent};animation:sn-spin .9s linear infinite}`,
-  ".snl-done .snl-num{background:none;box-shadow:inset 0 0 0 1.5px var(--sn-accent);color:var(--sn-accent-text)}",
+  ".snl-done .snl-num{background:none;color:var(--sn-accent-text)}", // just the check, no ring
+  ".snl-done .snl-num svg{width:14px;height:14px}", // as big as the ring was, so it reads on its own
   ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
   ".snl-notes li.snl-lost{grid-template-columns:auto 1fr auto;cursor:default}",
