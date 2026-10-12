@@ -10,6 +10,7 @@ import { getSettings, onSettings, EDITORS } from "./settings.js";
 import { connectRemote } from "./remote.js";
 import { renderMarkdown } from "./markdown.js";
 import { createLayer, closeTopLayer } from "./layers.js";
+import { confirmOver } from "./confirm.js";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -767,10 +768,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       svg: ICONS.trash,
       title: "Remove note",
       parent: header,
-      onClick: () => {
-        deletePin(key);
-        closePanel();
-      },
+      onClick: () => askDelete(),
     });
   }
   createIconBtn({ svg: ICONS.close, title: "Close", parent: header, onClick: closePanel });
@@ -830,9 +828,23 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     panel.style.outline = "none";
     panel.addEventListener("keydown", (e) => {
       e.stopPropagation();
-      e.preventDefault();
+      if (!e.target.closest?.("button")) e.preventDefault(); // Enter still presses Delete
     });
   }
+
+  // Delete asks first, over the dimmed panel.
+  const askDelete = () =>
+    !panel.querySelector(".sn-confirm") &&
+    confirmOver(panel, {
+      title: "Delete this note?",
+      body: talking ? "Its conversation with the agent goes too. This can't be undone." : "This can't be undone.",
+      action: "Delete",
+      onConfirm: () => {
+        deletePin(key);
+        closePanel();
+      },
+      onCancel: () => (mode === "working" ? panel.focus() : input.focus()),
+    });
 
   function doSend() {
     const note = (input.textContent || "").trim();

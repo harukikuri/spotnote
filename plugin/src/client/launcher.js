@@ -11,6 +11,7 @@
 import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot, agentMark } from "./ui.js";
 import { getSettings, setSetting, EDITORS } from "./settings.js";
 import { createLayer } from "./layers.js";
+import { confirmOver } from "./confirm.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
@@ -186,6 +187,11 @@ export function mountLauncher(ctrl) {
     for (const p of [notesPop, settingsPop]) {
       const show = p === which && !p.classList.contains("snl-show");
       p.classList.toggle("snl-show", show);
+      if (!show && p.classList.contains("sn-confirming")) {
+        // An open question goes with it.
+        p.querySelector(".sn-confirm").remove();
+        p.classList.remove("sn-confirming");
+      }
       p.item.setAttribute("aria-expanded", show);
       if (show && p === settingsPop) page = "main";
       if (show) (p === notesPop ? renderNotes : renderSettings)();
@@ -199,34 +205,29 @@ export function mountLauncher(ctrl) {
   const picked = new Set(); // notes ticked for deleting
 
   // The header's delete button: "Delete (n)" for the ticked notes, otherwise
-  // "Delete all" — which asks once more ("Delete 3?") before it does.
-  let confirmAll = null; // timer while "Delete all" waits for its second click
+  // "Delete all". Both ask first, over the dimmed list.
   function renderNotesActions() {
     const keys = new Set(ctrl.notes().map((n) => n.key));
     for (const k of picked) if (!keys.has(k)) picked.delete(k);
     notesActs.textContent = "";
     if (!keys.size) return;
     const b = el("button", "snl-del", notesActs);
-    if (picked.size) {
-      b.textContent = `Delete (${picked.size})`;
-      b.addEventListener("click", () => {
-        for (const k of [...picked]) ctrl.deleteNote(k);
-        picked.clear();
-      });
-      return;
-    }
-    const sure = confirmAll !== null;
-    b.textContent = sure ? `Delete ${keys.size}?` : "Delete all";
-    b.classList.toggle("snl-del-sure", sure);
-    b.addEventListener("click", () => {
-      if (!sure) {
-        confirmAll = setTimeout(() => ((confirmAll = null), renderNotesActions()), 3000);
-        return renderNotesActions();
-      }
-      clearTimeout(confirmAll);
-      confirmAll = null;
-      for (const k of keys) ctrl.deleteNote(k);
-    });
+    // The ticked notes, or with none ticked, all of them; asked first.
+    const doomed = picked.size ? [...picked] : [...keys];
+    const count = doomed.length === 1 ? "1 note" : `${doomed.length} notes`;
+    b.textContent = picked.size ? `Delete (${picked.size})` : "Delete all";
+    b.addEventListener("click", () =>
+      confirmOver(notesPop, {
+        title: picked.size ? `Delete ${count}?` : `Delete all ${count}?`,
+        body: "This can't be undone.",
+        action: "Delete",
+        onConfirm: () => {
+          for (const k of doomed) ctrl.deleteNote(k);
+          picked.clear();
+          renderNotesActions();
+        },
+      }),
+    );
   }
 
   function renderNotes() {

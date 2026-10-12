@@ -107,6 +107,27 @@ const CSS = [
   `.sn-send{flex:none;display:flex;align-items:center;gap:6px;margin:0;padding:1px 4px;border:none;border-radius:5px;` +
     `background:none;color:${T.textMuted};font:12px ${T.font};cursor:pointer;transition:opacity .14s,color .14s}`,
   `.sn-send:hover{color:${T.accentText}}`,
+  // confirm.js: a question over the dimmed panel or notes list, which grows to
+  // hold it. Every property set, so the launcher's own button styles can't leak in.
+  ".sn-confirming{min-height:150px}",
+  ".sn-confirm{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:12px;" +
+    "border-radius:inherit;background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:sn-fade .14s ease-out}",
+  `.sn-confirm-card{box-sizing:border-box;width:100%;max-width:272px;padding:16px 16px 14px;border:1px solid ${T.border};border-radius:10px;` +
+    `background:${T.bg};box-shadow:0 1px 2px rgba(0,0,0,.2),0 12px 32px rgba(0,0,0,.32);font-family:${T.font};text-align:left;cursor:default;` +
+    "animation:sn-rise .16s cubic-bezier(.2,.9,.3,1)}",
+  `.sn-confirm-title{margin:0;font:600 13px/18px ${T.font};color:${T.text}}`,
+  `.sn-confirm-body{margin:4px 0 0;font:12px/17px ${T.font};color:${T.textMuted}}`,
+  ".sn-confirm-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}",
+  `.sn-confirm .sn-confirm-btns button{box-sizing:border-box;height:28px;margin:0;padding:0 12px;border:1px solid transparent;border-radius:6px;` +
+    `font:500 12px/1 ${T.font};letter-spacing:0;cursor:pointer;transition:background .12s,border-color .12s}`,
+  `.sn-confirm .sn-confirm-btns .sn-confirm-no{background:var(--sn-hover);border-color:${T.border};color:${T.text}}`,
+  ".sn-confirm .sn-confirm-btns .sn-confirm-no:hover{background:var(--sn-hover-strong)}",
+  ".sn-confirm .sn-confirm-btns .sn-confirm-yes{background:#dc2626;border-color:#dc2626;color:#fff}",
+  ".sn-confirm .sn-confirm-btns .sn-confirm-yes:hover{background:#c81e1e;border-color:#c81e1e}",
+  `.sn-confirm .sn-confirm-btns button:focus-visible{outline:2px solid ${T.border};outline-offset:2px}`,
+  ".sn-confirm .sn-confirm-btns .sn-confirm-yes:focus-visible{outline-color:rgba(220,38,38,.5)}",
+  "@keyframes sn-fade{from{opacity:0}}",
+  "@keyframes sn-rise{from{opacity:0;transform:translateY(4px) scale(.98)}}",
   `.sn-send:disabled{opacity:0;pointer-events:none}`,
   `.sn-send kbd{font:11px ${T.mono};padding:0 4px;border:1px solid ${T.border};border-radius:4px;color:inherit}`,
   // Pins: numbered, pop in with a slight overshoot, shrink away on delete.
@@ -288,7 +309,6 @@ const CSS = [
   ".snl-head-acts{margin-left:auto;display:flex}",
   ".snl .snl-del{padding:3px 8px;border:none;border-radius:6px;background:none;color:var(--sn-sub);font:500 12px " + T.font + ";cursor:pointer}",
   ".snl .snl-del:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
-  ".snl .snl-del.snl-del-sure{background:#dc2626;color:#fff}",
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",
@@ -369,7 +389,7 @@ const CSS = [
   ".snl-seg button:hover{color:var(--sn-glass-text)}",
   '.snl-seg button[aria-checked="true"]{background:var(--sn-bg);color:var(--sn-glass-text);box-shadow:0 1px 2px rgba(0,0,0,.2)}',
   "@media (prefers-reduced-motion:reduce){.sn-hover,.sn-hover-label{transition:none}" +
-    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after,.sn-thinking-text,.sn-thinking-text::after{animation:none}" +
+    ".sn-panel,.sn-panel.sn-leaving,.sn-pin,.sn-pin.sn-leaving,.sn-pin.sn-asked,.sn-pin.sn-working::after,.sn-thinking-text,.sn-thinking-text::after,.sn-confirm,.sn-confirm-card{animation:none}" +
     ".snl,.snl *,.snl-working .snl-num::after{transition-duration:.01s!important;animation:none!important}}",
 ].join("\n");
 
