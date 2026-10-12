@@ -172,6 +172,9 @@ const CSS = [
   `.sn-md pre{font:11.5px/18px ${T.mono};padding:8px 10px;border-radius:8px;background:var(--sn-code-bg);border:1px solid var(--sn-code-border);` +
     "color:var(--sn-code-text);white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2}",
   ".sn-md code.sn-nowrap{white-space:nowrap}",
+  ".sn-glue{white-space:nowrap}",
+  `.sn-offline{display:flex;align-items:center;gap:6px;font:11px/16px ${T.font};color:${T.textMuted}}`,
+  `.sn-offline::before{content:'';width:6px;height:6px;border-radius:50%;background:${T.textMuted};opacity:.6}`, // a grey status dot // a chip or link with the punctuation after it
   ".sn-tk-tag{color:var(--sn-tk-tag)}",
   ".sn-tk-attr{color:var(--sn-tk-attr)}",
   ".sn-tk-str{color:var(--sn-tk-str)}",

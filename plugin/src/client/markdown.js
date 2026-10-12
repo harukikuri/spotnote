@@ -62,11 +62,27 @@ function inline(parent, text, onFile) {
   let last = 0;
   for (let m; (m = re.exec(text)); ) {
     prose(parent, text.slice(last, m.index), onFile);
-    if (m[1] != null) code(parent, m[1], onFile);
-    else prose(el("strong", parent), m[2], onFile);
     last = re.lastIndex;
+    if (m[1] != null) last += glued(parent, m[1].length <= 40, text.slice(last), (p) => code(p, m[1], onFile));
+    else prose(el("strong", parent), m[2], onFile);
   }
   prose(parent, text.slice(last), onFile);
+}
+
+// A chip or a file link is a box of its own, so the browser may wrap between it
+// and the "." or ")" right after it, leaving that alone on the next line. Keep
+// them together: `make(p)` adds the box to `p`; returns how much of `after` it took.
+const TRAILING = /^[.,;:!?)\]}"'’”]+/;
+function glued(parent, short, after, make) {
+  const tail = short ? (after.match(TRAILING)?.[0] ?? "") : ""; // a long chip may wrap inside: leave it be
+  if (!tail) {
+    make(parent);
+    return 0;
+  }
+  const span = el("span", parent, "sn-glue");
+  make(span);
+  span.append(tail);
+  return tail.length;
 }
 
 // Short code (up to 40 characters) stays on one line; longer code may wrap.
@@ -84,8 +100,8 @@ function prose(parent, text, onFile) {
   let last = 0;
   for (const m of text.matchAll(BARE_TAG)) {
     files(parent, text.slice(last, m.index), onFile);
-    paint(chip(parent, m[0]), m[0]);
     last = m.index + m[0].length;
+    last += glued(parent, m[0].length <= 40, text.slice(last), (p) => paint(chip(p, m[0]), m[0]));
   }
   files(parent, text.slice(last), onFile);
 }
@@ -121,12 +137,14 @@ function files(parent, text, onFile) {
   let last = 0;
   for (const m of text.matchAll(FILE_REF)) {
     parent.append(text.slice(last, m.index));
-    const a = el("button", parent, "sn-file");
-    a.type = "button";
-    a.textContent = m[0];
-    a.title = "Open in your editor";
-    a.addEventListener("click", () => onFile({ path: m[1], line: m[2], column: m[3] }, a));
     last = m.index + m[0].length;
+    last += glued(parent, true, text.slice(last), (p) => {
+      const a = el("button", p, "sn-file");
+      a.type = "button";
+      a.textContent = m[0];
+      a.title = "Open in your editor";
+      a.addEventListener("click", () => onFile({ path: m[1], line: m[2], column: m[3] }, a));
+    });
   }
   parent.append(text.slice(last));
 }

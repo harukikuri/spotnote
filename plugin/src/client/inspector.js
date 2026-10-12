@@ -605,6 +605,9 @@ function panelLabel(el) {
   return wrap;
 }
 
+// What to call the agent on this note: the last one that wrote on it.
+const agentName = (pin) => agentMark(pin?.thread?.findLast((m) => m.from === "agent")?.client)?.name ?? "The agent";
+
 // "✳ Claude Code" over an agent's message: its mark (when we have one) and its
 // name; just "Agent" when it didn't say which it is.
 function agentLabel(client) {
@@ -788,6 +791,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
         const who = m.from === "agent" ? agentLabel(m.client) : Object.assign(document.createElement("span"), { className: "sn-who", textContent: "You" });
         if (m.dismisses) who.append(" · won't do");
+        if (m.pending) who.append(" · not sent yet"); // written while the agent was away
         msg.append(who);
         // The agent writes Markdown; what you typed stays as typed.
         if (m.from === "agent") {
@@ -800,6 +804,13 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       }
       // While an agent works on it: a message from the agent, still being written.
       if (pin.working) thread.append(thinkingMsg(pin.working.client));
+      // The agent went away: what you write waits here until it's back.
+      else if (!agentConnected()) {
+        const off = document.createElement("div");
+        off.className = "sn-offline";
+        off.textContent = `${agentName(pin)} is offline`;
+        thread.append(off);
+      }
       thread.scrollTop = thread.scrollHeight;
     };
     panelRefresh();
@@ -877,6 +888,10 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   // while the agent is connected over MCP.
   panelSync = () => {
     const copy = !agentConnected();
+    if (talking) {
+      input.dataset.placeholder = copy ? `Sent once ${agentName(pins.get(key))} is back…` : "Reply to the agent…";
+      panelRefresh();
+    }
     send.innerHTML = `<kbd>↵</kbd>${talking ? "Reply" : isEdit ? "Save" : "Add"}${copy && !talking ? " &amp; copy" : ""}`;
     if (copyBtn) copyBtn.style.display = copy ? "flex" : "none"; // its inline display beats [hidden]
   };
@@ -1155,7 +1170,7 @@ function wire(key, p) {
     url: p.url,
     note: p.note,
     prompt: p.prompt ? p.prompt : savedPrompt(p),
-    thread: p.thread ?? [],
+    thread: (p.thread ?? []).map(({ pending, ...m }) => m), // on its way now
     done: !!p.done,
     dismissed: !!p.dismissed,
     updated: p.updated ?? 0,
@@ -1196,7 +1211,9 @@ function pinState(pin) {
 // Your answer to the agent. Replying on a done note reopens it.
 function replyNote(key, text) {
   const pin = pins.get(key);
-  (pin.thread ??= []).push({ id: Math.random().toString(36).slice(2), from: "you", text, at: Date.now() });
+  const msg = { id: Math.random().toString(36).slice(2), from: "you", text, at: Date.now() };
+  if (!agentConnected()) msg.pending = true; // sent with the rest of this note on reconnecting (merge)
+  (pin.thread ??= []).push(msg);
   Object.assign(pin, { done: false, dismissed: false, working: false, updated: Date.now() });
   showState(pin);
   savePins();
