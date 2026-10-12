@@ -439,9 +439,13 @@ export function mountLauncher(ctrl) {
   const MCP = {
     on: ["Connected", "Your agent picks up notes as you write them, and its replies show up on the note."],
     connecting: ["Connecting…", "Syncing your notes with your agent."],
-    off: ["Not connected", "Connect your coding agent to hand it notes without copy and paste. Add Spotnote to Claude Code once:"],
+    off: ["Not connected", "Connect your coding agent to hand it notes without copy and paste."],
   };
-  const MCP_CMD = "claude mcp add spotnote -- npx -y spotnote-mcp";
+  // Not connected: how to connect, in two steps (as in the MCP guide).
+  const MCP_STEPS = [
+    ["Add Spotnote to Claude Code, once:", "claude mcp add spotnote -- npx -y spotnote-mcp", "snl-cmd-shell"],
+    ["In a new Claude Code session, ask:", "Watch my Spotnote notes.", "snl-cmd-ask"],
+  ];
   let mcpBox = null;
   let mcpHelp = null;
   let shownMcp = null;
@@ -460,17 +464,22 @@ export function mountLauncher(ctrl) {
     mcpHelp.textContent = "";
     el("p", "snl-para", mcpHelp).textContent = MCP[status][1];
     if (status !== "off") return;
-    const cmd = el("div", "snl-cmd snl-mcp-help", mcpHelp);
-    el("code", "", cmd).textContent = MCP_CMD;
-    const copy = el("button", "", cmd);
-    copy.title = "Copy";
-    copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
-    copy.addEventListener("click", () => {
-      navigator.clipboard?.writeText(MCP_CMD).catch(() => {});
-      copy.innerHTML = ICONS.check;
-      setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
-    });
-    el("p", "snl-para snl-muted", mcpHelp).textContent = "Then start a new Claude Code session and ask it to watch your Spotnote notes.";
+    const steps = el("ol", "snl-steps", mcpHelp);
+    for (const [text, copyText, kind] of MCP_STEPS) {
+      const li = el("li", "", steps);
+      el("p", "snl-step-text", li).textContent = text;
+      const cmd = el("div", `snl-cmd ${kind}`, li);
+      el("code", "", cmd).textContent = copyText;
+      const copy = el("button", "", cmd);
+      copy.title = "Copy";
+      copy.setAttribute("aria-label", "Copy");
+      copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
+      copy.addEventListener("click", () => {
+        navigator.clipboard?.writeText(copyText).catch(() => {});
+        copy.innerHTML = ICONS.check;
+        setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
+      });
+    }
   }
 
   // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──

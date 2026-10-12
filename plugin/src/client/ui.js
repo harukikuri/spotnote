@@ -345,7 +345,7 @@ const CSS = [
   ".snl-head>.snl-icon-btn:last-child{margin-left:auto}", // a trailing button (theme) sits at the right
   ".snl-icon-btn{display:grid;place-items:center;width:28px;height:28px;margin-right:-6px;padding:0;border:none;border-radius:7px;background:none;color:var(--sn-sub);cursor:pointer;text-decoration:none}",
   ".snl-icon-btn:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
-  ".snl-back{margin:0 0 0 -8px}",
+  ".snl .snl-back{margin:0 -4px 0 -11px}", // its chevron lines up with the rows below (beats `.snl button`)
   // Footer: version and GitHub, centred on a darker band across the panel's
   // bottom (the negative margins undo the panel's padding).
   ".snl-foot{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;margin:6px -14px -10px;" +
@@ -380,10 +380,17 @@ const CSS = [
   `.snl-mcp-connecting .snl-dot{background:${T.accent};animation:snl-blink 1s ease-in-out infinite}`,
   "@keyframes snl-blink{50%{opacity:.3}}",
   ".snl-mcp-off{color:var(--sn-sub)}",
-  ".snl-agent{padding:2px 0 4px}",
+  ".snl-agent{padding:4px 0 8px}",
   ".snl-para{margin:4px 0 0;font-size:12px;line-height:17px}",
-  ".snl-muted{color:var(--sn-sub)}",
-  `.snl-cmd{display:flex;align-items:center;gap:4px;margin-top:8px;padding:6px 4px 6px 10px;border-radius:8px;background:var(--sn-hover-strong)}`,
+  // The steps to connect: a numbered rail, each step's line, then what to copy.
+  ".snl-steps{list-style:none;margin:14px 0 0;padding:0;counter-reset:snl-step;display:flex;flex-direction:column;gap:14px}",
+  ".snl-steps li{position:relative;padding-left:28px;counter-increment:snl-step}",
+  ".snl-steps li::before{content:counter(snl-step);position:absolute;left:0;top:0;display:grid;place-items:center;width:18px;height:18px;box-sizing:border-box;" +
+    "border:1px solid var(--sn-glass-border);border-radius:50%;font:600 10px/1 " + T.font + ";color:var(--sn-sub);font-variant-numeric:tabular-nums}",
+  ".snl-steps li:not(:last-child)::after{content:'';position:absolute;left:8.5px;top:22px;bottom:-10px;width:1px;background:var(--sn-glass-border)}", // the rail
+  ".snl-step-text{margin:0;font-size:12px;line-height:18px;color:var(--sn-glass-text)}",
+  ".snl-steps .snl-cmd{margin-top:6px}",
+  `.snl-cmd{display:flex;align-items:center;gap:4px;margin-top:8px;padding:5px 4px 5px 10px;border:1px solid var(--sn-glass-border);border-radius:8px;background:var(--sn-hover)}`,
   `.snl-cmd code{flex:1;min-width:0;font:11px/16px ${T.mono};color:var(--sn-glass-text);overflow-wrap:anywhere}`,
   ".snl-cmd button{display:grid;place-items:center;width:24px;height:24px;padding:0;border:none;border-radius:6px;background:none;color:var(--sn-sub);cursor:pointer}",
   ".snl-cmd button:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
