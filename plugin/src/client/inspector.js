@@ -686,17 +686,45 @@ function clearFileProblem(button) {
   button.classList.remove("sn-file-missing");
   if (button.dataset.title != null) button.title = button.dataset.title;
   if (button.nextSibling?.className === "sn-file-hint") button.nextSibling.remove();
+  hideTip();
 }
-// Say why a file link didn't open, right after it (once).
+// Say why a file link didn't open: a warning icon right after it, with the
+// reason on hover (or focus).
 function fileProblem(button, text, missing = false) {
   if (missing) button.classList.add("sn-file-missing");
   button.dataset.title ??= button.title; // to put back once it opens
   button.title = text;
-  if (button.nextSibling?.className === "sn-file-hint") return;
-  const hint = document.createElement("span");
-  hint.className = "sn-file-hint";
-  hint.textContent = ` (${text})`;
-  button.after(hint);
+  let hint = button.nextSibling;
+  if (hint?.className !== "sn-file-hint") {
+    hint = document.createElement("span");
+    hint.className = "sn-file-hint";
+    hint.tabIndex = 0;
+    hint.setAttribute("role", "img");
+    hint.innerHTML = ICONS.warning; // hardcoded SVG constants, not user input
+    const show = () => showTip(hint, hint.getAttribute("aria-label"));
+    hint.addEventListener("mouseenter", show);
+    hint.addEventListener("focus", show);
+    hint.addEventListener("mouseleave", hideTip);
+    hint.addEventListener("blur", hideTip);
+    button.after(hint);
+  }
+  hint.setAttribute("aria-label", text);
+}
+
+// One tooltip, fixed on top of everything: the panel and the conversation clip
+// their contents, so it can't live inside them.
+let tip = null;
+function showTip(anchor, text) {
+  tip ??= Object.assign(document.createElement("div"), { className: "sn-tip" });
+  tip.textContent = text;
+  uiRoot().append(tip);
+  const a = anchor.getBoundingClientRect();
+  const w = tip.offsetWidth;
+  tip.style.left = `${Math.max(8, Math.min(a.left + a.width / 2 - w / 2, innerWidth - w - 8))}px`;
+  tip.style.top = `${a.bottom + 6}px`;
+}
+function hideTip() {
+  tip?.remove();
 }
 
 // Is the coding agent connected (spotnote-mcp has our notes)?
@@ -786,6 +814,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       const pin = pins.get(key);
       if (!pin) return;
       thread.textContent = "";
+      hideTip(); // its icon may be gone
       for (const m of [{ from: "you", text: pin.note }, ...(pin.thread ?? [])]) {
         const msg = document.createElement("div");
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
@@ -1101,6 +1130,7 @@ function closePanel({ instant = false } = {}) {
   panelRefresh = null;
   panelMode = null;
   panelSync = null;
+  hideTip();
   document.removeEventListener("mousedown", onDocDown, true);
   // Play the exit animation on a detached reference; all state below resets now,
   // so nothing else ever sees a closing panel as open. inert drops its focus so

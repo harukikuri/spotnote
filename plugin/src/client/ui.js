@@ -186,7 +186,10 @@ const CSS = [
   `.sn-file{all:unset;cursor:pointer;color:${T.accentText};text-decoration:underline dotted;text-underline-offset:2px}`,
   ".sn-file:hover{text-decoration-style:solid}",
   ".sn-file.sn-file-missing{color:inherit;text-decoration:line-through;cursor:default}",
-  `.sn-file-hint{color:${T.textMuted};font-size:12px}`,
+  ".sn-file-hint{display:inline-grid;place-items:center;vertical-align:-2px;margin-left:4px;color:#f59e0b;cursor:help;border-radius:3px;outline:none}",
+  `.sn-file-hint:focus-visible{box-shadow:0 0 0 2px ${T.accent}}`,
+  `.sn-tip{position:fixed;z-index:2147483647;width:max-content;max-width:220px;padding:6px 8px;border-radius:6px;background:var(--sn-text);color:var(--sn-bg);` +
+    `font:400 11px/15px ${T.font};pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.25);animation:sn-fade .12s ease-out}`,
   // The panel header's file:line: a button that opens it in your editor.
   `.sn-loc{all:unset;display:inline-flex;align-items:center;align-self:center;flex-shrink:0;cursor:pointer;color:${T.textMuted};font:11px ${T.mono};border-radius:4px}`,
   `.sn-loc:hover{color:${T.text}}`,
@@ -532,6 +535,8 @@ export function agentMark(client) {
 }
 
 export const ICONS = {
+  warning:
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
   copy:
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   close:
