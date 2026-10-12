@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: Change Spotnote's accent color and its light or dark theme.
+description: Change Spotnote's accent color and light or dark theme, and see whether your agent is connected.
 ---
 
 Open the launcher and click the gear (the third button) to open **Settings**. Changes apply right away and are saved in your browser, per app (see [Storage](/reference/storage)).
@@ -19,3 +19,13 @@ The look of Spotnote's own UI (the launcher, note panel and lists), not your app
 | Light | Light panels. |
 | Dark | Dark panels. The default. |
 
+
+## Agent (MCP)
+
+Whether [spotnote-mcp](/guides/mcp) is running, updated live:
+
+| Status | Meaning |
+| --- | --- |
+| Connected | It's running and has this browser's notes. Your agent can pick them up. |
+| Connecting… | It just started; the notes are syncing. |
+| Not running | No agent has started it. Settings shows the command that adds it to Claude Code, with a copy button. |
