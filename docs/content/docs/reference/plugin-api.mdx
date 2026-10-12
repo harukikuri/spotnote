@@ -31,7 +31,7 @@ It has **no options**.
 | Stamps | `.jsx`, `.tsx`, `.vue` and `.svelte` files outside `node_modules`. See [Attributes](/reference/attributes). |
 | Injects | A script tag for the virtual module `virtual:spotnote-client` into the HTML Vite serves (`transformIndexHtml`). |
 | Connects | To [spotnote-mcp](/guides/mcp) on `127.0.0.1:4848` (`SPOTNOTE_PORT`), while it runs. The dev server checks every 2 seconds and tells the page. |
-| Dependencies | `@babel/core` and `magic-string`. Vue and Svelte stamping use the compiler already installed in your app. |
+| Dependencies | `@babel/core`, `magic-string` and `launch-editor`. Vue and Svelte stamping use the compiler already installed in your app. |
 | Peer dependency | `vite >= 5` |
 
 ## Plugin order

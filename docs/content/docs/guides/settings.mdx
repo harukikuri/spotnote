@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: Change Spotnote's accent color and light or dark theme, and see whether your agent is connected.
+description: Change Spotnote's accent color, theme and editor, and see whether your agent is connected.
 ---
 
 Open the launcher and click the gear (the third button) to open **Settings**. Changes apply right away and are saved in your browser, per app (see [Storage](/reference/storage)).
@@ -19,6 +19,17 @@ The look of Spotnote's own UI (the launcher, note panel and lists), not your app
 | Light | Light panels. |
 | Dark | Dark panels. The default. |
 
+
+## Editor
+
+Where a file opens when you click it: the file name in the note panel's header, or a file the agent mentions (`router.jsx:28`).
+
+| Option | Effect |
+| --- | --- |
+| Auto | The default. Opens the file in the editor that's running, found by the dev server. If that editor's command-line tool isn't installed (VS Code's `code`, for example), it opens through the editor's URL instead. |
+| VS Code, Cursor, Windsurf, Zed | Always opens in that editor, through its URL (`vscode://file/…`). Works without the editor running or its command-line tool installed. The browser may ask you to allow it the first time. |
+
+If Auto finds no editor, the link says so: pick yours here. Set `LAUNCH_EDITOR` when starting the dev server to name an editor Auto doesn't recognise.
 
 ## Agent (MCP)
 
