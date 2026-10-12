@@ -5,6 +5,12 @@
   "type": "module",
   "description": "Click a UI element in your Vite dev server, write a note, and copy an AI-agent-ready prompt with the exact source location.",
   "license": "MIT",
+  "homepage": "https://github.com/harukikuri/spotnote#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harukikuri/spotnote.git",
+    "directory": "plugin"
+  },
   "main": "src/index.js",
   "types": "index.d.ts",
   "exports": {

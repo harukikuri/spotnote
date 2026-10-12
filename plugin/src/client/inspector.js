@@ -72,6 +72,7 @@ const controller = {
   // location any more (an edit moved or removed it).
   fileKind,
   mcpStatus: () => remote?.status() ?? "off",
+  about: null, // { version, repo }, from the plugin (initInspector)
   notes: () =>
     [...pins.entries()].map(([key, p]) => ({
       key,
@@ -119,10 +120,11 @@ const controller = {
   },
 };
 
-export function initInspector({ jsx = null, root = "", port = 4848 } = {}) {
+export function initInspector({ jsx = null, root = "", port = 4848, about = null } = {}) {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   jsxFramework = jsx;
+  controller.about = about;
   applyLook(getSettings());
   onSettings(applyLook);
 

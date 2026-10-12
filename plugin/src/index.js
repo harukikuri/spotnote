@@ -12,6 +12,9 @@ import { existsSync, statSync } from "node:fs";
 import MagicString from "magic-string";
 
 const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
+// For the Settings footer: "Spotnote v0.0.0" and a link to the repository.
+const ABOUT = { version: pkg.version, repo: pkg.repository.url.replace(/^git\+/, "").replace(/\.git$/, "") };
 const launchEditor = require("launch-editor");
 const guessEditor = require("launch-editor/guess.js");
 // What launch-editor falls back to without a GUI editor: it would open inside
@@ -254,7 +257,7 @@ export default function spotnote() {
     },
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root, port: MCP_PORT })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root, port: MCP_PORT, about: ABOUT })});`;
       }
     },
 

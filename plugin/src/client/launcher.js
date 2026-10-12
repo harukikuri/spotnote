@@ -7,7 +7,7 @@
 //
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
-//     copyNote, deleteNote, fileKind, mcpStatus, onChange }
+//     copyNote, deleteNote, fileKind, mcpStatus, about, onChange }
 import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot } from "./ui.js";
 import { getSettings, setSetting, EDITORS } from "./settings.js";
 
@@ -19,6 +19,20 @@ const START = { bl: -90, br: 180, tr: 90, tl: 0 };
 
 const svg = (attrs, body) => `<svg width="18" height="18" viewBox="0 0 24 24" ${attrs}>${body}</svg>`;
 const LINE = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const S16 = (body) =>
+  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+// Settings: theme (one icon per choice), help, chevrons.
+const SET_ICON = {
+  system: S16('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'),
+  light: S16('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  dark: S16('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'),
+  help: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5"/><path d="M12 16.5h.01"/></svg>',
+  next: S16('<path d="M9 6l6 6-6 6"/>'),
+  back: S16('<path d="M15 6l-6 6 6 6"/>'),
+  // GitHub's mark (Simple Icons, CC0)
+  github:
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
+};
 const ICON = {
   // Rotated 135° when open, the "+" reads as "×".
   plus: svg('class="snl-plus" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"', '<path d="M12 5v14M5 12h14"/>'),
@@ -92,7 +106,6 @@ export function mountLauncher(ctrl) {
   const empty = el("p", "snl-empty", notesPop);
   const settingsPop = popover("snl-settings", "Settings");
   settingsPop.item = gear.b;
-  el("h4", "", settingsPop).textContent = "Settings";
   empty.textContent = "No notes yet. Click an element on the page to add one.";
 
   // ── Geometry ──
@@ -165,6 +178,7 @@ export function mountLauncher(ctrl) {
       const show = p === which && !p.classList.contains("snl-show");
       p.classList.toggle("snl-show", show);
       p.item.setAttribute("aria-expanded", show);
+      if (show && p === settingsPop) page = "main";
       if (show) (p === notesPop ? renderNotes : renderSettings)();
     }
   }
@@ -265,53 +279,135 @@ export function mountLauncher(ctrl) {
       });
     }
   }
-  function row(label) {
-    const r = el("div", "snl-row", settingsPop);
-    el("span", "snl-lbl", r).textContent = label;
-    return r;
+  // Settings: a header (name + theme), then rows of label · value, grouped by
+  // thin rules. What a row does is behind its (?), not spelled out underneath.
+  // The coding agent row opens its own page, with how to connect.
+  let page = "main"; // or "agent"
+  const THEMES = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
+  function label(parent, text, help) {
+    const l = el("span", "snl-label", parent);
+    l.append(text);
+    if (!help) return l;
+    const h = el("span", "snl-help", l);
+    h.tabIndex = 0;
+    h.setAttribute("aria-label", help);
+    h.innerHTML = SET_ICON.help; // hardcoded SVG constants, not user input
+    el("span", "snl-help-tip", h).textContent = help;
+    h.addEventListener("click", (e) => e.stopPropagation()); // help only, even inside a row that's a button
+    return l;
   }
   function renderSettings() {
-    settingsPop.querySelectorAll(".snl-row,.snl-mcp-help").forEach((n) => n.remove());
-    choices(row("Color"), "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, name) => {
-      b.style.setProperty("--c", ACCENTS[k].accent);
-      b.title = name;
-      b.setAttribute("aria-label", name);
+    settingsPop.textContent = "";
+    mcpBox = null;
+    shownMcp = null;
+    (page === "agent" ? renderAgentPage : renderMainPage)();
+  }
+  function renderMainPage() {
+    const head = el("div", "snl-head", settingsPop);
+    el("span", "snl-title", head).textContent = "Settings";
+    // Theme: one button, cycling System → Light → Dark.
+    const theme = getSettings().theme;
+    const [, name] = THEMES.find(([k]) => k === theme) ?? THEMES[0];
+    const tb = el("button", "snl-icon-btn", head);
+    tb.title = `Theme: ${name} (Spotnote's panels, not your app)`;
+    tb.setAttribute("aria-label", tb.title);
+    tb.innerHTML = SET_ICON[theme] ?? SET_ICON.system; // hardcoded SVG constants
+    tb.addEventListener("click", () => {
+      const i = THEMES.findIndex(([k]) => k === theme);
+      setSetting("theme", THEMES[(i + 1) % THEMES.length][0]);
+      renderSettings();
     });
-    const seg = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
-    choices(row("Theme"), "snl-seg", "theme", seg, (b, _, label) => (b.textContent = label));
-    // Where file links in the agent's messages open.
-    const select = el("select", "snl-select", row("Editor"));
-    select.setAttribute("aria-label", "Editor");
-    for (const [key, { name }] of Object.entries(EDITORS)) {
+
+    // Coding agent → its page
+    const agent = el("button", "snl-srow snl-link", settingsPop);
+    label(agent, "Coding agent", "Lets your agent pick up notes and reply, without copy and paste (spotnote-mcp).");
+    mcpBox = el("span", "snl-value", agent);
+    renderMcp();
+    agent.addEventListener("click", () => {
+      page = "agent";
+      renderSettings();
+    });
+
+    el("div", "snl-rule", settingsPop);
+    const accent = el("div", "snl-srow snl-stack", settingsPop);
+    label(accent, "Accent color", "The outline, labels and pins on your page.");
+    choices(accent, "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, n) => {
+      b.style.setProperty("--c", ACCENTS[k].accent);
+      b.title = n;
+      b.setAttribute("aria-label", n);
+    });
+
+    el("div", "snl-rule", settingsPop);
+    const files = el("label", "snl-srow", settingsPop);
+    label(files, "Open files in", "Where a file opens when you click its name in a note.");
+    const select = el("select", "snl-select", files);
+    for (const [key, { name: n }] of Object.entries(EDITORS)) {
       const o = el("option", "", select);
       o.value = key;
-      o.textContent = name;
+      o.textContent = n;
     }
     select.value = getSettings().editor;
     select.addEventListener("change", () => setSetting("editor", select.value));
-    mcpRow = row("Agent (MCP)");
-    shownMcp = null;
+
+    // Footer: which Spotnote this is, and where it lives.
+    const about = ctrl.about;
+    if (!about) return;
+    const foot = el("div", "snl-foot", settingsPop);
+    el("span", "", foot).textContent = `Spotnote v${about.version}`;
+    const gh = el("a", "snl-icon-btn", foot);
+    gh.href = about.repo;
+    gh.target = "_blank";
+    gh.rel = "noopener noreferrer";
+    gh.title = "Spotnote on GitHub";
+    gh.setAttribute("aria-label", gh.title);
+    gh.innerHTML = SET_ICON.github; // hardcoded SVG constants, not user input
+  }
+
+  function renderAgentPage() {
+    const head = el("div", "snl-head", settingsPop);
+    const back = el("button", "snl-icon-btn snl-back", head);
+    back.title = "Back";
+    back.setAttribute("aria-label", "Back");
+    back.innerHTML = SET_ICON.back; // hardcoded SVG constants
+    back.addEventListener("click", () => {
+      page = "main";
+      renderSettings();
+    });
+    el("span", "snl-title", head).textContent = "Coding agent";
+    const status = el("div", "snl-srow", settingsPop);
+    label(status, "Status");
+    mcpBox = el("span", "snl-value", status);
+    mcpHelp = el("div", "snl-agent", settingsPop);
     renderMcp();
   }
 
-  // Whether spotnote-mcp is running and has our notes. Off, it shows how to add it.
-  const MCP_TEXT = { on: "Connected", connecting: "Connecting…", off: "Not running" };
+  // Whether spotnote-mcp is running and has our notes (live, while Settings is
+  // open). Not connected, the agent page says what connecting gives you and how.
+  const MCP = {
+    on: ["Connected", "Your agent picks up notes as you write them, and its replies show up on the note."],
+    connecting: ["Connecting…", "Syncing your notes with your agent."],
+    off: ["Not connected", "Connect your coding agent to hand it notes without copy and paste. Add Spotnote to Claude Code once:"],
+  };
   const MCP_CMD = "claude mcp add spotnote -- npx -y spotnote-mcp";
-  let mcpRow = null;
+  let mcpBox = null;
+  let mcpHelp = null;
   let shownMcp = null;
   function renderMcp() {
     const status = ctrl.mcpStatus();
-    if (!mcpRow || status === shownMcp) return;
+    if (!mcpBox || status === shownMcp) return;
     shownMcp = status;
-    mcpRow.querySelector(".snl-mcp")?.remove();
-    const value = el("span", `snl-mcp snl-mcp-${status}`, mcpRow);
-    el("span", "snl-dot", value);
-    value.append(MCP_TEXT[status]);
-    settingsPop.querySelector(".snl-mcp-help")?.remove();
+    mcpBox.textContent = "";
+    const line = el("span", `snl-mcp snl-mcp-${status}`, mcpBox);
+    el("span", "snl-dot", line);
+    line.append(MCP[status][0]);
+    if (page === "main") {
+      el("span", "snl-chev", mcpBox).innerHTML = SET_ICON.next; // hardcoded SVG constants
+      return;
+    }
+    mcpHelp.textContent = "";
+    el("p", "snl-para", mcpHelp).textContent = MCP[status][1];
     if (status !== "off") return;
-    const help = el("div", "snl-mcp-help", settingsPop);
-    help.append("Starts with your agent. To add it to Claude Code:");
-    const cmd = el("div", "snl-cmd", help);
+    const cmd = el("div", "snl-cmd snl-mcp-help", mcpHelp);
     el("code", "", cmd).textContent = MCP_CMD;
     const copy = el("button", "", cmd);
     copy.title = "Copy";
@@ -321,6 +417,7 @@ export function mountLauncher(ctrl) {
       copy.innerHTML = ICONS.check;
       setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
     });
+    el("p", "snl-para snl-muted", mcpHelp).textContent = "Then start a new Claude Code session and ask it to watch your Spotnote notes.";
   }
 
   // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──

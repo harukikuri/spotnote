@@ -144,7 +144,12 @@ const CSS = [
   ".sn-loc:hover span>span:last-child{text-decoration-style:solid}",
   `.sn-loc:focus-visible{outline:2px solid ${T.accent};outline-offset:2px}`,
   // Settings → Editor
-  ".snl-select{font:inherit;font-size:12px;color:var(--sn-glass-text);background:var(--sn-hover-strong);border:none;border-radius:6px;padding:4px 6px;cursor:pointer}",
+  ".snl-select{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;color:var(--sn-glass-text);background:none;border:none;" +
+    "padding:4px 18px 4px 6px;margin-right:-4px;border-radius:6px;cursor:pointer;text-align:right;" +
+    "background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E\");" +
+    "background-repeat:no-repeat;background-position:right 2px center}",
+  ".snl-select:hover{background-color:var(--sn-hover-strong)}",
+  ".snl-select option{color:initial}",
   `.sn-who{display:block;font-size:11px;line-height:16px;color:${T.textMuted}}`,
   // In place of the input while an agent works on the note.
   `.sn-busy{display:flex;align-items:center;gap:8px;min-height:20px;color:${T.textMuted};font:13px/18px ${T.font}}`,
@@ -248,24 +253,50 @@ const CSS = [
     "background:none;color:var(--sn-sub);cursor:pointer}",
   ".snl-acts button:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
   // Settings: one row per setting, label left, control right.
-  ".snl-settings{width:300px}",
-  ".snl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px}",
-  ".snl-lbl{font-size:12px;color:var(--sn-sub)}",
-  ".snl-swatches{display:flex;gap:6px}",
-  ".snl-swatches button{width:20px;height:20px;padding:0;border-radius:50%;border:none;background:var(--c);cursor:pointer;" +
-    "box-shadow:0 0 0 2px transparent;transition:box-shadow .12s ease}",
-  '.snl-swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--sn-bg),0 0 0 4px var(--sn-glass-text)}',
-  // Agent (MCP) status: a dot and a word; when off, how to add it.
-  ".snl-mcp{display:flex;align-items:center;gap:6px;font-size:12px}",
-  ".snl-dot{width:8px;height:8px;border-radius:50%;background:var(--sn-sub)}",
-  ".snl-mcp-on .snl-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}",
+  // Settings: a header, then rows of label · value split by thin rules; help
+  // behind each (?).
+  ".snl-settings{width:292px;padding:6px 14px 10px}",
+  ".snl-head{display:flex;align-items:center;gap:6px;height:40px;margin-bottom:2px;border-bottom:1px solid var(--sn-glass-border)}",
+  ".snl-title{flex:1;font-size:13px;font-weight:600}",
+  ".snl-icon-btn{display:grid;place-items:center;width:28px;height:28px;margin-right:-6px;padding:0;border:none;border-radius:7px;background:none;color:var(--sn-sub);cursor:pointer;text-decoration:none}",
+  ".snl-icon-btn:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
+  ".snl-back{margin:0 0 0 -8px}",
+  ".snl-foot{display:flex;align-items:center;justify-content:space-between;height:34px;margin:4px 0 -6px;border-top:1px solid var(--sn-glass-border);font-size:11px;color:var(--sn-sub)}",
+  ".snl-srow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:40px;padding:0;" +
+    "border:none;background:none;text-align:left;font:inherit;color:inherit}",
+  ".snl-srow.snl-stack{flex-direction:column;align-items:stretch;justify-content:center;gap:10px;padding:10px 0 12px}",
+  ".snl-link{cursor:pointer}",
+  ".snl-link:hover .snl-chev{color:var(--sn-glass-text);transform:translateX(2px)}",
+  ".snl-rule{height:1px;background:var(--sn-glass-border)}",
+  ".snl-label{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--sn-sub)}",
+  ".snl-value{display:inline-flex;align-items:center;gap:4px;font-size:13px}",
+  ".snl-chev{display:grid;color:var(--sn-sub);transition:transform .15s ease,color .15s ease}",
+  // (?) with its tooltip on hover or focus.
+  ".snl-help{position:relative;display:grid;color:var(--sn-sub);cursor:help;outline:none}",
+  ".snl-help svg{opacity:.7}", // on the icon only: the tooltip inside must stay opaque
+  ".snl-help:hover svg,.snl-help:focus-visible svg{opacity:1}",
+  `.snl-help-tip{position:absolute;left:50%;bottom:calc(100% + 6px);width:max-content;max-width:200px;padding:6px 8px;border-radius:6px;` +
+    `background:var(--sn-text);color:var(--sn-bg);font:400 11px/15px ${T.font};text-align:left;pointer-events:none;` +
+    "box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transform:translate(-50%,2px);transition:opacity .12s ease,transform .12s ease;z-index:2}",
+  ".snl-help:hover .snl-help-tip,.snl-help:focus-visible .snl-help-tip{opacity:1;transform:translate(-50%,0)}",
+  ".snl-swatches{display:flex;justify-content:space-between}",
+  ".snl-swatches button{width:22px;height:22px;padding:0;border-radius:50%;border:none;background:var(--c);cursor:pointer;" +
+    "box-shadow:0 0 0 2px transparent;transition:box-shadow .12s ease,transform .12s ease}",
+  ".snl-swatches button:hover{transform:scale(1.08)}",
+  '.snl-swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--sn-pop),0 0 0 4px var(--c)}',
+  // Coding agent: status with a dot; its page explains and shows the command.
+  ".snl-mcp{display:inline-flex;align-items:center;gap:7px}",
+  ".snl-dot{width:7px;height:7px;border-radius:50%;background:var(--sn-sub)}",
+  ".snl-mcp-on .snl-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18)}",
   `.snl-mcp-connecting .snl-dot{background:${T.accent};animation:snl-blink 1s ease-in-out infinite}`,
   "@keyframes snl-blink{50%{opacity:.3}}",
   ".snl-mcp-off{color:var(--sn-sub)}",
-  ".snl-mcp-help{margin:-2px 8px 8px;font-size:11px;line-height:16px;color:var(--sn-sub)}",
-  `.snl-cmd{display:flex;align-items:center;gap:4px;margin-top:4px;padding:4px 4px 4px 8px;border-radius:6px;background:var(--sn-hover-strong)}`,
-  `.snl-cmd code{flex:1;min-width:0;font:11px/15px ${T.mono};color:var(--sn-glass-text);overflow-wrap:anywhere}`,
-  ".snl-cmd button{display:grid;place-items:center;width:22px;height:22px;padding:0;border:none;border-radius:5px;background:none;color:var(--sn-sub);cursor:pointer}",
+  ".snl-agent{padding:2px 0 4px}",
+  ".snl-para{margin:4px 0 0;font-size:12px;line-height:17px}",
+  ".snl-muted{color:var(--sn-sub)}",
+  `.snl-cmd{display:flex;align-items:center;gap:4px;margin-top:8px;padding:6px 4px 6px 10px;border-radius:8px;background:var(--sn-hover-strong)}`,
+  `.snl-cmd code{flex:1;min-width:0;font:11px/16px ${T.mono};color:var(--sn-glass-text);overflow-wrap:anywhere}`,
+  ".snl-cmd button{display:grid;place-items:center;width:24px;height:24px;padding:0;border:none;border-radius:6px;background:none;color:var(--sn-sub);cursor:pointer}",
   ".snl-cmd button:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
   ".snl-seg{display:flex;padding:2px;border-radius:8px;background:var(--sn-hover-strong)}",
   ".snl-seg button{padding:3px 9px;border:none;border-radius:6px;background:none;font-size:12px;cursor:pointer;color:var(--sn-sub)}",
