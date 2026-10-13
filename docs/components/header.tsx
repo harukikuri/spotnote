@@ -14,8 +14,8 @@ export function Header() {
       >
         <Link href="/" className="ps-3" aria-label="Spotnote">
           {/* The light-theme logo is dark ink, and the other way round. */}
-          <img src="/brand/spotnote-logo-light.svg" alt="Spotnote" width={118} height={22} className="h-[22px] w-auto dark:hidden" />
-          <img src="/brand/spotnote-logo-dark.svg" alt="Spotnote" width={118} height={22} className="hidden h-[22px] w-auto dark:block" />
+          <img src="/brand/spotnote-logo-light.svg" alt="Spotnote" width={122} height={22} className="h-[22px] w-auto dark:hidden" />
+          <img src="/brand/spotnote-logo-dark.svg" alt="Spotnote" width={122} height={22} className="hidden h-[22px] w-auto dark:block" />
         </Link>
         <div className="flex-1" />
         <nav className="flex items-center gap-3">
