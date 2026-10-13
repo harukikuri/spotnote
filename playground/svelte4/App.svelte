@@ -20,7 +20,7 @@
 
 <header class="nav">
   <div class="nav-inner">
-    <span class="brand">◎ Spotnote · Svelte 4</span>
+    <span class="brand">Spotnote · Svelte 4</span>
   </div>
 </header>
 

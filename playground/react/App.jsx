@@ -23,7 +23,7 @@ export default function App() {
     <div>
       <header className="nav">
         <div className="nav-inner">
-          <span className="brand">◎ Spotnote</span>
+          <span className="brand">Spotnote</span>
           <nav className="nav-links">
             <Link to="/">Home</Link>
             <Link to="/products?category=all&sort=name">Products</Link>

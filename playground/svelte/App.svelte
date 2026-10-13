@@ -22,7 +22,7 @@
 
 <header class="nav">
   <div class="nav-inner">
-    <span class="brand">◎ Spotnote</span>
+    <span class="brand">Spotnote</span>
     <nav class="nav-links">
       <a class="link" href="#features">Features</a>
       <a class="link" href="#products">Products</a>

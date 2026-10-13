@@ -20,7 +20,7 @@ const page = computed(() => {
   <div>
     <header class="nav">
       <div class="nav-inner">
-        <span class="brand">◎ Spotnote</span>
+        <span class="brand">Spotnote</span>
         <nav class="nav-links">
           <AppLink to="/">Home</AppLink>
           <AppLink to="/products?category=all&sort=name">Products</AppLink>
