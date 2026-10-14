@@ -1,6 +1,6 @@
 ---
 title: Picking Elements
-description: Two ways to start picking, the launcher's buttons, and how to back out.
+description: Two ways to start picking, and how to back out.
 ---
 
 ## Start picking
@@ -14,20 +14,6 @@ Pick whichever fits what you're doing:
 
 Either way, **selection mode** starts: an outline follows your cursor, and clicking an element opens its note panel instead of reaching your app.
 
-## The launcher
-
-- **Click it** to open it: selection mode starts, it turns yellow, and your pins appear.
-- <LauncherIcon state="open" /> closes it: selection mode ends and the pins hide.
-- **Drag it** to move it. It snaps to the nearest corner and remembers it.
-
-It always starts closed when the page loads. Opening it shows three buttons:
-
-| Button | What it does |
-| --- | --- |
-| <LauncherItem icon="pause" /> **Pause** | Turns selection mode off and back on. Your pins stay visible, so you can use your app with them. The launcher turns grey (<LauncherIcon state="paused" />) while paused. |
-| <LauncherItem icon="notes" /> **Notes** | Opens [the list of your notes](/guides/notes#the-notes-list). |
-| <LauncherItem icon="settings" /> **Settings** | Opens [Settings](/guides/settings). |
-
 ## Back out with `Esc`
 
 Each press closes one thing, front first:
@@ -37,23 +23,6 @@ Each press closes one thing, front first:
 3. selection mode (the launcher stays open, paused)
 
 When panels overlap, click the one behind to bring it to the front.
-
-<Accordions>
-<Accordion title="What happens to clicks while the note panel is open">
-
-Clicks still don't reach your app. Clicking another element moves the panel to it. Clicking empty space closes the panel.
-
-If the panel holds text you haven't sent, it shakes and keeps your text instead. See [Notes](/guides/notes#clicking-away-with-unsent-text).
-
-</Accordion>
-<Accordion title="Which element a click selects">
-
-Spotnote picks the element that carries a **stamp**: the `data-spotnote` attribute the plugin adds to every element written in your source.
-
-If you click something without one (for example, markup rendered inside a dependency), the selection moves up to the nearest ancestor that has one, and the prompt says so.
-
-</Accordion>
-</Accordions>
 
 ## Next
 
