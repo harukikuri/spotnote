@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Spotnote">
-  <rect width="512" height="512" rx="112" fill="#18181B"/>
-  <g transform="translate(106 106) scale(1.595745) translate(-56 -56)">
-    <path fill="#FFD84D" fill-rule="evenodd" d="M56 56h188v124l-64 64H56z M150 124a26 26 0 1 0-52 0a26 26 0 1 0 52 0z"/>
-    <path fill="#D4A817" d="M244 180h-64v64z"/>
-  </g>
-</svg>
