@@ -3,7 +3,6 @@
   "pages": [
     "plugin-api",
     "prompt-format",
-    "keyboard-and-mouse",
     "storage",
     "framework-support"
   ]
