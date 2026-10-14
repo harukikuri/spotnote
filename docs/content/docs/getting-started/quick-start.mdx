@@ -23,9 +23,9 @@ Open the local URL Vite prints.
 
 ### Click the launcher, then an element
 
-Click the launcher, then click the element you want to change.
+Click <LauncherIcon />, then click the element you want to change.
 
-**You should see** the launcher turn yellow, an outline follow your cursor with a label like `button .chip ProductCard.jsx:12`, and, after your click, the note panel open next to the element.
+**You should see** the launcher turn into <LauncherIcon state="open" />, an outline follow your cursor with a label like `button .chip ProductCard.jsx:12`, and, after your click, the note panel open next to the element.
 
 <BrowserFrame url="localhost:5173">
   <SpotnoteDemo />
@@ -38,7 +38,7 @@ Click the launcher, then click the element you want to change.
 
 Plain words are enough: "make this pill-shaped".
 
-**You should see** a ✓ on the launcher (the prompt is on your clipboard) and a numbered **pin** on the element. Click the pin later to reopen the note.
+**You should see** <LauncherIcon state="done" /> for a moment (the prompt is on your clipboard) and a numbered **pin** on the element. Click the pin later to reopen the note.
 
 </Step>
 <Step>

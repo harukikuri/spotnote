@@ -24,6 +24,7 @@ import { Diagram } from './diagram';
 import { SpotnoteFullDemo } from './spotnote-full-demo';
 import { LauncherIcon } from './launcher-icon';
 import { PinIcon } from './pin-icon';
+import { PanelButton, LauncherItem, SendButton } from './ui-buttons';
 
 const tabIcons: Record<string, ReactNode> = {
   npm: <SiNpm />,
@@ -66,6 +67,9 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     SpotnoteFullDemo,
     LauncherIcon,
     PinIcon,
+    PanelButton,
+    LauncherItem,
+    SendButton,
     ...components,
   };
 }

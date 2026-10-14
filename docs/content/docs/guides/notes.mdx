@@ -11,9 +11,9 @@ A **note** is what you write about an element. A **pin** is the numbered marker 
 | --- | --- |
 | **Write** a note | In [selection mode](/guides/picking-elements), click an element, type, press `Enter`. |
 | **Edit** a note | Click its pin (or the element), change the text, close the panel. |
-| **Copy** the prompt again | Open the note, click the **copy** button at the top. |
-| **Delete** a note | Open it, click the **trash** button, then **Delete**. |
-| **Find** a note | Open the launcher, click **Notes**, click the note. |
+| **Copy** the prompt again | Open the note, click <PanelButton icon="copy" /> at the top. |
+| **Delete** a note | Open it, click <PanelButton icon="trash" />, then **Delete**. |
+| **Find** a note | Open the launcher, click <LauncherItem icon="notes" />, click the note. |
 
 The sections below cover each one.
 
@@ -21,46 +21,46 @@ The sections below cover each one.
 
 1. In selection mode, click an element. The note panel opens.
 2. Type your request. `Shift+Enter` adds a line break.
-3. Press `Enter`, or click **↵ Add & copy**.
+3. Press `Enter`, or click <SendButton label="Add & copy" />.
 
 The note is saved, its pin appears, and the prompt is on your clipboard.
 
 <Callout type="warn" title="Closing first throws the draft away">
-  Closing the panel with **×** or `Esc` before step 3 discards what you typed.
+  Closing the panel with <PanelButton icon="close" /> or `Esc` before step 3 discards what you typed.
 </Callout>
 
 ### Clicking away with unsent text
 
-If you click elsewhere on the page while the panel holds unsent text, the panel shakes and keeps your text. Send it with `Enter`, or close it with **×** or `Esc`.
+If you click elsewhere on the page while the panel holds unsent text, the panel shakes and keeps your text. Send it with `Enter`, or close it with <PanelButton icon="close" /> or `Esc`.
 
 ## Edit a note
 
 Click its pin, or click its element in selection mode. The panel opens with the note filled in.
 
 - **Changes save when the panel closes**, however you close it.
-- `Enter` (or **↵ Save & copy**) saves and copies the updated prompt.
-- The **copy** button at the top copies without closing the panel.
+- `Enter` (or <SendButton label="Save & copy" />) saves and copies the updated prompt.
+- <PanelButton icon="copy" /> at the top copies without closing the panel.
 
 Clicking away with unsaved changes makes the panel shake, as for a new note.
 
 <Callout type="info" title="With your agent connected">
-  While your [coding agent is connected](/guides/mcp), notes go to it directly. The buttons say **↵ Add** / **↵ Save**, the copy button is hidden, and `Enter` leaves your clipboard alone.
+  While your [coding agent is connected](/guides/mcp), notes go to it directly. The buttons say <SendButton label="Add" /> / <SendButton label="Save" />, <PanelButton icon="copy" /> is hidden, and `Enter` leaves your clipboard alone.
 </Callout>
 
 ## Delete notes
 
-**One note:** open it, click the **trash** button, then **Delete** (or **Cancel**). The remaining pins are renumbered.
+**One note:** open it, click <PanelButton icon="trash" />, then **Delete** (or **Cancel**). The remaining pins are renumbered.
 
 **Several notes:** open the notes list, then:
 
-- tick the ones to delete and click the **trash** icon at the top (it shows the count, as in **(2)**), or
-- with none ticked, click the trash icon showing **(all)** to delete every note.
+- tick the ones to delete and click <PanelButton icon="trash" count="(2)" /> at the top (it shows how many), or
+- with none ticked, click <PanelButton icon="trash" count="(all)" /> to delete every note.
 
 Spotnote asks first (**Delete all 3 notes?**). Click **Delete** or **Cancel**.
 
 ## The notes list
 
-Open the launcher and click **Notes**. Click a note to scroll to its element and open it. If it's on another page of your app, Spotnote goes there first.
+Open the launcher and click <LauncherItem icon="notes" />. Click a note to scroll to its element and open it. If it's on another page of your app, Spotnote goes there first.
 
 - This page's notes come first, under **This page**. Other pages follow, under their paths.
 - Numbers match the pins.
