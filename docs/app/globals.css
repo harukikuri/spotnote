@@ -12,6 +12,11 @@
   font-weight: 500;
 }
 
+/* Tables: only the header row is grey; body rows sit on the page colour. */
+.prose :where(table) {
+  background: var(--color-fd-background);
+}
+
 /* Neutral greys for reading; the plugin's highlighter yellow is used only as a
    marker (active item, link underline, selection) — never as text on white,
    where it would be unreadable. In dark mode it can be the text colour too. */
