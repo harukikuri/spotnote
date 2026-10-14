@@ -7,6 +7,7 @@ import {
   DocsDescription,
 } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
+import { Footer } from '@/components/footer';
 
 export default async function Page({
   params,
@@ -22,8 +23,8 @@ export default async function Page({
 
   return (
     // No previous/next cards under the page (guides end with their own Next
-    // link); the padding keeps the room they took above the site footer.
-    <DocsPage toc={page.data.toc} footer={{ enabled: false }} className="pb-24">
+    // link); our footer closes the page instead.
+    <DocsPage toc={page.data.toc} footer={{ enabled: false }}>
       {page.data.headline && (
         // Styled like the breadcrumb other pages show above their title.
         <p className="text-sm font-medium text-fd-primary">{page.data.title}</p>
@@ -33,6 +34,7 @@ export default async function Page({
       <DocsBody>
         <Mdx components={getMDXComponents()} />
       </DocsBody>
+      <Footer />
     </DocsPage>
   );
 }
