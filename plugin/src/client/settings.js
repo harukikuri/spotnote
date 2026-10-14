@@ -3,7 +3,7 @@
 //   theme:  "system" | "light" | "dark" — Spotnote's own UI, not the page's
 //   editor: a key of EDITORS — where file links in the agent's messages open
 const KEY = "data-spotnote-settings";
-const DEFAULTS = { accent: "yellow", theme: "dark", editor: "auto" };
+const DEFAULTS = { accent: "yellow", theme: "light", editor: "auto" };
 
 // "auto" asks the dev server to open the file in the editor that's running.
 // The others open it through the editor's own URL, straight from the browser:
