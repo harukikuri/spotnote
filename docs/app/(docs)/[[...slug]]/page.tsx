@@ -21,7 +21,9 @@ export default async function Page({
   const Mdx = page.data.body;
 
   return (
-    <DocsPage toc={page.data.toc}>
+    // No previous/next cards under the page (guides end with their own Next
+    // link); the padding keeps the room they took above the site footer.
+    <DocsPage toc={page.data.toc} footer={{ enabled: false }} className="pb-24">
       {page.data.headline && (
         // Styled like the breadcrumb other pages show above their title.
         <p className="text-sm font-medium text-fd-primary">{page.data.title}</p>

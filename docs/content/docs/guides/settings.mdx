@@ -3,10 +3,6 @@ title: Settings
 description: Check your agent's connection, change Spotnote's colors, and choose where files open.
 ---
 
-**Open it:** open the launcher, click <LauncherItem icon="settings" /> (the third button).
-
-Changes apply right away and are saved in your browser, per app ([Storage](/reference/storage)). Every row has a **?**: hover it for what the setting does.
-
 ## Coding agent
 
 Shows whether your agent is connected through [spotnote-mcp](/guides/mcp), updated live.
@@ -27,8 +23,6 @@ The color of the outline, labels and pins. Yellow is the default. Switch to oran
 
 The icon at the top right of Settings. Click it to cycle: **System** (follows your OS), **Light**, **Dark** (the default).
 
-It changes Spotnote's own panels only, not your app.
-
 ## Open files in
 
 Where a file opens when you click its name, in the note panel's header or in the agent's messages (`router.jsx:28`).
@@ -39,10 +33,6 @@ Where a file opens when you click its name, in the note panel's header or in the
 | **VS Code, Cursor, Windsurf, Zed** | Always opens in that editor through its URL (`vscode://file/…`). Works without the editor running or its command-line tool installed. The browser may ask permission the first time. |
 
 **If Auto finds no editor**, a warning icon appears next to the link. Hover it for why, then pick your editor here. To name an editor Auto doesn't recognise, set `LAUNCH_EDITOR` when starting the dev server.
-
-## Version
-
-The bottom of Settings shows your Spotnote version, with a link to its GitHub repository.
 
 ## Next
 
