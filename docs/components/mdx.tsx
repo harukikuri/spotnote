@@ -19,6 +19,7 @@ import {
 // OpenAI's mark isn't in Simple Icons.
 import { RiOpenaiFill } from 'react-icons/ri';
 import { Diagram } from './diagram';
+import { Framework } from './framework';
 import { LauncherIcon } from './launcher-icon';
 import { PinIcon } from './pin-icon';
 import { PanelButton, LauncherItem, SendButton } from './ui-buttons';
@@ -59,6 +60,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Accordion,
     Accordions,
     Diagram,
+    Framework,
     LauncherIcon,
     PinIcon,
     PanelButton,
