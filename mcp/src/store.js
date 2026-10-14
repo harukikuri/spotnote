@@ -3,8 +3,10 @@
 // is the source of truth; browsers mirror it and fall back to localStorage
 // when it's gone.
 //
-// A note: { key, loc, index, url, note, prompt, thread, done, dismissed, working, updated }
+// A note: { key, loc, index, url, note, prompt, thread, done, dismissed, working, asked, updated }
 //   key       "path:line:col@index" — one note per element
+//   asked     when this request was written, in ms: a note deleted and written again
+//             word for word is still a new request
 //   thread    [{ id, from: "agent" | "you", text, at, resolves?, dismisses?, client? }]
 //             (client: the agent's name for itself, e.g. "claude-code")
 //   done      the agent made the change; dismissed: it won't, and said why
@@ -89,11 +91,13 @@ export function createStore() {
       const a = app(root);
       const old = a.notes.find((x) => x.key === n.key);
       if (!old) {
-        a.notes.push({ ...fromBrowser(n), thread: [], done: false, dismissed: false, working: false, updated: Date.now() });
+        const now = Date.now();
+        a.notes.push({ ...fromBrowser(n), thread: [], done: false, dismissed: false, working: false, asked: now, updated: now });
         delete a.deleted[n.key];
       } else {
         // A rewritten note is a new request: start its conversation over.
-        if (old.note !== n.note) Object.assign(old, { thread: [], done: false, dismissed: false, working: false, reopened: null });
+        if (old.note !== n.note)
+          Object.assign(old, { thread: [], done: false, dismissed: false, working: false, reopened: null, asked: Date.now() });
         Object.assign(old, fromBrowser(n), { updated: Date.now() });
       }
       changed(root);
@@ -125,7 +129,8 @@ export function createStore() {
         const i = a.notes.findIndex((x) => x.key === n.key);
         if (i >= 0 && a.notes[i].updated >= updated) continue;
         const thread = Array.isArray(n.thread) ? n.thread : [];
-        const note = { ...fromBrowser(n), thread, done: !!n.done, dismissed: !!n.dismissed, working: false, updated };
+        const asked = Number(n.asked) || updated;
+        const note = { ...fromBrowser(n), thread, done: !!n.done, dismissed: !!n.dismissed, working: false, asked, updated };
         if (i >= 0) a.notes[i] = note;
         else a.notes.push(note);
         any = true;

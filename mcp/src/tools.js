@@ -50,7 +50,7 @@ export function createRunner(store) {
     for (const root of new Set(list.map((v) => v.root)))
       store.working(root, list.filter((v) => v.root === root).map((v) => v.key), agent, client);
   }
-  const signature = (v) => `${v.root}\n${v.key}\n${v.note}\n${v.thread.length}`;
+  const signature = (v) => `${v.root}\n${v.key}\n${v.asked}\n${v.note}\n${v.thread.length}`;
 
   // Resolves once something changes, after `ms`, or when the call is cancelled.
   function change(ms, signal) {
@@ -77,6 +77,10 @@ export function createRunner(store) {
       // Watching again means the last batch is handled; whatever it left unanswered
       // isn't being worked on (see store.release).
       store.release(agent);
+      // The agent answers every note it gets, so one still waiting on it that no
+      // agent holds never reached it (the call was cut off, or its answer was
+      // rejected): hand it out again.
+      for (const v of notes(cwd)) if (needsAgent(v) && !v.working) delivered.delete(signature(v));
       const end = Date.now() + Math.min(timeout_seconds, MAX_WAIT_S) * 1000;
       const fresh = () => notes(cwd).filter((v) => needsAgent(v) && !delivered.has(signature(v)));
       while (!fresh().length && Date.now() < end && !signal?.aborted) await change(end - Date.now(), signal);
