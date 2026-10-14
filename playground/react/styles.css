@@ -38,3 +38,10 @@ body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 
 .list { list-style: none; padding: 0; margin: 0; }
 .list li { padding: 14px 2px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
+
+/* Skeleton bars: the app shows layout only, no readable text. */
+.bar { display: block; max-width: 100%; border-radius: 6px; background: #ececef; }
+.bar + .bar { margin-top: 8px; }
+.bar-dark { background: #d6d6db; }
+.btn-primary .bar, .chip-active .bar { background: rgba(255, 255, 255, 0.35); }
+.row .link, .nav-links .link { display: inline-block; }

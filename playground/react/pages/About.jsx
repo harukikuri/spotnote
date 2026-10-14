@@ -1,27 +1,19 @@
-const SECTIONS = [
-  ["What is this?", "A playground for the data-loc tool — a realistic multi-page React app you can point the picker at."],
-  ["Routing", "Navigation uses the History API with query strings, so you can test the picker across route changes."],
-  ["Scrolling", "Every page is intentionally tall so pins and the note panel can be tested through scroll."],
-  ["Repeated elements", "The products grid renders many identical cards to exercise per-instance identity."],
-  ["Components", "Cards live in their own file, so their stamps point back to where they were authored."],
-  ["Notes", "Select an element, write a note, and copy an agent-ready prompt to the clipboard."],
-];
+import Bar from "../components/Bar.jsx";
 
 export default function About() {
   return (
     <div>
       <section className="hero">
-        <h1>About</h1>
-        <p>Everything on this page is a target for the picker. Scroll around and drop a few notes.</p>
+        <h1><Bar w={160} h={40} dark /></h1>
+        <p><Bar w="90%" h={16} /></p>
       </section>
-      {SECTIONS.map(([title, body]) => (
-        <section className="section" key={title}>
-          <h2>{title}</h2>
-          <p>{body}</p>
+      {Array.from({ length: 6 }, (_, i) => (
+        <section className="section" key={i}>
+          <h2><Bar w={200} h={24} dark /></h2>
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            <Bar w="100%" />
+            <Bar w="95%" />
+            <Bar w="60%" />
           </p>
         </section>
       ))}

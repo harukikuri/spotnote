@@ -1,52 +1,47 @@
 import { Link } from "../router.jsx";
-
-const features = [
-  { title: "Click to source", body: "Point at any element and jump to the exact file and line." },
-  { title: "Notes on elements", body: "Leave a note on a component and hand it to your agent." },
-  { title: "Framework-agnostic", body: "One client script, any Vite framework." },
-  { title: "No server", body: "Everything runs locally in dev — nothing to host." },
-  { title: "Pins persist", body: "Reopen and edit a note anytime from the launcher." },
-  { title: "Tailwind-friendly", body: "Reads classes and computed styles into the prompt." },
-];
+import Bar from "../components/Bar.jsx";
 
 export default function Home() {
   return (
     <div>
       <section className="hero">
-        <h1>Build UI feedback into your dev loop</h1>
+        <h1><Bar w="70%" h={40} dark /></h1>
         <p>
-          A dev-only tool to point at elements, capture their exact source location, and turn a
-          quick note into an agent-ready prompt.
+          <Bar w="100%" h={16} />
+          <Bar w="80%" h={16} />
         </p>
         <div className="row">
           <Link to="/products?category=all&sort=name">
-            <span className="btn btn-primary">Browse products</span>
+            <span className="btn btn-primary"><Bar w={100} h={14} dark /></span>
           </Link>
           <Link to="/about">
-            <span className="btn">Learn more</span>
+            <span className="btn"><Bar w={80} h={14} /></span>
           </Link>
         </div>
       </section>
 
       <section className="section">
-        <h2>Features</h2>
+        <h2><Bar w={120} h={24} dark /></h2>
         <div className="grid">
-          {features.map((f) => (
-            <div className="card" key={f.title}>
-              <h3>{f.title}</h3>
-              <p>{f.body}</p>
+          {Array.from({ length: 6 }, (_, i) => (
+            <div className="card" key={i}>
+              <h3><Bar w="60%" h={16} dark /></h3>
+              <p>
+                <Bar w="100%" />
+                <Bar w="75%" />
+              </p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="section">
-        <h2>Recent activity</h2>
+        <h2><Bar w={160} h={24} dark /></h2>
         <ul className="list">
           {Array.from({ length: 12 }, (_, i) => (
             <li key={i}>
-              <span>Deploy #{120 - i} finished</span>
-              <span className="muted">{i + 1} min ago</span>
+              <span><Bar w={180} /></span>
+              <span className="muted"><Bar w={60} /></span>
             </li>
           ))}
         </ul>

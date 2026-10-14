@@ -1,68 +1,54 @@
 <script>
   import ProductCard from "./components/ProductCard.svelte";
-
-  const features = [
-    { title: "Click to source", body: "Point at any element and jump to the exact file and line." },
-    { title: "Notes on elements", body: "Leave a note on a component and hand it to your agent." },
-    { title: "Framework-agnostic", body: "One client script, any Vite framework." },
-    { title: "Pins persist", body: "Reopen and edit a note anytime from the launcher." },
-    { title: "No server", body: "Everything runs locally in dev — nothing to host." },
-    { title: "Agent-ready", body: "Reads classes and computed styles into the prompt." },
-  ];
-
-  const products = [
-    { id: 1, name: "Aero Runner", price: 120, category: "shoes" },
-    { id: 2, name: "Trail Blazer", price: 145, category: "shoes" },
-    { id: 3, name: "Day Tote", price: 80, category: "bags" },
-    { id: 4, name: "Weekender", price: 160, category: "bags" },
-    { id: 5, name: "Chrono 39", price: 240, category: "watches" },
-    { id: 6, name: "Field Watch", price: 150, category: "watches" },
-  ];
+  import Bar from "./components/Bar.svelte";
 </script>
 
 <header class="nav">
   <div class="nav-inner">
-    <span class="brand">Spotnote</span>
+    <span class="brand"><Bar w={96} h={18} dark /></span>
     <nav class="nav-links">
-      <a class="link" href="#features">Features</a>
-      <a class="link" href="#products">Products</a>
+      <a class="link" href="#features"><Bar w={60} /></a>
+      <a class="link" href="#products"><Bar w={64} /></a>
     </nav>
   </div>
 </header>
 
 <main class="page">
   <section class="hero">
-    <h1>Build UI feedback into your dev loop</h1>
+    <h1><Bar w="70%" h={40} dark /></h1>
     <p>
-      A dev-only tool to point at elements, capture their exact source location, and turn a
-      quick note into an agent-ready prompt.
+      <Bar h={16} />
+      <Bar w="80%" h={16} />
     </p>
     <div class="row">
-      <span class="btn btn-primary">Browse products</span>
-      <span class="btn">Learn more</span>
+      <span class="btn btn-primary"><Bar w={100} h={14} dark /></span>
+      <span class="btn"><Bar w={80} h={14} /></span>
     </div>
   </section>
 
   <section class="section" id="features">
-    <h2>Features</h2>
+    <h2><Bar w={120} h={24} dark /></h2>
     <div class="grid">
-      {#each features as f}
+      {#each Array(6) as _}
         <div class="card">
-          <h3>{f.title}</h3>
-          <p>{f.body}</p>
+          <h3><Bar w="60%" h={16} dark /></h3>
+          <p>
+            <Bar />
+            <Bar w="75%" />
+          </p>
         </div>
       {/each}
     </div>
   </section>
 
   <section class="section" id="products">
-    <h2>Products</h2>
+    <h2><Bar w={140} h={24} dark /></h2>
     <div class="grid">
-      {#each products as p (p.id)}
-        <ProductCard product={p} />
+      {#each Array(6) as _}
+        <ProductCard />
       {/each}
     </div>
   </section>
 </main>
 
-<footer class="footer">Spotnote playground · Svelte + Vite</footer>
+<footer class="footer"><Bar w={180} /></footer>

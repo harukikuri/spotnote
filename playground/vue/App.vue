@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { route } from "./router.js";
 import AppLink from "./components/AppLink.vue";
+import Bar from "./components/Bar.vue";
 import Home from "./pages/Home.vue";
 import Products from "./pages/Products.vue";
 import About from "./pages/About.vue";
@@ -20,11 +21,11 @@ const page = computed(() => {
   <div>
     <header class="nav">
       <div class="nav-inner">
-        <span class="brand">Spotnote</span>
+        <span class="brand"><Bar :w="96" :h="18" dark /></span>
         <nav class="nav-links">
-          <AppLink to="/">Home</AppLink>
-          <AppLink to="/products?category=all&sort=name">Products</AppLink>
-          <AppLink to="/about">About</AppLink>
+          <AppLink to="/"><Bar :w="44" /></AppLink>
+          <AppLink to="/products?category=all&sort=name"><Bar :w="64" /></AppLink>
+          <AppLink to="/about"><Bar :w="52" /></AppLink>
         </nav>
       </div>
     </header>
@@ -32,12 +33,11 @@ const page = computed(() => {
     <main class="page">
       <component :is="page" v-if="page" />
       <div v-else class="section">
-        <h2>404</h2>
-        <p class="muted">No page at {{ route.path }}</p>
-        <AppLink to="/">← Back home</AppLink>
+        <h2><Bar :w="120" :h="24" dark /></h2>
+        <AppLink to="/"><Bar :w="100" /></AppLink>
       </div>
     </main>
 
-    <footer class="footer">Spotnote playground · Vue + Vite</footer>
+    <footer class="footer"><Bar :w="180" /></footer>
   </div>
 </template>

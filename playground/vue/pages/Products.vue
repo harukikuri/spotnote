@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { route, navigate } from "../router.js";
 import ProductCard from "../components/ProductCard.vue";
+import Bar from "../components/Bar.vue";
 
 const PRODUCTS = [
   { id: 1, name: "Aero Runner", price: 120, category: "shoes" },
@@ -40,10 +41,8 @@ function setParam(k, v) {
 <template>
   <div>
     <section class="section">
-      <h2>Products</h2>
-      <p class="muted">
-        category=<b>{{ category }}</b> · sort=<b>{{ sort }}</b> · {{ items.length }} items
-      </p>
+      <h2><Bar :w="140" :h="24" dark /></h2>
+      <p class="muted"><Bar :w="220" /></p>
     </section>
 
     <div class="filters">
@@ -53,21 +52,21 @@ function setParam(k, v) {
         :class="['chip', { 'chip-active': c === category }]"
         @click="setParam('category', c)"
       >
-        {{ c }}
+        <Bar :w="40" :h="10" :dark="c === category" />
       </button>
-      <span class="muted" style="margin-left: auto">sort:</span>
+      <span class="muted" style="margin-left: auto"><Bar :w="30" :h="10" /></span>
       <button
         v-for="s in ['name', 'price']"
         :key="s"
         :class="['chip', { 'chip-active': s === sort }]"
         @click="setParam('sort', s)"
       >
-        {{ s }}
+        <Bar :w="36" :h="10" :dark="s === sort" />
       </button>
     </div>
 
     <div class="grid">
-      <ProductCard v-for="p in items" :key="p.id" :product="p" />
+      <ProductCard v-for="p in items" :key="p.id" />
     </div>
   </div>
 </template>

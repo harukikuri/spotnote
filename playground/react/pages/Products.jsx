@@ -1,5 +1,6 @@
 import { navigate } from "../router.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import Bar from "../components/Bar.jsx";
 
 const PRODUCTS = [
   { id: 1, name: "Aero Runner", price: 120, category: "shoes" },
@@ -36,10 +37,8 @@ export default function Products({ query }) {
   return (
     <div>
       <section className="section">
-        <h2>Products</h2>
-        <p className="muted">
-          category=<b>{category}</b> · sort=<b>{sort}</b> · {items.length} items
-        </p>
+        <h2><Bar w={140} h={24} dark /></h2>
+        <p className="muted"><Bar w={220} /></p>
       </section>
 
       <div className="filters">
@@ -49,11 +48,11 @@ export default function Products({ query }) {
             className={"chip" + (c === category ? " chip-active" : "")}
             onClick={() => setParam("category", c)}
           >
-            {c}
+            <Bar w={40} h={10} dark={c === category} />
           </button>
         ))}
         <span className="muted" style={{ marginLeft: "auto" }}>
-          sort:
+          <Bar w={30} h={10} />
         </span>
         {["name", "price"].map((s) => (
           <button
@@ -61,7 +60,7 @@ export default function Products({ query }) {
             className={"chip" + (s === sort ? " chip-active" : "")}
             onClick={() => setParam("sort", s)}
           >
-            {s}
+            <Bar w={36} h={10} dark={s === sort} />
           </button>
         ))}
       </div>

@@ -2,6 +2,7 @@ import { useRoute, Link } from "./router.jsx";
 import Home from "./pages/Home.jsx";
 import Products from "./pages/Products.jsx";
 import About from "./pages/About.jsx";
+import Bar from "./components/Bar.jsx";
 
 export default function App() {
   const route = useRoute();
@@ -13,9 +14,8 @@ export default function App() {
   else
     page = (
       <div className="section">
-        <h2>404</h2>
-        <p className="muted">No page at {route.path}</p>
-        <Link to="/">← Back home</Link>
+        <h2><Bar w={120} h={24} dark /></h2>
+        <Link to="/"><Bar w={100} /></Link>
       </div>
     );
 
@@ -23,16 +23,16 @@ export default function App() {
     <div>
       <header className="nav">
         <div className="nav-inner">
-          <span className="brand">Spotnote</span>
+          <span className="brand"><Bar w={96} h={18} dark /></span>
           <nav className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/products?category=all&sort=name">Products</Link>
-            <Link to="/about">About</Link>
+            <Link to="/"><Bar w={44} /></Link>
+            <Link to="/products?category=all&sort=name"><Bar w={64} /></Link>
+            <Link to="/about"><Bar w={52} /></Link>
           </nav>
         </div>
       </header>
       <main className="page">{page}</main>
-      <footer className="footer">Spotnote playground · React + Vite</footer>
+      <footer className="footer"><Bar w={180} /></footer>
     </div>
   );
 }
