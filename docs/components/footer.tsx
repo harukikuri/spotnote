@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import { ThemeSwitch } from 'fumadocs-ui/layouts/shared/slots/theme-switch';
 
 // Site-wide footer: the mark and licence on the left, where else Spotnote lives
-// on the right.
+// and the light/dark toggle on the right.
 const LINKS = [
   { href: '/getting-started/installation', label: 'Get started' },
   { href: 'https://github.com/harukikuri/spotnote', label: 'GitHub' },
@@ -21,21 +22,24 @@ export function Footer() {
           <img src="/brand/spotnote-mark-dark.svg" alt="" width={16} height={16} className="hidden dark:block" />
           <span>MIT Licensed · © 2026 harukikuri</span>
         </div>
-        <nav className="flex flex-wrap gap-x-6 gap-y-2">
-          {LINKS.map(({ href, label }) => {
-            const external = href.startsWith('http');
-            return (
-              <Link
-                key={href}
-                href={href}
-                {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
-                className="transition-colors hover:text-fd-foreground"
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+            {LINKS.map(({ href, label }) => {
+              const external = href.startsWith('http');
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
+                  className="transition-colors hover:text-fd-foreground"
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+          <ThemeSwitch mode="light-dark" className="w-fit border-none bg-transparent p-0 shadow-none" />
+        </div>
       </div>
     </footer>
   );

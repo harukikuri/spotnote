@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { SiGithub } from 'react-icons/si';
-import { ThemeSwitch } from 'fumadocs-ui/layouts/shared/slots/theme-switch';
 import { FullSearchTrigger } from 'fumadocs-ui/layouts/shared/slots/search-trigger';
 
 export function Header() {
@@ -28,7 +27,6 @@ export function Header() {
           >
             <SiGithub size={18} />
           </a>
-          <ThemeSwitch mode="light-dark" className="w-fit border-none bg-transparent p-0 shadow-none" />
         </nav>
       </div>
     </header>
