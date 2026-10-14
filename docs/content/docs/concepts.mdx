@@ -3,16 +3,6 @@ title: Concepts
 description: How Spotnote stamps source locations at dev time and reads them back in the browser.
 ---
 
-You don't need this page to use Spotnote. Read it when you want to know why something behaves the way it does.
-
-## In short
-
-1. **The plugin stamps.** While Vite compiles your code, it writes each element's source location onto the element.
-2. **The client reads.** In the browser, it reads that location back when you click.
-3. **Notes match by stamp.** A note finds its element again by looking for the same stamp.
-
-Nothing else is involved: no manifest, no extra server, no Git.
-
 ## Stamps
 
 <Diagram name="stamps" width={844} height={476} alt="Line 12 of components/ProductCard.jsx goes through vite dev, where Spotnote stamps it before your framework compiles it, and reaches the browser with the stamp components/ProductCard.jsx:12:5." />
@@ -23,7 +13,13 @@ A **stamp** is a `data-spotnote` attribute holding the element's source location
 <button data-spotnote="components/ProductCard.jsx:12:5" data-spotnote-name="ProductCard">
 ```
 
-The plugin adds it to every **host element** (a real DOM tag such as `<div>` or `<button>`) written in your own source.
+The location is `path:line:column`:
+
+- `path` is relative to the Vite root, with `/` separators.
+- `line` and `column` both count from 1, as in your editor.
+- The position is the start of the opening tag (`<`).
+
+The plugin adds it to every **host element** (a real DOM tag such as `<div>` or `<button>`) written in your own source. An element that already has a `data-spotnote` attribute is left as is.
 
 Components (`<ProductCard>`) aren't stamped, because a component doesn't always pass attributes down to a DOM node. Their elements are stamped inside their own file instead.
 
@@ -35,9 +31,12 @@ How the stamp is added depends on the file type:
 
 The stamping runs before your framework's compiler, wherever `spotnote()` sits in `plugins`. Files in `node_modules` are never stamped.
 
-Alongside the location, `data-spotnote-name` records the **owning component**: the nearest enclosing capitalized function in JSX, or the file name for `.vue` and `.svelte`. The client uses it to build the source path.
+Alongside the location, `data-spotnote-name` records the **owning component**. The client uses it to build the source path.
 
-See [Attributes](/reference/attributes) for the exact formats.
+| File | Value |
+| --- | --- |
+| `.jsx` / `.tsx` | The nearest enclosing function whose name starts with a capital letter (`function TodoList`, `const TodoList = () =>`, also through `memo()` / `forwardRef()`). Omitted when there is none. |
+| `.vue` / `.svelte` | The file name without its extension. |
 
 ## The client
 
@@ -45,7 +44,9 @@ See [Attributes](/reference/attributes) for the exact formats.
 
 The plugin also adds a script to the page Vite serves, so the client starts without an import in your app.
 
-It draws everything (the launcher, outlines, panel and pins) inside a shadow root. Your app's CSS doesn't affect it, and its CSS doesn't leak into your app.
+It draws everything (the launcher, outlines, panel and pins) inside the open shadow root of a single `<spotnote-root>` element appended to `<html>`. Your app's CSS doesn't affect it, and its CSS doesn't leak into your app. The element carries `data-spotnote-ui`, so Spotnote ignores its own UI when it looks for elements under the cursor.
+
+If your end-to-end tests run against your dev server, the stamps and `<spotnote-root>` are in the DOM there too.
 
 When you click in selection mode, the client:
 
@@ -59,10 +60,6 @@ A note is saved with its element's stamp and its **position** among elements wit
 
 - **Why notes survive reloads and hot updates:** the stamp comes back with the element, with no IDs in your code.
 - **Why a note loses its element when an edit moves the opening tag:** the stamp changes, so nothing matches. See [When your code changes](/guides/notes#when-your-code-changes).
-
-## Dev only
-
-The plugin runs only for `vite dev` (`apply: "serve"`). Production builds don't include stamps or the client.
 
 ## Next
 
