@@ -39,7 +39,7 @@ const SET_ICON = {
 };
 const ICON = {
   // The core, closed: the Spotnote mark (docs/public/brand/spotnote-mark-yellow.svg),
-  // in the theme's mark colours.
+  // in the accent colour (applyLook sets --sn-mark / --sn-mark-fold).
   mark: '<svg class="snl-logo" width="20" height="20" viewBox="56 56 188 188" aria-hidden="true"><path fill="var(--sn-mark)" fill-rule="evenodd" d="M56 56h188v124l-64 64H56z M150 124a26 26 0 1 0-52 0a26 26 0 1 0 52 0z"/><path fill="var(--sn-mark-fold)" d="M244 180h-64v64z"/></svg>',
   // Open, a "+" turned 135° reads as "×".
   plus: svg('class="snl-plus" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"', '<path d="M12 5v14M5 12h14"/>'),

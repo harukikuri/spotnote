@@ -22,13 +22,15 @@ export const T = {
 // colours at full strength, in hue order. `ink` is the text on the accent (dark,
 // or white on violet: each ≥ 5:1); `deep` is the hue dark enough to read as
 // text on the light theme (≥ 4.5:1 on white).
+// `fold` is the Spotnote mark's folded corner in that colour (the mark itself
+// takes `accent`); yellow's are the brand's own (docs/public/brand/spotnote-mark-yellow.svg).
 export const ACCENTS = {
-  yellow: { name: "Yellow", accent: "#ffd84d", ink: "#1a1600", deep: "#8a6a00" },
-  orange: { name: "Orange", accent: "#ff9500", ink: "#1f1100", deep: "#b25000" },
-  pink: { name: "Pink", accent: "#ff375f", ink: "#1f0008", deep: "#d70f45" },
-  violet: { name: "Violet", accent: "#5e5ce6", ink: "#ffffff", deep: "#5e5ce6" },
-  blue: { name: "Blue", accent: "#0a84ff", ink: "#00142b", deep: "#0062cc" },
-  green: { name: "Green", accent: "#30c85e", ink: "#001f0b", deep: "#1b7f3b" },
+  yellow: { name: "Yellow", accent: "#ffd84d", ink: "#1a1600", deep: "#8a6a00", fold: "#d4a817" },
+  orange: { name: "Orange", accent: "#ff9500", ink: "#1f1100", deep: "#b25000", fold: "#cc7700" },
+  pink: { name: "Pink", accent: "#ff375f", ink: "#1f0008", deep: "#d70f45", fold: "#cc2c4c" },
+  violet: { name: "Violet", accent: "#5e5ce6", ink: "#ffffff", deep: "#5e5ce6", fold: "#4b4ab8" },
+  blue: { name: "Blue", accent: "#0a84ff", ink: "#00142b", deep: "#0062cc", fold: "#086acc" },
+  green: { name: "Green", accent: "#30c85e", ink: "#001f0b", deep: "#1b7f3b", fold: "#26a04b" },
 };
 
 // Theme surfaces. Dark is the original look; light mirrors it.
@@ -39,8 +41,6 @@ const THEMES = {
     hover: "rgba(255,255,255,.06)", "hover-strong": "rgba(255,255,255,.08)", "text-strong": "#fff",
     glass: "rgba(24,24,28,.74)", "glass-border": "rgba(255,255,255,.10)", "glass-inset": "rgba(255,255,255,.06)",
     "glass-text": "#f2f2f3", "glass-hover": "rgba(44,44,50,.86)", track: "#a1a1aa",
-    // the Spotnote mark, as in docs/public/brand/spotnote-mark-yellow.svg
-    mark: "#FFD84D", "mark-fold": "#D4A817",
     "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)", pop: "rgba(24,24,28,.97)", foot: "rgba(0,0,0,.3)",
     "fw-react": "#61dafb", "fw-solid": "#76b3e1", "fw-vue": "#42b883", "fw-svelte": "#ff3e00", "fw-jsx": "#a1a1aa",
     // code in the agent's messages (GitHub's dark palette)
@@ -53,8 +53,6 @@ const THEMES = {
     hover: "rgba(0,0,0,.04)", "hover-strong": "rgba(0,0,0,.06)", "text-strong": "#000",
     glass: "rgba(255,255,255,.8)", "glass-border": "rgba(0,0,0,.08)", "glass-inset": "rgba(255,255,255,.7)",
     "glass-text": "#18181b", "glass-hover": "rgba(244,244,245,.94)", track: "#71717a",
-    // the Spotnote mark, as in docs/public/brand/spotnote-mark-yellow.svg
-    mark: "#FFD84D", "mark-fold": "#D4A817",
     "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)", pop: "rgba(255,255,255,.98)", foot: "rgba(0,0,0,.04)",
     "fw-react": "#087ea4", "fw-solid": "#2c4f7c", "fw-vue": "#2f9768", "fw-svelte": "#e63900", "fw-jsx": "#71717a",
     // code in the agent's messages (GitHub's light palette)
@@ -454,6 +452,9 @@ export function applyLook(next) {
   host.style.setProperty("--sn-accent-rgb", [1, 3, 5].map((i) => parseInt(a.accent.slice(i, i + 2), 16)).join(","));
   host.style.setProperty("--sn-ink", a.ink);
   host.style.setProperty("--sn-accent-text", theme === "light" ? a.deep : a.accent);
+  // The launcher's Spotnote mark wears the accent too.
+  host.style.setProperty("--sn-mark", a.accent);
+  host.style.setProperty("--sn-mark-fold", a.fold);
 }
 
 export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
