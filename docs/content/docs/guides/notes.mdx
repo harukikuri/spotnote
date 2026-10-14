@@ -46,6 +46,18 @@ Open the launcher and click <LauncherItem icon="notes" />. Click a note to scrol
 - Numbers match the pins.
 - Click a heading to fold that section (it shows how many notes it holds). Click again to unfold.
 
+## Note status
+
+With [your agent connected](/guides/mcp), each pin shows where its note stands:
+
+| Pin | Meaning |
+| --- | --- |
+| <PinIcon n={1} /> | Waiting for an agent. |
+| <PinIcon state="working" /> | The agent is working on it. |
+| <PinIcon state="asked" /> | The agent asked you something. Answer in the panel. |
+| <PinIcon state="done" /> | Done. The note shows what changed. |
+| <PinIcon state="dismissed" /> | The agent won't make the change. The note shows why. |
+
 ## Next
 
 [Using with agents](/guides/using-with-agents): write notes that get the edit you meant.

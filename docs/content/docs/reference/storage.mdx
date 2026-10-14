@@ -1,6 +1,6 @@
 ---
 title: Storage
-description: What Spotnote saves in the browser, and for how long.
+description: Where Spotnote saves your notes and settings.
 ---
 
 Spotnote saves your notes in your browser and writes nothing to your project. With [spotnote-mcp](/guides/mcp) running, the notes are kept in `~/.spotnote/` and the browser keeps a copy. Nothing leaves your machine.
@@ -12,3 +12,10 @@ Spotnote saves your notes in your browser and writes nothing to your project. Wi
 | `data-spotnote-panel-size` | `localStorage` | The note panel's size, once you've resized it. |
 | `data-spotnote-settings` | `localStorage` | Your [Settings](/guides/settings): accent color and theme. |
 | `data-spotnote-open` | `sessionStorage` | The note to open after the notes list switches pages. Removed as soon as the new page reads it. |
+
+## With spotnote-mcp
+
+- While spotnote-mcp runs, it holds the notes, and every browser with the app open shows the same ones.
+- It saves them in `~/.spotnote/`, so they outlive your dev server, your `node_modules` and the browser tab. An agent sees them even before you open the app.
+- When it isn't running, Spotnote uses your browser's own copy, as without MCP. Notes written meanwhile join the server's the next time it runs. For a note on the same element in both, the newer one wins.
+- An agent only sees notes from apps inside the folder it works in.

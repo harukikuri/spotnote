@@ -72,54 +72,7 @@ That's it. You stay in the browser from now on.
 </Step>
 </Steps>
 
-## Note status
-
-| Pin | Meaning |
-| --- | --- |
-| <PinIcon n={1} /> | Waiting for an agent. |
-| <PinIcon state="working" /> | The agent is working on it. |
-| <PinIcon state="asked" /> | The agent asked you something. Answer in the panel. |
-| <PinIcon state="done" /> | Done. The note shows what changed. |
-| <PinIcon state="dismissed" /> | The agent won't make the change. The note shows why. |
-
-## Details
-
-<Accordions>
-<Accordion title="What the conversation panel shows">
-
-- Your note first, then the agent's messages and yours.
-- Each agent message is labelled with the agent's name (Claude Code, Codex, …), and its mark for Claude Code, Cursor, Gemini, Windsurf and GitHub Copilot.
-- While the agent works, its message shows "Thinking…" (and similar words), and there's no input until it answers.
-- Messages show as Markdown: paragraphs, lists, `code` and code blocks, **bold**. Code is syntax-coloured, and markup written without backticks (`<span class="btn">`) shows as code too.
-- A file the agent mentions, such as `router.jsx:28`, is a link that opens the file at that line. Which editor: [Settings → Open files in](/guides/settings#open-files-in).
-
-</Accordion>
-<Accordion title="When the agent is offline">
-
-If spotnote-mcp isn't running, the panel says so. You can still reply: your message shows **not sent yet**, and goes to the agent once it's back.
-
-</Accordion>
-<Accordion title="When the agent moves on without finishing a note">
-
-An agent finishes each note by resolving it, dismissing it or replying. If it moves on without doing any of these, <PinIcon state="working" /> goes away: a note your reply reopened (say, a "thanks!" on a done note) goes back to <PinIcon state="done" /> or <PinIcon state="dismissed" />, and a new note goes back to its number.
-
-</Accordion>
-<Accordion title="Where notes live">
-
-- While spotnote-mcp runs, it holds the notes, and every browser with the app open shows the same ones.
-- It saves them in `~/.spotnote/`, so they outlive your dev server, your `node_modules` and the browser tab. An agent sees them even before you open the app.
-- When it isn't running, Spotnote uses your browser's own copy, as without MCP. Notes written meanwhile join the server's the next time it runs. For a note on the same element in both, the newer one wins.
-- An agent only sees notes from apps inside the folder it works in.
-
-</Accordion>
-<Accordion title="Several agent sessions, and updates">
-
-Each agent session starts its own spotnote-mcp. The first one serves the browsers, and the others pass their calls to it.
-
-After you update Spotnote, the next session that starts takes over from one still running the old version, so you don't have to close your other sessions.
-
-</Accordion>
-<Accordion title="Tools the agent gets">
+## MCP Tools
 
 | Tool | What it does |
 | --- | --- |
@@ -131,13 +84,9 @@ After you update Spotnote, the next session that starts takes over from one stil
 
 Each note comes with its id, its page, the same prompt that copying gives you, and the conversation so far.
 
-</Accordion>
-<Accordion title="Who can connect">
+## Where notes live
 
-spotnote-mcp listens on `127.0.0.1:4848` only, so other devices on your network can't reach it. Browsers can only reach it from pages served on `localhost`.
-
-</Accordion>
-</Accordions>
+spotnote-mcp keeps your notes in `~/.spotnote/`, so every browser shows the same ones. See [Storage](/reference/storage#with-spotnote-mcp).
 
 ## Next
 

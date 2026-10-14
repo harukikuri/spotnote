@@ -3,7 +3,9 @@ title: FAQ
 description: Common problems, and the first fix to try.
 ---
 
-## The launcher doesn't appear
+## Setup
+
+### Why doesn't the launcher appear?
 
 Try these in order:
 
@@ -11,7 +13,7 @@ Try these in order:
 2. **Check the browser console** for errors loading `virtual:spotnote-client`.
 3. **Check your HTML goes through Vite.** The client is added through Vite's `transformIndexHtml` hook. HTML served some other way never loads it.
 
-## Hovering highlights nothing
+### Why does hovering highlight nothing?
 
 Try these in order:
 
@@ -19,7 +21,9 @@ Try these in order:
 2. **Look at the terminal for `[spotnote] skipped …`.** That file couldn't be parsed, so its elements aren't stamped. See [Warnings](/reference/plugin-api#warnings).
 3. **Check the file type.** Only `.jsx`, `.tsx`, `.vue` and `.svelte` files are stamped. In dev tools, look for a `data-spotnote` attribute on the element.
 
-## A pin disappeared after an edit
+## Notes
+
+### Why did a pin disappear after an edit?
 
 **Expected.** A note finds its element by the element's **source location** (file, line, column), plus its position for repeated elements.
 
@@ -35,13 +39,25 @@ From the notes list, a **Not found** note can still be:
 
 It can't be opened. If the element comes back to the same location (say, you undo the edit), the note finds it again.
 
-## My notes are gone
+### Where did my notes go?
 
 **Check the port.** Notes are saved per browser and per address. If Vite started on `5174` because `5173` was busy, your notes are still under `5173`. See [Storage](/reference/storage).
 
-## The prompt points at the wrong file
+### Why does the prompt point at the wrong file?
 
 **Tell the agent which usage you mean.** You likely clicked an element from a shared component, so the location is inside that component's file. The **source path** in the prompt shows where it's used.
+
+## Agents
+
+### What happens when the agent is offline?
+
+If spotnote-mcp isn't running, the panel says so. You can still reply: your message shows **not sent yet**, and goes to the agent once it's back.
+
+### Can I run several agent sessions?
+
+**That's fine.** Each agent session starts its own spotnote-mcp. The first one serves the browsers, and the others pass their calls to it.
+
+After you update Spotnote, the next session that starts takes over from one still running the old version, so you don't have to close your other sessions.
 
 ## Next
 
