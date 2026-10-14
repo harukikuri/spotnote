@@ -7,6 +7,8 @@ description: Check your agent's connection, change Spotnote's colors, and choose
 
 Shows whether your agent is connected through [spotnote-mcp](/guides/mcp), updated live.
 
+<img src="/settings-agent.png" alt="The Coding agent page in Settings: Not connected, with the two steps to connect Claude Code" width="453" className="my-6 rounded-lg border border-fd-border shadow-sm" />
+
 | Status | Meaning |
 | --- | --- |
 | Connected | Your agent picks up notes as you write them. |
@@ -19,13 +21,19 @@ Click the row for its page. When you're not connected, it shows the two steps to
 
 The color of the outline, labels and pins. Yellow is the default. Switch to orange, pink, violet, blue or green when yellow blends into your app.
 
+<img src="/settings-accent.png" alt="Settings with blue picked as the accent color, and the launcher turned blue" width="453" className="my-6 rounded-lg border border-fd-border shadow-sm" />
+
 ## Theme
 
 The icon at the top right of Settings. Click it to cycle: **System** (follows your OS), **Light** (the default), **Dark**.
 
+<img src="/settings-theme.png" alt="Settings and the launcher in the Dark theme, with the moon icon at the top right" width="453" className="my-6 rounded-lg border border-fd-border shadow-sm" />
+
 ## Open files in
 
 Where a file opens when you click its name, in the note panel's header or in the agent's messages (`router.jsx:28`).
+
+<img src="/settings-editor.png" alt="Settings with Open files in set to Cursor" width="453" className="my-6 rounded-lg border border-fd-border shadow-sm" />
 
 | Option | Effect |
 | --- | --- |
@@ -33,6 +41,8 @@ Where a file opens when you click its name, in the note panel's header or in the
 | **VS Code, Cursor, Windsurf, Zed** | Always opens in that editor through its URL (`vscode://file/…`). Works without the editor running or its command-line tool installed. The browser may ask permission the first time. |
 
 **If Auto finds no editor**, a warning icon appears next to the link. Hover it for why, then pick your editor here. To name an editor Auto doesn't recognise, set `LAUNCH_EDITOR` when starting your dev server.
+
+<img src="/settings-no-editor.png" alt="A warning icon next to Home.jsx:15 in the note panel, with its tooltip: No editor is running. Pick yours in Settings → Open files in." width="356" className="my-6 rounded-lg border border-fd-border shadow-sm" />
 
 ## Next
 
