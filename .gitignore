@@ -24,10 +24,7 @@ Thumbs.db
 CLAUDE.md
 
 # Build artifacts
-*.png
-# …except the docs site's icons and screenshots
-!docs/app/apple-icon.png
-!docs/public/icon-*.png
-!docs/public/notes-*.png
-!docs/public/settings-*.png
 *.tsbuildinfo
+
+# Stray screenshots at the repo root (e.g. from browser tools)
+/*.png
