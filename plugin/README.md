@@ -1,116 +1,107 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/harukikuri/spotnote/main/docs/public/brand/spotnote-logo-dark.svg">
-  <img src="https://raw.githubusercontent.com/harukikuri/spotnote/main/docs/public/brand/spotnote-logo-light.svg" alt="Spotnote" height="48">
-</picture>
+# Spotnote
 
-A dev-only tool: click an element in your running app, write a note, and get a
-ready-to-paste prompt with the **exact source location** copied to your
-clipboard — hand it to any local coding agent (Claude Code / Cursor / Codex).
+**Point, don't describe.** Click any element in your running Vite app, write
+what should change, and hand your coding agent its exact file, line and column —
+no more guessing, no more grepping.
 
-A compile-time Babel plugin stamps `data-spotnote="file:line:column"` onto host
-elements; a framework-agnostic client picker reads it back on click. No server,
-no persistence — just the picker and the clipboard.
-
-## Run
-
-From the repo root — the demo apps live in the sibling `playground/` package and
-consume this plugin via the `spotnote` workspace link:
+## Install
 
 ```bash
-pnpm install
-pnpm dev                                    # React demo
-pnpm --filter spotnote-playground dev:solid # Solid demo
+npm install -D spotnote
 ```
 
-Open the printed URL. Open the launcher (the `+` in the bottom-left) or **hold
-`Alt`**, then hover and click an element.
+Add `spotnote()` to `plugins`. Anywhere in the array works.
 
-## Use in your app
-
-```js
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import spotnote from "spotnote";
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import spotnote from 'spotnote';
 
 export default defineConfig({
-  plugins: [react(), spotnote()], // dev-only; auto-injects the picker
+  plugins: [react(), spotnote()],
 });
 ```
 
-That's the whole setup — no client import, no Babel wiring. `spotnote()` is
-`apply: "serve"`, so production builds are untouched.
+Nothing to import in your app code. Spotnote runs only in `vite dev`; `vite build`
+doesn't include it.
 
-## Flow
+## Use
 
-1. **Inspect** → hover shows an outline + `tag .class (file:line)` label.
-2. **Click** an element → a panel opens with the source label and a note input.
-3. **Type** an instruction → **Copy for agent** (or Enter) copies a prompt like:
+1. Start your dev server and open your app.
+2. Click the launcher in the bottom-left corner (or hold `Alt` / `⌥ Option`),
+   then click an element.
+3. Type what should change and press `Enter`. The note is saved, a numbered pin
+   appears on the element, and a prompt like this is on your clipboard:
 
-   ```
+   ```markdown
    ## Request
-   make the padding bigger
+   Make the padding bigger
 
    ## Target
    - file: pages/Products.jsx
-   - line: 12, column: 4
-   - element: <button class="chip">
-   - text: "shoes"
+   - line: 47, column: 11
+   - element: <button class="chip chip-active">
+   - text: "all"
 
    ## Current computed styles
      padding: 6px 12px
      …
    ```
 
-   …and drops a **pin** on the element, then exits inspect mode.
-4. **Paste** into your agent. It has the exact file/line + styles + your note.
-5. **Click the pin** anytime to reopen/edit the note (🗑 removes it).
+4. Paste it into Claude Code, Cursor, Codex or any chat.
 
-## What to try
+## Connect your agent (MCP)
 
-- **Pages / query strings**: navigate Home · Products · About; the Products
-  filters push `?category=&sort=` — pick elements across route changes.
-- **Scroll**: pages are tall; pins and the open note panel follow the element as
-  you scroll.
-- **Repeated elements**: the products grid renders many identical cards — each
-  gets a distinct id (`data-spotnote` + occurrence index), so notes don't collide and
-  the prompt names the exact instance.
-- **Component boundary**: cards come from `components/ProductCard.jsx`, so their
-  stamps point there — not where they're used.
-- **HMR**: edit a page; class-only changes keep pins anchored, line shifts re-bind.
-- **Launcher**: open it (+ ↔ ×) to start inspecting, close it to stop. Its arc
-  holds pause, the Notes list of your pins, and settings (coming soon). Drag it to
-  any corner.
+Skip the copy and paste. With `spotnote-mcp`, your agent picks up notes as you
+write them, asks on the note when a request is unclear, and marks it done.
 
-## Layout
+```bash
+# Claude Code
+claude mcp add --scope user spotnote -- npx -y spotnote-mcp
 
-```
-src/                  # THE TOOL (this package)
-  index.js            # the Vite plugin: spotnote() — transform + client injection
-  plugin.cjs          # Babel visitor — stamps data-spotnote (host-only, project-relative)
-  client/             # browser runtime (auto-injected by the plugin in dev)
-    inspector.js      # picking, panel, pins, clipboard prompt, HMR re-bind
-    launcher.js       # corner button + radial menu (pause · notes · settings)
-    ui.js             # buttons, icons, theme tokens
+# Codex
+codex mcp add spotnote -- npx -y spotnote-mcp
 ```
 
-The demo apps live in the sibling `../playground/` package (React, Solid, …),
-which imports `spotnote` via the workspace link — see the repo root `DEVELOPMENT.md`.
+For Cursor (`~/.cursor/mcp.json`) or Gemini CLI (`~/.gemini/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "spotnote": { "command": "npx", "args": ["-y", "spotnote-mcp"] }
+  }
+}
+```
+
+Then ask your agent: `Watch my Spotnote notes.`
 
 ## Frameworks
 
-The client is framework-agnostic (it reads `data-spotnote` off the DOM). Stamping
-runs as an `order: "pre"` transform, before the framework compiler (in any
-`plugins` order): JSX via a standalone Babel
-pass (no React dependency), and `.vue` / `.svelte` markup via the app's own
-`vue/compiler-sfc` / `svelte/compiler`. So:
+Vite 5 or later.
 
-| Framework | Support | How |
-| --- | --- | --- |
-| React (Vite) | ✅ built-in | `plugins: [react(), spotnote()]` |
-| Solid / Preact / Qwik (Vite) | ✅ same plugin | `plugins: [framework(), spotnote()]` |
-| Vue (Vite) | ✅ built-in | `plugins: [vue(), spotnote()]` — stamps `<template>` host elements; borrows `vue/compiler-sfc` from your app, no extra dep |
-| Svelte (Vite) | ✅ built-in | `plugins: [svelte(), spotnote()]` — stamps markup elements; borrows `svelte/compiler` from your app, no extra dep |
-| Next.js | ⏳ planned | not Vite — register `src/plugin.cjs` via `babel.config.js` and load the client manually |
+| Framework | Status |
+| --- | --- |
+| React | Tested (React 18) |
+| Solid | Tested (Solid 1.9) |
+| Vue | Tested (Vue 3.5) |
+| Svelte | Tested (Svelte 4.2 and 5) |
+| Preact, other JSX | Untested |
+| Next.js | Not supported (not Vite) |
 
-The only framework-specific work left is **non-Vite bundlers** (Next). The
-`plugin.cjs` visitor is reusable as-is there.
+## How it works
+
+While Vite compiles your code, the plugin stamps every host element written in
+your `.jsx`, `.tsx`, `.vue` and `.svelte` files with its source location:
+
+```html
+<button data-spotnote="components/ProductCard.jsx:12:5" data-spotnote-name="ProductCard">
+```
+
+A small client, injected into the page Vite serves, reads the stamp back when
+you click. Notes live in your browser's `localStorage`, and in `~/.spotnote/`
+while spotnote-mcp runs. Nothing leaves your machine.
+
+## License
+
+MIT
