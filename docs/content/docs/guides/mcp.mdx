@@ -40,6 +40,15 @@ There's nothing else to run. The agent starts the server, and the launcher in yo
 
 **You should see** **Connected** under [Settings → Coding agent](/guides/settings#coding-agent) once your agent is running.
 
+<Callout type="info" title="Port 4848 taken?">
+
+Set `SPOTNOTE_PORT` to the same free port in two places:
+
+- **Your agent:** add `-e SPOTNOTE_PORT=4900` to the Claude Code command, or `"env": { "SPOTNOTE_PORT": "4900" }` next to `"args"` in a JSON config.
+- **Your dev server:** `SPOTNOTE_PORT=4900 pnpm dev`
+
+</Callout>
+
 </Step>
 <Step>
 
@@ -56,26 +65,14 @@ Watch my Spotnote notes.
 
 ### Write notes in the browser
 
+<video src="/demo.mp4" autoPlay muted loop playsInline className="my-6 w-full rounded-lg border border-fd-border shadow-sm" />
+
 That's it. You stay in the browser from now on.
 
 </Step>
 </Steps>
 
-<Callout type="info" title="Port 4848 taken?">
-  Set `SPOTNOTE_PORT` to another port in both places: in the MCP server's
-  environment (for Claude Code,
-  `claude mcp add --scope user spotnote -e SPOTNOTE_PORT=4900 -- npx -y spotnote-mcp`;
-  in a JSON config, an `"env": { "SPOTNOTE_PORT": "4900" }` entry next to `args`)
-  and in the environment you start your dev server from.
-</Callout>
-
-## What happens to a note
-
-1. **You write a note.** Within a few seconds, the agent picks it up. Its pin shows <PinIcon state="working" />.
-2. **If the request is unclear,** the agent asks on the note. The pin shows <PinIcon state="asked" />. Click it and type your answer.
-3. **When the agent is done,** the pin shows <PinIcon state="done" /> and the note shows a summary of what changed.
-
-All pin marks:
+## Note status
 
 | Pin | Meaning |
 | --- | --- |
@@ -84,14 +81,6 @@ All pin marks:
 | <PinIcon state="asked" /> | The agent asked you something. Answer in the panel. |
 | <PinIcon state="done" /> | Done. The note shows what changed. |
 | <PinIcon state="dismissed" /> | The agent won't make the change. The note shows why. |
-
-The notes list shows the same marks and names the agent working on a note ("Claude Code is on it…").
-
-## Stop watching
-
-The agent keeps watching until you tell it to stop. While nothing happens, it checks in about once a minute, and each check-in uses some tokens. **Tell it to stop when you take a break.**
-
-For one round instead of watching, ask: "Handle my Spotnote notes." The agent works through the open notes and stops.
 
 ## Details
 
