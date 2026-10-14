@@ -23,7 +23,19 @@ Try these in order:
 
 ### A pin disappeared after an edit
 
-**Expected.** The edit moved the element's opening tag, so the note no longer matches. Find it in the notes list under **Not found**, then copy or delete it. See [When your code changes](/guides/notes#when-your-code-changes).
+**Expected.** A note finds its element by the element's **source location** (file, line, column), plus its position for repeated elements.
+
+| Your edit | The pin |
+| --- | --- |
+| Doesn't move the element's opening tag (classes, text, children) | Stays. |
+| Moves the tag to another line or column (say, a new line above it) | Disappears. The note is marked **Not found** in the notes list. |
+
+From the notes list, a **Not found** note can still be:
+
+- **copied**: you get its last prompt, plus a line telling the agent the location may have moved;
+- **deleted**: for example, once the agent has made the change.
+
+It can't be opened. If the element comes back to the same location (say, you undo the edit), the note finds it again.
 
 ### My notes are gone
 

@@ -25,7 +25,8 @@ CLAUDE.md
 
 # Build artifacts
 *.png
-# …except the docs site's icons
+# …except the docs site's icons and screenshots
 !docs/app/apple-icon.png
 !docs/public/icon-*.png
+!docs/public/notes-*.png
 *.tsbuildinfo

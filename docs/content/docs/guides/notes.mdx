@@ -1,6 +1,6 @@
 ---
 title: Notes
-description: Write, edit, delete and find your notes, and what happens to them when your code changes.
+description: Write, edit, delete and find your notes.
 ---
 
 ## Write a note
@@ -23,6 +23,8 @@ If you click elsewhere on the page while the panel holds unsent text, the panel 
 
 Click its pin, or click its element in selection mode. The panel opens with the note filled in.
 
+<img src="/notes-edit.png" alt="Pin 2 on a button, with its note panel open and filled in: Make this pill-shaped" width="380" className="my-6 rounded-lg border border-fd-border shadow-sm" />
+
 - **Changes save when the panel closes**, however you close it.
 - `Enter` (or <SendButton label="Save & copy" />) saves and copies the updated prompt.
 - <PanelButton icon="copy" /> at the top copies without closing the panel.
@@ -40,35 +42,17 @@ Clicking away with unsaved changes makes the panel shake, as for a new note.
 
 Spotnote asks first (**Delete all 3 notes?**). Click **Delete** or **Cancel**.
 
+<img src="/notes-delete.png" alt="The notes list with two notes ticked, asking: Delete 2 notes? This can't be undone. Cancel or Delete" width="509" className="my-6 rounded-lg border border-fd-border shadow-sm" />
+
 ## The notes list
 
 Open the launcher and click <LauncherItem icon="notes" />. Click a note to scroll to its element and open it. If it's on another page of your app, Spotnote goes there first.
 
+<img src="/notes-list.png" alt="The notes list: two notes under This page, one under /products, each with its pin number, file and line" width="509" className="my-6 rounded-lg border border-fd-border shadow-sm" />
+
 - This page's notes come first, under **This page**. Other pages follow, under their paths.
 - Numbers match the pins.
 - Click a heading to fold that section (it shows how many notes it holds). Click again to unfold.
-
-## When your code changes
-
-A note finds its element by the element's **source location** (file, line, column), plus its position for repeated elements.
-
-| Your edit | The pin |
-| --- | --- |
-| Doesn't move the element's opening tag (classes, text, children) | Stays. |
-| Moves the tag to another line or column (say, a new line above it) | Disappears. The note is marked **Not found** in the notes list. |
-
-From the notes list, a **Not found** note can still be:
-
-- **copied**: you get its last prompt, plus a line telling the agent the location may have moved;
-- **deleted**: for example, once the agent has made the change.
-
-It can't be opened. If the element comes back to the same location (say, you undo the edit), the note finds it again.
-
-## Where notes are stored
-
-In your browser's `localStorage`. They survive reloads and dev-server restarts. Nothing is sent to a server.
-
-They belong to one browser and one address: another browser, or the same app on another port, starts with no notes. See [Storage](/reference/storage).
 
 ## Next
 
