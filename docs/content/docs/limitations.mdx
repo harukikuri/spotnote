@@ -1,0 +1,25 @@
+---
+title: Limitations
+description: What Spotnote can't do.
+---
+
+## Elements without a source location
+
+Spotnote only points at elements written literally in your own source. For these, a click selects the nearest stamped ancestor, and the prompt says so:
+
+- **Elements rendered by dependencies**, such as a UI library's components. Spotnote stamps your source, not `node_modules`.
+- **Injected HTML**: `dangerouslySetInnerHTML`, `v-html`, `{@html}`.
+- **DOM built by scripts**: charts, maps, rich-text editors and other widgets.
+- **Tags chosen at runtime**: `<component :is="…">`, `<svelte:element this={…}>`.
+- **Vue render functions** (`h(...)`).
+
+## Platform
+
+- **Vite only.** Next.js and other non-Vite setups aren't supported.
+- **Dev only.** Nothing runs in production builds.
+- **Notes are local.** Saved in your browser, not shared with teammates, not tied to Git.
+
+## Notes and code changes
+
+- Edits that move an element's opening tag detach its note.
+- For repeated elements, sorting or filtering moves a note to another item, because the note is tied to a position.
