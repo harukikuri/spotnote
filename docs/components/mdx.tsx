@@ -22,6 +22,7 @@ import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
 import { Diagram } from './diagram';
 import { SpotnoteFullDemo } from './spotnote-full-demo';
+import { LauncherIcon } from './launcher-icon';
 
 const tabIcons: Record<string, ReactNode> = {
   npm: <SiNpm />,
@@ -62,6 +63,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     SpotnoteDemo,
     Diagram,
     SpotnoteFullDemo,
+    LauncherIcon,
     ...components,
   };
 }
