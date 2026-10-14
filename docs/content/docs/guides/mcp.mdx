@@ -71,31 +71,21 @@ That's it. You stay in the browser from now on.
 
 ## What happens to a note
 
-1. **You write a note.** Within a few seconds, the agent picks it up. Its pin shows **…** with a spinning ring.
-2. **If the request is unclear,** the agent asks on the note. The pin shows **?** and pulses. Click it and type your answer.
-3. **When the agent is done,** the pin shows **✓** and the note shows a summary of what changed.
+1. **You write a note.** Within a few seconds, the agent picks it up. Its pin shows <PinIcon state="working" />.
+2. **If the request is unclear,** the agent asks on the note. The pin shows <PinIcon state="asked" />. Click it and type your answer.
+3. **When the agent is done,** the pin shows <PinIcon state="done" /> and the note shows a summary of what changed.
 
 All pin marks:
 
 | Pin | Meaning |
 | --- | --- |
-| Number | Waiting for an agent. |
-| **…** (spinning) | The agent is working on it. |
-| **?** (pulsing) | The agent asked you something. Answer in the panel. |
-| **✓** | Done. The note shows what changed. |
-| **–** (grey) | The agent won't make the change. The note shows why. |
+| <PinIcon n={1} /> | Waiting for an agent. |
+| <PinIcon state="working" /> | The agent is working on it. |
+| <PinIcon state="asked" /> | The agent asked you something. Answer in the panel. |
+| <PinIcon state="done" /> | Done. The note shows what changed. |
+| <PinIcon state="dismissed" /> | The agent won't make the change. The note shows why. |
 
 The notes list shows the same marks and names the agent working on a note ("Claude Code is on it…").
-
-## Reply on a note
-
-Once the agent has written on a note, the panel shows the conversation, and the input below sends a reply.
-
-- **Not quite right?** Reply on a done note ("a bit darker"). It reopens, and the agent picks it up.
-- **Disagree with a "won't do"?** Reply with what the agent was missing. It reopens the same way.
-- **Want to start over?** Delete the note and write a new one.
-
-Replies aren't copied to the clipboard.
 
 ## Stop watching
 
@@ -122,7 +112,7 @@ If spotnote-mcp isn't running, the panel says so. You can still reply: your mess
 </Accordion>
 <Accordion title="When the agent moves on without finishing a note">
 
-An agent finishes each note by resolving it, dismissing it or replying. If it moves on without doing any of these, the **…** goes away: a note your reply reopened (say, a "thanks!" on a done note) goes back to **✓** or **–**, and a new note goes back to its number.
+An agent finishes each note by resolving it, dismissing it or replying. If it moves on without doing any of these, <PinIcon state="working" /> goes away: a note your reply reopened (say, a "thanks!" on a done note) goes back to <PinIcon state="done" /> or <PinIcon state="dismissed" />, and a new note goes back to its number.
 
 </Accordion>
 <Accordion title="Where notes live">

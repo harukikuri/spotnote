@@ -55,6 +55,15 @@ html:not(.dark) #nd-sidebar {
   color: var(--color-fd-foreground);
 }
 
+/* The question pin's pulse (components/pin-icon.tsx), as in the client's sn-ask. */
+@keyframes sn-ask {
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(255, 216, 77, 0.4),
+      0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+}
+
 /* Spacing between content and footer nav */
 @layer base {
   .prose + .grid {
