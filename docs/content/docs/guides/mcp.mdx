@@ -66,7 +66,7 @@ That's it. You stay in the browser from now on.
   environment (for Claude Code,
   `claude mcp add --scope user spotnote -e SPOTNOTE_PORT=4900 -- npx -y spotnote-mcp`;
   in a JSON config, an `"env": { "SPOTNOTE_PORT": "4900" }` entry next to `args`)
-  and in the environment you start the dev server from.
+  and in the environment you start your dev server from.
 </Callout>
 
 ## What happens to a note
@@ -118,7 +118,7 @@ An agent finishes each note by resolving it, dismissing it or replying. If it mo
 <Accordion title="Where notes live">
 
 - While spotnote-mcp runs, it holds the notes, and every browser with the app open shows the same ones.
-- It saves them in `~/.spotnote/`, so they outlive the dev server, your `node_modules` and the browser tab. An agent sees them even before you open the app.
+- It saves them in `~/.spotnote/`, so they outlive your dev server, your `node_modules` and the browser tab. An agent sees them even before you open the app.
 - When it isn't running, Spotnote uses your browser's own copy, as without MCP. Notes written meanwhile join the server's the next time it runs. For a note on the same element in both, the newer one wins.
 - An agent only sees notes from apps inside the folder it works in.
 

@@ -17,7 +17,7 @@ Spotnote saves your notes in your browser and writes nothing to your project. Wi
 
 `localStorage` belongs to one browser profile and one origin (scheme, host **and port**). So:
 
-- Notes survive reloads, closing the browser, and restarting the dev server.
+- Notes survive reloads, closing the browser, and restarting your dev server.
 - The same app on a different port (for example, when `5173` is taken and Vite picks `5174`) starts with no notes, and the old ones come back when you return to the old port.
 - Without spotnote-mcp, notes aren't shared across browsers. They're never shared across machines or teammates.
 
