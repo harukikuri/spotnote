@@ -39,8 +39,8 @@ const THEMES = {
     hover: "rgba(255,255,255,.06)", "hover-strong": "rgba(255,255,255,.08)", "text-strong": "#fff",
     glass: "rgba(24,24,28,.74)", "glass-border": "rgba(255,255,255,.10)", "glass-inset": "rgba(255,255,255,.06)",
     "glass-text": "#f2f2f3", "glass-hover": "rgba(44,44,50,.86)", track: "#a1a1aa",
-    // the Spotnote mark, as in docs/public/brand/spotnote-mark-dark.svg
-    mark: "#FAFAFA", "mark-fold": "#71717A",
+    // the Spotnote mark, as in docs/public/brand/spotnote-mark-yellow.svg
+    mark: "#FFD84D", "mark-fold": "#D4A817",
     "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)", pop: "rgba(24,24,28,.97)", foot: "rgba(0,0,0,.3)",
     "fw-react": "#61dafb", "fw-solid": "#76b3e1", "fw-vue": "#42b883", "fw-svelte": "#ff3e00", "fw-jsx": "#a1a1aa",
     // code in the agent's messages (GitHub's dark palette)
@@ -53,8 +53,8 @@ const THEMES = {
     hover: "rgba(0,0,0,.04)", "hover-strong": "rgba(0,0,0,.06)", "text-strong": "#000",
     glass: "rgba(255,255,255,.8)", "glass-border": "rgba(0,0,0,.08)", "glass-inset": "rgba(255,255,255,.7)",
     "glass-text": "#18181b", "glass-hover": "rgba(244,244,245,.94)", track: "#71717a",
-    // the Spotnote mark, as in docs/public/brand/spotnote-mark-light.svg
-    mark: "#18181B", "mark-fold": "#A1A1AA",
+    // the Spotnote mark, as in docs/public/brand/spotnote-mark-yellow.svg
+    mark: "#FFD84D", "mark-fold": "#D4A817",
     "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)", pop: "rgba(255,255,255,.98)", foot: "rgba(0,0,0,.04)",
     "fw-react": "#087ea4", "fw-solid": "#2c4f7c", "fw-vue": "#2f9768", "fw-svelte": "#e63900", "fw-jsx": "#71717a",
     // code in the agent's messages (GitHub's light palette)

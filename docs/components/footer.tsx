@@ -18,8 +18,7 @@ export function Footer() {
         style={{ maxWidth: 'var(--fd-layout-width, 97rem)' }}
       >
         <div className="flex items-center gap-2.5">
-          <img src="/brand/spotnote-mark-light.svg" alt="" width={16} height={16} className="dark:hidden" />
-          <img src="/brand/spotnote-mark-dark.svg" alt="" width={16} height={16} className="hidden dark:block" />
+          <img src="/brand/spotnote-mark-yellow.svg" alt="" width={16} height={16} />
           <span>MIT Licensed · © 2026 harukikuri</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
