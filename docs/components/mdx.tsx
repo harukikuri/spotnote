@@ -21,7 +21,6 @@ import { RiOpenaiFill } from 'react-icons/ri';
 import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
 import { Diagram } from './diagram';
-import { SpotnoteFullDemo } from './spotnote-full-demo';
 import { LauncherIcon } from './launcher-icon';
 import { PinIcon } from './pin-icon';
 import { PanelButton, LauncherItem, SendButton } from './ui-buttons';
@@ -64,7 +63,6 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     BrowserFrame,
     SpotnoteDemo,
     Diagram,
-    SpotnoteFullDemo,
     LauncherIcon,
     PinIcon,
     PanelButton,
