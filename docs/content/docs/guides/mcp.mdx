@@ -3,8 +3,6 @@ title: Connect Your Agent (MCP)
 description: About 1 minute to set up. Then write notes in the browser, and your agent picks them up, asks questions and marks them done.
 ---
 
-**spotnote-mcp** is Spotnote's MCP server. With it, you stop copying and pasting: your agent reads your notes directly and works through them. Copying still works, for agents without MCP.
-
 ## Set up
 
 <Steps>
@@ -12,11 +10,31 @@ description: About 1 minute to set up. Then write notes in the browser, and your
 
 ### Add the server to your agent (once)
 
+Pick your agent:
+
 ```bash tab="Claude Code"
 claude mcp add --scope user spotnote -- npx -y spotnote-mcp
 ```
 
-Other agents that support MCP servers over stdio can run the same command: `npx -y spotnote-mcp`.
+```bash tab="Codex"
+codex mcp add spotnote -- npx -y spotnote-mcp
+```
+
+```json tab="Cursor" title="~/.cursor/mcp.json"
+{
+  "mcpServers": {
+    "spotnote": { "command": "npx", "args": ["-y", "spotnote-mcp"] }
+  }
+}
+```
+
+```json tab="Gemini CLI" title="~/.gemini/settings.json"
+{
+  "mcpServers": {
+    "spotnote": { "command": "npx", "args": ["-y", "spotnote-mcp"] }
+  }
+}
+```
 
 There's nothing else to run. The agent starts the server, and the launcher in your app connects to it on its own.
 
@@ -27,7 +45,7 @@ There's nothing else to run. The agent starts the server, and the launcher in yo
 
 ### Ask your agent to watch
 
-In the agent's terminal:
+In your agent's chat or terminal:
 
 ```
 Watch my Spotnote notes.
@@ -44,8 +62,10 @@ That's it. You stay in the browser from now on.
 </Steps>
 
 <Callout type="info" title="Port 4848 taken?">
-  Set `SPOTNOTE_PORT` to another port in both places: for the MCP server
-  (`claude mcp add --scope user spotnote -e SPOTNOTE_PORT=4900 -- npx -y spotnote-mcp`)
+  Set `SPOTNOTE_PORT` to another port in both places: in the MCP server's
+  environment (for Claude Code,
+  `claude mcp add --scope user spotnote -e SPOTNOTE_PORT=4900 -- npx -y spotnote-mcp`;
+  in a JSON config, an `"env": { "SPOTNOTE_PORT": "4900" }` entry next to `args`)
   and in the environment you start the dev server from.
 </Callout>
 
@@ -142,4 +162,4 @@ spotnote-mcp listens on `127.0.0.1:4848` only, so other devices on your network 
 
 ## Next
 
-[Lists & components](/guides/lists-and-components): what the prompt says for repeated elements.
+[Concepts](/concepts): how Spotnote finds an element's file and line.

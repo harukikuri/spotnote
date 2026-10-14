@@ -4,7 +4,20 @@ import type { ReactNode } from 'react';
 import { CodeBlockTabsTrigger } from 'fumadocs-ui/components/codeblock';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
-import { SiNpm, SiPnpm, SiYarn, SiReact, SiSolid, SiVuedotjs, SiSvelte } from 'react-icons/si';
+import {
+  SiNpm,
+  SiPnpm,
+  SiYarn,
+  SiReact,
+  SiSolid,
+  SiVuedotjs,
+  SiSvelte,
+  SiClaude,
+  SiCursor,
+  SiGooglegemini,
+} from 'react-icons/si';
+// OpenAI's mark isn't in Simple Icons.
+import { RiOpenaiFill } from 'react-icons/ri';
 import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
 import { Diagram } from './diagram';
@@ -18,6 +31,10 @@ const tabIcons: Record<string, ReactNode> = {
   Solid: <SiSolid />,
   Vue: <SiVuedotjs />,
   Svelte: <SiSvelte />,
+  'Claude Code': <SiClaude />,
+  Codex: <RiOpenaiFill />,
+  Cursor: <SiCursor />,
+  'Gemini CLI': <SiGooglegemini />,
 };
 
 function CustomCodeBlockTabsTrigger(
