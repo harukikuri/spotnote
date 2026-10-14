@@ -88,7 +88,7 @@ function HoverLabel({ x, y }: { x: number; y: number }) {
         background: '#6366f1',
         color: '#fff',
         fontSize: 12,
-        fontWeight: 600,
+        fontWeight: 500,
         padding: '2px 8px',
         borderRadius: 6,
         whiteSpace: 'nowrap',
@@ -340,7 +340,7 @@ export function SpotnoteDemo() {
         >
           {/* Header: element label + close */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 7px 7px 12px', borderBottom: '1px solid #262626' }}>
-            <span style={{ color: '#ededed', fontWeight: 600, fontSize: 13 }}>h1</span>
+            <span style={{ color: '#ededed', fontWeight: 500, fontSize: 13 }}>h1</span>
             <span style={{ color: '#888', fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>(Hero.tsx:12)</span>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, color: '#999' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

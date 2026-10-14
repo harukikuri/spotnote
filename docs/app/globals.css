@@ -2,6 +2,16 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+/* One heavy weight on the site: 500. Tailwind's semibold/bold utilities
+   (ours and Fumadocs') and the prose headings, which default to 600–900. */
+@theme {
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+}
+.prose :where(h1, h2, h3, h4, h5, h6, dt, thead th, strong) {
+  font-weight: 500;
+}
+
 /* Neutral greys for reading; the plugin's highlighter yellow is used only as a
    marker (active item, link underline, selection) — never as text on white,
    where it would be unreadable. In dark mode it can be the text colour too. */

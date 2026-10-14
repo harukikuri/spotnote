@@ -85,7 +85,7 @@ function NotePin({ x, y }: { x: number; y: number }) {
 // The plugin's on-hover "tag (file:line)" badge.
 function HoverLabel({ x, y }: { x: number; y: number }) {
   return (
-    <div className="absolute z-20" style={{ left: x, top: y, display: 'flex', gap: 6, alignItems: 'center', background: '#6366f1', color: '#fff', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 6, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', pointerEvents: 'none' }}>
+    <div className="absolute z-20" style={{ left: x, top: y, display: 'flex', gap: 6, alignItems: 'center', background: '#6366f1', color: '#fff', fontSize: 12, fontWeight: 500, padding: '2px 8px', borderRadius: 6, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', pointerEvents: 'none' }}>
       <span>h1</span>
       <span style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'ui-monospace, monospace', fontWeight: 400 }}>(Hero.tsx:12)</span>
     </div>
@@ -122,7 +122,7 @@ function FloatingTerminal({ noteText, aiText }: { noteText: string; aiText: stri
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
               <span style={{ color: '#d2a8ff', fontSize: 10 }}>{'✻'}</span>
-              <span style={{ color: '#d2a8ff', fontSize: 10, fontWeight: 600 }}>Claude</span>
+              <span style={{ color: '#d2a8ff', fontSize: 10, fontWeight: 500 }}>Claude</span>
             </div>
             <div style={{ color: '#c9d1d9', marginBottom: diffLines.length > 0 ? 6 : 0 }}>
               {firstLine}
@@ -335,7 +335,7 @@ export function SpotnoteFullDemo() {
           <div ref={popupRef} className="absolute z-10" style={{ left: heroTitlePos.x - 20, top: heroTitlePos.y + 30, width: 300, background: '#1a1a1a', border: '1px solid #333', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', overflow: 'hidden', animation: 'fd-fade-in 0.18s ease' }}>
             {/* Header: element label + close */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 7px 7px 12px', borderBottom: '1px solid #262626' }}>
-              <span style={{ color: '#ededed', fontWeight: 600, fontSize: 13 }}>h1</span>
+              <span style={{ color: '#ededed', fontWeight: 500, fontSize: 13 }}>h1</span>
               <span style={{ color: '#888', fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>(Hero.tsx:12)</span>
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, color: '#999' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
