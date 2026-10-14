@@ -1,15 +1,14 @@
 ---
 title: Installation
-description: Install Spotnote and add it to your Vite config.
+description: About 1 minute. Two steps, no changes to your app code.
 ---
 
-## Requirements
+You need [Vite](https://vite.dev) 5 or later.
 
-- [Vite](https://vite.dev) 5 or later.
+<Steps>
+<Step>
 
-## 1. Install the package
-
-Spotnote only runs in the dev server, so add it as a dev dependency.
+### Install the package
 
 ```bash tab="npm"
 npm install -D spotnote
@@ -23,9 +22,14 @@ pnpm add -D spotnote
 yarn add -D spotnote
 ```
 
-## 2. Add the plugin
+It's a dev dependency because it only runs in the dev server.
 
-Add `spotnote()` to `plugins`. It takes no options, and where you put it in the array doesn't matter.
+</Step>
+<Step>
+
+### Add the plugin
+
+Add `spotnote()` to `plugins` in `vite.config.ts`. Anywhere in the array works.
 
 ```ts tab="React" title="vite.config.ts"
 import { defineConfig } from 'vite';
@@ -67,12 +71,15 @@ export default defineConfig({
 });
 ```
 
-That's it! You don't import anything in your app code at all.
+</Step>
+</Steps>
+
+**Done.** You don't import anything in your app code, and `spotnote()` takes no options.
 
 <Callout type="info" title="Production builds are untouched">
-  The plugin only runs during `vite dev`. `vite build` is untouched.
+  The plugin only runs during `vite dev`. `vite build` doesn't include it.
 </Callout>
 
 ## Next
 
-[Quick Start](/getting-started/quick-start): write your first note.
+[Quick Start](/getting-started/quick-start): write your first note. About 2 minutes.

@@ -2,6 +2,8 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import type { ReactNode } from 'react';
 import { CodeBlockTabsTrigger } from 'fumadocs-ui/components/codeblock';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import { SiNpm, SiPnpm, SiYarn, SiReact, SiSolid, SiVuedotjs, SiSvelte } from 'react-icons/si';
 import { BrowserFrame } from './browser-frame';
 import { SpotnoteDemo } from './spotnote-demo';
@@ -35,6 +37,10 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
     CodeBlockTabsTrigger: CustomCodeBlockTabsTrigger,
+    Step,
+    Steps,
+    Accordion,
+    Accordions,
     BrowserFrame,
     SpotnoteDemo,
     Diagram,

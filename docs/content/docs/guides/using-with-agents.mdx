@@ -1,27 +1,35 @@
 ---
 title: Using with Agents
-description: Paste Spotnote prompts into Claude Code, Cursor or Codex, and get the edit you meant.
+description: Four habits that get you the edit you meant.
 ---
 
-The copied prompt is plain Markdown, so it works anywhere you can paste text: Claude Code, Cursor, Codex, or a chat window. Paste it as the whole message, or add your own lines before or after it. To skip the copy and paste, [connect your agent over MCP](/guides/mcp).
+The prompt is plain Markdown. Paste it into Claude Code, Cursor, Codex or any chat, on its own or with your own lines around it.
+
+Tired of pasting? [Connect your agent](/guides/mcp) and it picks up notes on its own.
+
+## Write better notes
+
+1. **Say the outcome, not the location.** The prompt already has the location. "Make this pill-shaped" is enough.
+2. **One change per note.** For a change across several elements, write a note on each and paste the prompts together.
+3. **Say "all" when you mean all.** For repeated elements, the prompt points at one instance. Write "all the cards", not "this card".
+4. **Say when only this usage should change.** If the element comes from a shared component and you don't want every usage to change, say so.
 
 ## What the agent gets
 
-- **Where to edit**: the file, line and column of the element's opening tag.
-- **Which element**: its tag, `id`, classes and the start of its text, so the agent can confirm it found the right one.
-- **Which instance**, when the element is rendered several times from one line (a list item, a card in a grid).
-- **The component path** from the app root down to the element, so the agent can tell whether to change the component or the place it's used.
-- **The current computed styles**, so a request like "a bit more padding" has a starting value.
+| Part | Why it helps |
+| --- | --- |
+| **File, line, column** of the opening tag | The agent edits the right place without searching. |
+| **Tag, `id`, classes, start of its text** | The agent can confirm it found the right element. |
+| **Which instance** (for lists, grids) | The agent knows which of the repeated elements you mean. |
+| **Component path**, root to element | The agent can tell whether to change the component or where it's used. |
+| **Current computed styles** | "A bit more padding" has a starting value. |
 
-The full layout is in [Prompt format](/reference/prompt-format).
-
-## Writing good requests
-
-- **Say the outcome, not the location.** The prompt already has the location. "Make this pill-shaped" is enough; "In Home.jsx, change the span…" repeats what Spotnote added.
-- **One change per note.** Each note is about one element. For a change that spans several elements, write a note on each and paste the prompts together.
-- **Say when the change should apply everywhere.** For repeated elements, the prompt points at one instance. If you mean all of them, say "all the cards", not "this card".
-- **Mention the component when it matters.** If the element comes from a shared component and you only want to change this usage, say so. The component path tells the agent where that usage is.
+Full layout: [Prompt format](/reference/prompt-format).
 
 ## After the edit
 
-When the agent saves the file, Vite's hot reload updates the page. If the edit moved the element's opening tag to another line, its pin disappears. That's expected: see [When your code changes](/guides/notes#when-your-code-changes).
+Vite's hot reload shows the change. If the edit moved the element's opening tag to another line, its pin disappears. That's expected: see [When your code changes](/guides/notes#when-your-code-changes).
+
+## Next
+
+[Connect your agent](/guides/mcp): no more copy and paste.

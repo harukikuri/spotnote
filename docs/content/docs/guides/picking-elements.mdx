@@ -1,48 +1,64 @@
 ---
 title: Picking Elements
-description: Selection mode, the launcher, and how a click finds its element.
+description: Two ways to start picking, the launcher's buttons, and how to back out.
 ---
 
-## Selection mode
+## Start picking
 
-In **selection mode**, an outline follows your cursor and a label shows the element under it: tag, first class, and `file:line` with a framework logo (React, Solid, Vue, Svelte, or a generic `</>` when Spotnote can't tell which JSX framework compiles the file). Clicking an element opens the note panel instead of reaching your app.
+Pick whichever fits what you're doing:
 
-There are two ways in:
+| Way | How | Stays on |
+| --- | --- | --- |
+| **Launcher** | Click the round button in a corner. | Until you pause it or close the launcher. |
+| **`Alt` key** | Hold `Alt` (`⌥ Option` on a Mac). | Only while you hold the key. Good for a quick pick while you use your app. |
 
-- **Open the launcher** (the round button in a corner). Selection mode stays on until you pause it or close the launcher.
-- **Hold `Alt`** (`⌥ Option` on a Mac). Selection mode lasts while the key is down. Use it for a quick pick while you're using your app normally.
+Either way, **selection mode** starts: an outline follows your cursor, and clicking an element opens its note panel instead of reaching your app.
 
-While the note panel is open, clicks on the page still don't reach your app. Clicking another element moves the panel to it; clicking empty space closes the panel. See [Notes](/guides/notes) for what happens to text you haven't sent.
+The label on the outline shows the element's tag, first class and `file:line`, with a framework logo (React, Solid, Vue, Svelte, or `</>` when Spotnote can't tell which JSX framework compiles the file).
 
 ## The launcher
 
-The launcher is a round button in a corner of the page. It always starts closed when the page loads.
+- **`+`** opens it: selection mode starts, it turns yellow, and your pins appear.
+- **`×`** closes it: selection mode ends and the pins hide.
+- **Drag it** to move it. It snaps to the nearest corner and remembers it.
 
-- **Open** (`+`): selection mode starts, the button turns yellow, and your pins appear.
-- **Close** (`×`): selection mode ends and the pins hide.
-
-Opening it fans three buttons out along an arc:
+It always starts closed when the page loads. Opening it shows three buttons:
 
 | Button | What it does |
 | --- | --- |
-| Pause | Turns selection mode off (and back on) without closing the launcher, so you can use your app with your pins still showing. The launcher turns grey while paused. |
-| Notes | Opens the list of your notes, numbered like their pins. See [Notes](/guides/notes#the-notes-list). |
-| Settings | Opens [Settings](/guides/settings): whether your coding agent is connected, the accent color and theme, and where files open. |
+| **Pause** | Turns selection mode off and back on. Your pins stay visible, so you can use your app with them. The launcher turns grey while paused. |
+| **Notes** | Opens [the list of your notes](/guides/notes#the-notes-list). |
+| **Settings** | Opens [Settings](/guides/settings). |
 
-**Move it** by dragging: it snaps to the nearest corner, the arc turns to face into the page, and the corner is remembered.
+## Back out with `Esc`
 
-## Backing out with `Esc`
+Each press closes one thing, front first:
 
-`Esc` closes one thing at a time:
+1. the note panel, the notes list or Settings (whichever you used last)
+2. the other one, if it's open
+3. selection mode (the launcher stays open, paused)
 
-1. the note panel, the notes list or Settings, whichever is in front (the one you used last),
-2. then the other one, if it's open,
-3. then selection mode (the launcher stays open, paused).
+When panels overlap, click the one behind to bring it to the front.
 
-When the note panel and the notes list or Settings overlap, click the one behind to bring it to the front.
+<Accordions>
+<Accordion title="What happens to clicks while the note panel is open">
 
-## What a click selects
+Clicks still don't reach your app. Clicking another element moves the panel to it. Clicking empty space closes the panel.
 
-Spotnote picks the element that carries a **stamp**: the `data-spotnote` attribute the plugin adds to every element written in your source. If you click something without one (for example, markup rendered inside a dependency), the selection moves up to the nearest ancestor that has one, and the prompt says so.
+If the panel holds text you haven't sent, it shakes and keeps your text instead. See [Notes](/guides/notes#clicking-away-with-unsent-text).
 
-See [Lists & components](/guides/lists-and-components) for repeated elements and component boundaries.
+</Accordion>
+<Accordion title="Which element a click selects">
+
+Spotnote picks the element that carries a **stamp**: the `data-spotnote` attribute the plugin adds to every element written in your source.
+
+If you click something without one (for example, markup rendered inside a dependency), the selection moves up to the nearest ancestor that has one, and the prompt says so.
+
+For repeated elements and component boundaries, see [Lists & components](/guides/lists-and-components).
+
+</Accordion>
+</Accordions>
+
+## Next
+
+[Notes](/guides/notes): edit, delete and find your notes.

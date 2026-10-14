@@ -1,52 +1,70 @@
 ---
 title: Notes
-description: Write, edit, copy and delete notes, and what happens to them when your code changes.
+description: Write, edit, delete and find your notes, and what happens to them when your code changes.
 ---
 
-A **note** is the text you write about an element. A **pin** is the numbered marker that Spotnote leaves on that element so you can find the note again. One element has at most one note.
+A **note** is what you write about an element. A **pin** is the numbered marker it leaves on that element. One element has at most one note.
 
-## Writing a note
+## At a glance
 
-1. In [selection mode](/guides/picking-elements), click an element. The note panel opens.
+| To… | Do this |
+| --- | --- |
+| **Write** a note | In [selection mode](/guides/picking-elements), click an element, type, press `Enter`. |
+| **Edit** a note | Click its pin (or the element), change the text, close the panel. |
+| **Copy** the prompt again | Open the note, click the **copy** button at the top. |
+| **Delete** a note | Open it, click the **trash** button, then **Delete**. |
+| **Find** a note | Open the launcher, click **Notes**, click the note. |
+
+The sections below cover each one.
+
+## Write a note
+
+1. In selection mode, click an element. The note panel opens.
 2. Type your request. `Shift+Enter` adds a line break.
 3. Press `Enter`, or click **↵ Add & copy**.
 
 The note is saved, its pin appears, and the prompt is on your clipboard.
 
-Closing the panel before that (with **×** or `Esc`) throws the draft away.
+<Callout type="warn" title="Closing first throws the draft away">
+  Closing the panel with **×** or `Esc` before step 3 discards what you typed.
+</Callout>
 
 ### Clicking away with unsent text
 
-If you click somewhere else on the page while the panel holds text you haven't sent, the panel shakes and keeps your text. Send it with `Enter`, or close the panel with **×** or `Esc`.
+If you click elsewhere on the page while the panel holds unsent text, the panel shakes and keeps your text. Send it with `Enter`, or close it with **×** or `Esc`.
 
-## Editing a note
+## Edit a note
 
-Click its pin, or click the element itself in selection mode. The panel opens with the note filled in.
+Click its pin, or click its element in selection mode. The panel opens with the note filled in.
 
-- **Your changes save when the panel closes**, however you close it.
-- `Enter` (or **↵ Save & copy**) saves and copies the updated prompt in one step.
-- The **copy** button at the top copies the prompt without closing the panel.
+- **Changes save when the panel closes**, however you close it.
+- `Enter` (or **↵ Save & copy**) saves and copies the updated prompt.
+- The **copy** button at the top copies without closing the panel.
 
-While your [coding agent is connected](/guides/mcp), notes go to it directly: the panel says **↵ Add** / **↵ Save**, the copy button is hidden, and `Enter` leaves your clipboard alone.
+Clicking away with unsaved changes makes the panel shake, as for a new note.
 
-Clicking away with unsaved changes makes the panel shake, the same as for a new note.
+<Callout type="info" title="With your agent connected">
+  While your [coding agent is connected](/guides/mcp), notes go to it directly. The buttons say **↵ Add** / **↵ Save**, the copy button is hidden, and `Enter` leaves your clipboard alone.
+</Callout>
 
-## Deleting a note
+## Delete notes
 
-Open the note and click the **trash** button, then **Delete** in the question that comes up over the panel (or **Cancel** to keep it). The pin goes away and the remaining pins are renumbered.
+**One note:** open it, click the **trash** button, then **Delete** (or **Cancel**). The remaining pins are renumbered.
 
-To delete several at once, open the notes list:
+**Several notes:** open the notes list, then:
 
-- Tick the notes you want gone, then click the **trash** icon at the top: it shows how many, as in **(2)**.
-- Or, with none ticked, the icon shows **(all)**: click it to delete every note.
+- tick the ones to delete and click the **trash** icon at the top (it shows the count, as in **(2)**), or
+- with none ticked, click the trash icon showing **(all)** to delete every note.
 
-Either way, Spotnote asks first (**Delete all 3 notes?**): click **Delete** to confirm, or **Cancel**.
+Spotnote asks first (**Delete all 3 notes?**). Click **Delete** or **Cancel**.
 
 ## The notes list
 
-Open the launcher and press **Notes** to see every note, numbered like its pin. Click one to scroll to its element and open it. If the note was written on another page of your app, Spotnote navigates there first.
+Open the launcher and click **Notes**. Click a note to scroll to its element and open it. If it's on another page of your app, Spotnote goes there first.
 
-The list puts this page's notes first, under **This page**, and each other page's under its path. The numbers stay the same as on the pins. Click a heading to fold its section away (it shows how many notes it holds), and click it again to unfold it.
+- This page's notes come first, under **This page**. Other pages follow, under their paths.
+- Numbers match the pins.
+- Click a heading to fold that section (it shows how many notes it holds). Click again to unfold.
 
 ## Pins
 
@@ -55,18 +73,26 @@ The list puts this page's notes first, under **This page**, and each other page'
 
 ## When your code changes
 
-A note is tied to its element by the element's source location (file, line and column) plus, for repeated elements, its position among them. Hot reload keeps that link as long as the location stays the same.
+A note finds its element by the element's **source location** (file, line, column), plus its position for repeated elements.
 
-- **Edits that don't move the element's opening tag** (changing its classes, text or children) keep the pin in place.
-- **Edits that move the tag to another line or column** (for example, adding a line above it) break the link. The pin disappears, and the note is marked **Not found** in the notes list.
+| Your edit | The pin |
+| --- | --- |
+| Doesn't move the element's opening tag (classes, text, children) | Stays. |
+| Moves the tag to another line or column (say, a new line above it) | Disappears. The note is marked **Not found** in the notes list. |
 
-A note marked **Not found** can't be opened, but from the notes list you can:
+From the notes list, a **Not found** note can still be:
 
-- **copy** it: you get the prompt saved the last time the note was sent or edited, with a line telling the agent the location may have moved;
-- **delete** it, for example once the agent has made the change.
+- **copied**: you get its last prompt, plus a line telling the agent the location may have moved;
+- **deleted**: for example, once the agent has made the change.
 
-If the element comes back to the same location (say, you undo the edit), the note finds it again.
+It can't be opened. If the element comes back to the same location (say, you undo the edit), the note finds it again.
 
 ## Where notes are stored
 
-Notes are saved in your browser's `localStorage`. They survive reloads and dev-server restarts, but they belong to that browser and that address: a different browser, or the same app on another port, starts with no notes. Nothing is sent to a server. See [Storage](/reference/storage).
+In your browser's `localStorage`. They survive reloads and dev-server restarts. Nothing is sent to a server.
+
+They belong to one browser and one address: another browser, or the same app on another port, starts with no notes. See [Storage](/reference/storage).
+
+## Next
+
+[Using with agents](/guides/using-with-agents): write notes that get the edit you meant.

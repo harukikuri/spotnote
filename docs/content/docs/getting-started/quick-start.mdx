@@ -1,43 +1,59 @@
 ---
 title: Quick Start
-description: Write your first note and hand it to your coding agent.
+description: About 2 minutes. Click an element, write a note, paste it into your agent.
 ---
 
-This assumes Spotnote is [installed](/getting-started/installation).
+Spotnote needs to be [installed](/getting-started/installation) first.
 
-## 1. Start the dev server
+<Steps>
+<Step>
+
+### Start the dev server
 
 ```bash
 pnpm dev
 ```
 
-Open the local URL Vite prints. A round `+` button sits in the bottom-left corner of the page: that's the **launcher**.
+Open the local URL Vite prints.
 
-## 2. Pick an element
+**You should see** a round `+` button in the bottom-left corner. That's the **launcher**.
 
-Click the launcher. It turns yellow and **selection mode** starts: as you move the cursor, an outline follows it with a label like `button .chip ProductCard.jsx:12`.
+</Step>
+<Step>
 
-Click the element you want to change. The note panel opens next to it.
+### Click the launcher, then an element
+
+Click the launcher, then click the element you want to change.
+
+**You should see** the launcher turn yellow, an outline follow your cursor with a label like `button .chip ProductCard.jsx:12`, and, after your click, the note panel open next to the element.
 
 <BrowserFrame url="localhost:5173">
   <SpotnoteDemo />
 </BrowserFrame>
 
-## 3. Write the note
+</Step>
+<Step>
 
-Type what should change, in plain words, and press `Enter`. Spotnote:
+### Write what should change, press `Enter`
 
-- copies the prompt to your clipboard (the launcher shows a ✓),
-- leaves a numbered **pin** on the element, so you can reopen the note later.
+Plain words are enough: "make this pill-shaped".
 
-You stay in selection mode, ready for the next element.
+**You should see** a ✓ on the launcher (the prompt is on your clipboard) and a numbered **pin** on the element. Click the pin later to reopen the note.
 
-## 4. Paste it into your agent
+</Step>
+<Step>
 
-Paste into Claude Code, Cursor, Codex or any chat. The prompt names the file, line and column of the element, so the agent edits the right place. When the change lands, Vite's hot reload shows it in the page.
+### Paste into your agent
+
+Paste into Claude Code, Cursor, Codex or any chat.
+
+**You should see** the agent edit the right file, and Vite's hot reload show the change in the page.
+
+</Step>
+</Steps>
+
+You're still in selection mode, so you can click the next element right away. `Esc` pauses it.
 
 ## Next
 
-- [Picking elements](/guides/picking-elements): selection mode, the launcher, and `Alt`.
-- [Notes](/guides/notes): editing, deleting and the notes list.
-- [Using with agents](/guides/using-with-agents): getting good edits from the prompt.
+[Connect your agent](/guides/mcp): skip the copy and paste. Your agent picks up notes as you write them.

@@ -1,45 +1,49 @@
 ---
 title: Settings
-description: See whether your coding agent is connected, and change Spotnote's look and where files open.
+description: Check your agent's connection, change Spotnote's colors, and choose where files open.
 ---
 
-Open the launcher and click the gear (the third button) to open **Settings**. Each row has a **?**: hover it for what the setting does. Changes apply right away and are saved in your browser, per app (see [Storage](/reference/storage)).
+**Open it:** open the launcher, click the gear (the third button).
+
+Changes apply right away and are saved in your browser, per app ([Storage](/reference/storage)). Every row has a **?**: hover it for what the setting does.
 
 ## Coding agent
 
-The row shows whether your agent is connected through [spotnote-mcp](/guides/mcp), updated live. Click it for its page: what connecting gives you, and when it isn't connected, the two steps to connect Claude Code (the command to add it, then what to ask it), each with a copy button.
+Shows whether your agent is connected through [spotnote-mcp](/guides/mcp), updated live.
 
 | Status | Meaning |
 | --- | --- |
 | Connected | Your agent picks up notes as you write them. |
-| Connecting… | It just started; your notes are syncing. |
+| Connecting… | It just started. Your notes are syncing. |
 | Not connected | No agent is running spotnote-mcp. |
+
+Click the row for its page. When you're not connected, it shows the two steps to connect Claude Code, each with a copy button.
 
 ## Accent color
 
-The color of the outline, the labels and the pins. Yellow is the default; switch to orange, pink, violet, blue or green when yellow blends into your app.
+The color of the outline, labels and pins. Yellow is the default. Switch to orange, pink, violet, blue or green when yellow blends into your app.
 
 ## Theme
 
-The icon at the top right of Settings. Click it to cycle through the options. It sets the look of Spotnote's own panels (the launcher, note panel and lists), not your app's.
+The icon at the top right of Settings. Click it to cycle: **System** (follows your OS), **Light**, **Dark** (the default).
 
-| Option | Effect |
-| --- | --- |
-| System | Follows your OS setting, and switches when it does. |
-| Light | Light panels. |
-| Dark | Dark panels. The default. |
+It changes Spotnote's own panels only, not your app.
 
 ## Open files in
 
-Where a file opens when you click its name: in the note panel's header, or in the agent's messages (`router.jsx:28`).
+Where a file opens when you click its name, in the note panel's header or in the agent's messages (`router.jsx:28`).
 
 | Option | Effect |
 | --- | --- |
-| Auto | The default. Opens the file in the editor that's running, found by the dev server. If that editor's command-line tool isn't installed (VS Code's `code`, for example), it opens through the editor's URL instead. |
-| VS Code, Cursor, Windsurf, Zed | Always opens in that editor, through its URL (`vscode://file/…`). Works without the editor running or its command-line tool installed. The browser may ask you to allow it the first time. |
+| **Auto** (default) | Opens in the editor that's running. If that editor's command-line tool isn't installed (VS Code's `code`, for example), opens through the editor's URL instead. |
+| **VS Code, Cursor, Windsurf, Zed** | Always opens in that editor through its URL (`vscode://file/…`). Works without the editor running or its command-line tool installed. The browser may ask permission the first time. |
 
-If Auto finds no editor, a warning icon appears next to the link; hover it for why, and pick yours here. Set `LAUNCH_EDITOR` when starting the dev server to name an editor Auto doesn't recognise.
+**If Auto finds no editor**, a warning icon appears next to the link. Hover it for why, then pick your editor here. To name an editor Auto doesn't recognise, set `LAUNCH_EDITOR` when starting the dev server.
 
-## Footer
+## Version
 
-The bottom of Settings shows which Spotnote version you're running, with a link to its GitHub repository.
+The bottom of Settings shows your Spotnote version, with a link to its GitHub repository.
+
+## Next
+
+[Connect your agent](/guides/mcp): turn **Not connected** into **Connected**.

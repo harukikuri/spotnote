@@ -1,43 +1,58 @@
 ---
 title: Lists & Components
-description: Repeated elements, component boundaries, and elements without a source location.
+description: What the prompt says when you pick a repeated element, an element from a shared component, or one with no source location.
 ---
+
+## In short
+
+- **Picked one item in a list?** The prompt says which one. The agent edits the line, so say "only this one" if you mean it.
+- **Picked something from a shared component?** The location points into the component's file. The component path shows where it's used.
+- **Picked something from a library?** Spotnote selects the nearest element from your own code instead.
 
 ## Repeated elements
 
-Elements rendered in a loop (`items.map(...)`, `v-for`, `{#each}`) all come from one line of source, so they all carry the same stamp. Spotnote tells them apart by **position**: which match it is, counting in DOM order.
+Elements rendered in a loop (`items.map(...)`, `v-for`, `{#each}`) all come from one line, so they share one stamp. Spotnote tells them apart by **position**, counting in DOM order.
 
-When you pick one, the prompt names it:
+The prompt names the one you picked:
 
 ```markdown
 - text: "all"
 - instance: 1 of 4 rendered from this line (by DOM order) — target the one matching the text above
 ```
 
-The agent edits the line, so a style change usually affects every instance. If you only want one to change, say so in your note (for example, "only the active chip").
+The agent edits the line, so a style change usually affects every instance. To change only one, say so ("only the active chip").
 
-You don't need a `key` or any extra attribute for this.
+You don't need a `key` or any extra attribute.
 
 <Callout type="warn" title="Reordering moves the note">
-  Because instances are counted by position, a note on the 2nd item stays on
-  whatever is 2nd after the list is sorted, filtered or reloaded with
-  different data.
+  A note on the 2nd item stays on whatever is 2nd after the list is sorted,
+  filtered or reloaded with different data.
 </Callout>
 
 ## Component boundaries
 
-A stamp records where an element is **written**, which is inside a component's own file. If you click a button that comes from your `Button` component, the location points into `Button.jsx`, not the page that uses it.
+A stamp records where an element is **written**. Click a button from your `Button` component, and the location points into `Button.jsx`, not the page that uses it.
 
-That's why the prompt also includes the **source path**: the components that own each element from the app root down to the one you clicked, for example `App > Products > ProductCard`. With it, the agent can decide whether to change `ProductCard` itself or how `Products` uses it.
+So the prompt also has the **source path**: the components from the app root down to the element, like `App > Products > ProductCard`. With it, the agent can choose between changing `ProductCard` itself or how `Products` uses it.
 
-The source path is built from the elements on the page, so a component appears in it once per stretch of its own elements. When one component's elements wrap another's (a `Link` that wraps markup written in `Home`), the path can show a name twice: `App > Home > Link > Home`.
+<Accordions>
+<Accordion title="Why a name can appear twice in the path">
+
+The path is built from the elements on the page, so a component appears once per stretch of its own elements. When one component's elements wrap another's (a `Link` wrapping markup written in `Home`), you can get `App > Home > Link > Home`.
+
+</Accordion>
+</Accordions>
 
 ## Elements without a stamp
 
-Some elements have no source location of their own:
+These have no source location of their own:
 
-- markup rendered inside a dependency (a UI library's components),
-- HTML injected as a string (`dangerouslySetInnerHTML`, `v-html`, `{@html}`),
-- DOM built by third-party widgets (charts, maps, editors).
+- markup rendered inside a dependency (a UI library's components)
+- HTML injected as a string (`dangerouslySetInnerHTML`, `v-html`, `{@html}`)
+- DOM built by third-party widgets (charts, maps, editors)
 
-Clicking one selects the **nearest ancestor that has a stamp**, and the prompt adds a line saying the clicked element isn't in your source. The agent gets the closest place in your code to start from. See [Limitations](/troubleshooting#limitations) for the full list.
+Clicking one selects the **nearest ancestor that has a stamp**, and the prompt adds a line saying the clicked element isn't in your source. Full list: [Limitations](/troubleshooting#limitations).
+
+## Next
+
+[Concepts](/concepts): how stamps work under the hood.

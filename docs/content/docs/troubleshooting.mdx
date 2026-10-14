@@ -1,53 +1,57 @@
 ---
 title: Troubleshooting & Limitations
-description: Fixes for common problems, and what Spotnote can't do.
+description: Find your symptom, try the first fix. Then what Spotnote can't do.
 ---
 
 ## Troubleshooting
 
 ### The launcher doesn't appear
 
-- **Check you're on the dev server.** Spotnote runs only in `vite dev`, not in a build or `vite preview`.
-- **Check your HTML goes through Vite.** The client is added to the page through Vite's `transformIndexHtml` hook. If your setup serves HTML that doesn't pass through that hook, the client is never loaded.
-- **Check the browser console** for errors loading `virtual:spotnote-client`.
+Try these in order:
+
+1. **Use the dev server.** Spotnote runs only in `vite dev`, not in a build or `vite preview`.
+2. **Check the browser console** for errors loading `virtual:spotnote-client`.
+3. **Check your HTML goes through Vite.** The client is added through Vite's `transformIndexHtml` hook. HTML served some other way never loads it.
 
 ### Hovering highlights nothing
 
-- **Is selection mode on?** Open the launcher (it should be yellow, not grey) or hold `Alt` / `⌥ Option`.
-- **Is the file stamped?** Only `.jsx`, `.tsx`, `.vue` and `.svelte` files are. In dev tools, look for a `data-spotnote` attribute on the element.
-- **Did the terminal print `[spotnote] skipped …`?** That file couldn't be parsed, so its elements aren't stamped. See [Warnings](/reference/plugin-api#warnings).
+Try these in order:
+
+1. **Turn on selection mode.** Open the launcher (yellow, not grey), or hold `Alt` / `⌥ Option`.
+2. **Look at the terminal for `[spotnote] skipped …`.** That file couldn't be parsed, so its elements aren't stamped. See [Warnings](/reference/plugin-api#warnings).
+3. **Check the file type.** Only `.jsx`, `.tsx`, `.vue` and `.svelte` files are stamped. In dev tools, look for a `data-spotnote` attribute on the element.
 
 ### A pin disappeared after an edit
 
-The edit moved the element's opening tag, so the note no longer matches any element. The notes list marks it **Not found**; you can still copy or delete it there. See [When your code changes](/guides/notes#when-your-code-changes).
+**Expected.** The edit moved the element's opening tag, so the note no longer matches. Find it in the notes list under **Not found**, then copy or delete it. See [When your code changes](/guides/notes#when-your-code-changes).
 
 ### My notes are gone
 
-Notes are saved per browser and per address. If Vite started on another port (for example `5174` because `5173` was busy), your notes are still saved under the old port. See [Storage](/reference/storage).
+**Check the port.** Notes are saved per browser and per address. If Vite started on `5174` because `5173` was busy, your notes are still under `5173`. See [Storage](/reference/storage).
 
 ### The prompt points at the wrong file
 
-You probably clicked an element from a shared component: its location is inside that component's file. Check the **source path** in the prompt, and tell the agent which usage you mean. See [Component boundaries](/guides/lists-and-components#component-boundaries).
+**Tell the agent which usage you mean.** You likely clicked an element from a shared component, so the location is inside that component's file. The **source path** in the prompt shows where it's used. See [Component boundaries](/guides/lists-and-components#component-boundaries).
 
 ## Limitations
 
 ### Elements without a source location
 
-Spotnote can only point at elements written literally in your own source. For these, a click selects the nearest stamped ancestor, and the prompt says so:
+Spotnote only points at elements written literally in your own source. For these, a click selects the nearest stamped ancestor, and the prompt says so:
 
 - **Elements rendered by dependencies**, such as a UI library's components. Spotnote stamps your source, not `node_modules`.
 - **Injected HTML**: `dangerouslySetInnerHTML`, `v-html`, `{@html}`.
 - **DOM built by scripts**: charts, maps, rich-text editors and other widgets.
-- **Elements whose tag is chosen at runtime**: `<component :is="…">`, `<svelte:element this={…}>`.
+- **Tags chosen at runtime**: `<component :is="…">`, `<svelte:element this={…}>`.
 - **Vue render functions** (`h(...)`).
 
 ### Platform
 
 - **Vite only.** Next.js and other non-Vite setups aren't supported.
 - **Dev only.** Nothing runs in production builds.
-- **Notes are local.** They're saved in your browser, not shared with teammates, and not tied to Git.
+- **Notes are local.** Saved in your browser, not shared with teammates, not tied to Git.
 
 ### Notes and code changes
 
-- A note is tied to a source location. Edits that move the element's opening tag detach the note.
-- For repeated elements, a note is tied to a position in the list, so sorting or filtering moves it to another item.
+- Edits that move an element's opening tag detach its note.
+- For repeated elements, sorting or filtering moves a note to another item, because the note is tied to a position.

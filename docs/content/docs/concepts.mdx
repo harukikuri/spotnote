@@ -3,7 +3,15 @@ title: Concepts
 description: How Spotnote stamps source locations at dev time and reads them back in the browser.
 ---
 
-Spotnote has two halves. While Vite compiles your code, the **plugin** writes each element's source location onto it. In the browser, the **client** reads that location back when you click. Nothing else is involved: no manifest, no extra server, no Git.
+You don't need this page to use Spotnote. Read it when you want to know why something behaves the way it does.
+
+## In short
+
+1. **The plugin stamps.** While Vite compiles your code, it writes each element's source location onto the element.
+2. **The client reads.** In the browser, it reads that location back when you click.
+3. **Notes match by stamp.** A note finds its element again by looking for the same stamp.
+
+Nothing else is involved: no manifest, no extra server, no Git.
 
 ## Stamps
 
@@ -15,7 +23,9 @@ A **stamp** is a `data-spotnote` attribute holding the element's source location
 <button data-spotnote="components/ProductCard.jsx:12:5" data-spotnote-name="ProductCard">
 ```
 
-The plugin adds it to every **host element** (a real DOM tag such as `<div>` or `<button>`) written in your own source. Components (`<ProductCard>`) aren't stamped, because a component doesn't always pass attributes down to a DOM node. Their elements are stamped inside their own file instead.
+The plugin adds it to every **host element** (a real DOM tag such as `<div>` or `<button>`) written in your own source.
+
+Components (`<ProductCard>`) aren't stamped, because a component doesn't always pass attributes down to a DOM node. Their elements are stamped inside their own file instead.
 
 How the stamp is added depends on the file type:
 
@@ -33,7 +43,9 @@ See [Attributes](/reference/attributes) for the exact formats.
 
 <Diagram name="pick" width={914} height={200} alt="Select, click, send, paste: pick an element, write the note, and paste the copied prompt into your agent." />
 
-The plugin also adds a script to the page Vite serves, so the client starts without an import in your app. It draws everything (the launcher, outlines, panel and pins) inside a shadow root, so your app's CSS doesn't affect it and its CSS doesn't leak into your app.
+The plugin also adds a script to the page Vite serves, so the client starts without an import in your app.
+
+It draws everything (the launcher, outlines, panel and pins) inside a shadow root. Your app's CSS doesn't affect it, and its CSS doesn't leak into your app.
 
 When you click in selection mode, the client:
 
@@ -45,8 +57,13 @@ When you click in selection mode, the client:
 
 A note is saved with its element's stamp and its **position** among elements with the same stamp (for repeated elements). To show a pin, the client looks for the element with that stamp at that position.
 
-This is what makes notes survive reloads and hot updates without any IDs in your code. It's also why a note loses its element when an edit moves the opening tag: the stamp changes, so nothing matches. See [When your code changes](/guides/notes#when-your-code-changes).
+- **Why notes survive reloads and hot updates:** the stamp comes back with the element, with no IDs in your code.
+- **Why a note loses its element when an edit moves the opening tag:** the stamp changes, so nothing matches. See [When your code changes](/guides/notes#when-your-code-changes).
 
 ## Dev only
 
 The plugin runs only for `vite dev` (`apply: "serve"`). Production builds don't include stamps or the client.
+
+## Next
+
+[Reference](/reference/plugin-api): every option, field and key, for looking things up.

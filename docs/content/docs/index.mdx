@@ -1,22 +1,32 @@
 ---
 title: What is Spotnote?
 headline: Point, don't describe.
-description: Click any element in your running app and hand your coding agent its exact file and line.
+description: Click any element in your running app and hand your agent its exact file and line — no more guessing, no more grepping.
 ---
-
-Spotnote is a **dev-only Vite plugin**. In your running app, click an element and write what should change. Spotnote copies a prompt for your coding agent that names the **file, line and column** where that element is written.
 
 <SpotnoteFullDemo />
 
-## Why
+## Try it in 2 minutes
 
-Describing UI to an agent in words loses information. "Make the button in the hero rounder" leaves the agent to search the codebase and guess which button you mean. Spotnote skips the guessing: the prompt says exactly where the element is defined, which instance you picked if it's one of many, and which components it sits inside. No searching also means fewer tokens spent.
+1. Install: `npm install -D spotnote`
+2. Add `spotnote()` to `plugins` in `vite.config.ts`
+3. Run your dev server, click the round `+` in the corner, then click any element
+
+Full steps: [Installation](/getting-started/installation).
+
+## What you get
+
+- **The exact spot.** The prompt names the **file, line and column** where the element is written.
+- **The right instance.** If the element is one of many (a card in a grid), the prompt says which one.
+- **Fewer tokens.** Your agent doesn't search the codebase or guess which button you meant.
 
 ## Works with
 
-React, Solid, Vue and Svelte on Vite. See [Framework support](/reference/framework-support) for versions and caveats.
+- React, Solid, Vue and Svelte, on Vite 5 or later
+- Any agent you can paste text into: Claude Code, Cursor, Codex, a chat window
+
+Versions and caveats: [Framework support](/reference/framework-support).
 
 ## Next
 
-- [Installation](/getting-started/installation): add the plugin to your Vite config.
-- [Quick Start](/getting-started/quick-start): write your first note and paste it into your agent.
+[Installation](/getting-started/installation): about 1 minute.
