@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write # the GitHub release
-  id-token: write # npm provenance
+  id-token: write # npm trusted publishing (no token) and provenance
 
 jobs:
   release:
@@ -23,6 +23,7 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
+      - run: npm install -g npm@11 # trusted publishing needs npm 11.5.1 or later
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
 
@@ -34,11 +35,10 @@ jobs:
             [ "$v" = "$tag" ] || { echo "::error::$p/package.json is $v, tag is v$tag"; exit 1; }
           done
 
-      # A version already on npm is skipped, so a re-run after a partial failure
-      # finishes the rest.
+      # Trusted publishing: npmjs.com trusts this workflow (each package's
+      # Settings → Trusted Publisher), so no token. A version already on npm is
+      # skipped, so a re-run after a partial failure finishes the rest.
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for p in plugin mcp; do
             name=$(node -p "require('./$p/package.json').name")
