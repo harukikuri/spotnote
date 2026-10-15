@@ -133,7 +133,8 @@ export const CSS = [
   // and shrinks back toward it on close.
   `.sn-panel{position:fixed;z-index:2147483647;width:300px;background:${T.bg};border:1px solid ${T.border};border-radius:10px;` +
     `box-shadow:0 12px 32px var(--sn-shadow);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1);` +
-    "display:flex;flex-direction:column}",
+    "display:flex;flex-direction:column;cursor:grab}", // it drags from anywhere but the input and buttons (panel-frame.js)
+  ".sn-panel.sn-dragging,.sn-panel.sn-dragging *{cursor:grabbing!important}",
   // Resized (width/height set): the conversation takes the room, or with none,
   // the note input does.
   ".sn-panel.sn-sized .sn-thread{flex:1 1 auto;min-height:0;max-height:none}",
@@ -150,7 +151,7 @@ export const CSS = [
   // The input and its "↵ Add & copy" share a row: the hint sits at the right,
   // on the input's last line, so an empty input leaves no gap below it.
   ".sn-compose{display:flex;align-items:flex-end;gap:8px;padding:10px 12px}",
-  ".sn-compose [data-spotnote-input]{flex:1;min-width:0}",
+  ".sn-compose [data-spotnote-input]{flex:1;min-width:0;cursor:text}",
   `.sn-send{flex:none;display:flex;align-items:center;gap:6px;margin:0;padding:1px 4px;border:none;border-radius:5px;` +
     `background:none;color:${T.textMuted};font:12px ${T.font};cursor:pointer;transition:opacity .14s,color .14s}`,
   `.sn-send:hover{color:${T.accentText}}`,

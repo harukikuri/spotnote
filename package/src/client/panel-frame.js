@@ -32,6 +32,7 @@ export function enablePanelDrag(panelEl, onMoved) {
     const ox = r.left;
     const oy = r.top;
     onMoved();
+    panelEl.classList.add("sn-dragging");
     const onMove = (ev) => {
       const left = Math.max(8, Math.min(ox + (ev.clientX - startX), window.innerWidth - panelEl.offsetWidth - 8));
       const top = Math.max(8, Math.min(oy + (ev.clientY - startY), window.innerHeight - panelEl.offsetHeight - 8));
@@ -39,6 +40,7 @@ export function enablePanelDrag(panelEl, onMoved) {
       panelEl.style.top = top + "px";
     };
     const onUp = () => {
+      panelEl.classList.remove("sn-dragging");
       document.removeEventListener("mousemove", onMove, true);
       document.removeEventListener("mouseup", onUp, true);
       swallowNextClick();

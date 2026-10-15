@@ -682,7 +682,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
 
   // Header: label + icon buttons
   const header = document.createElement("div");
-  header.style.cssText = `display:flex;align-items:flex-start;gap:4px;padding:7px 7px 7px 12px;border-bottom:1px solid ${T.borderSubtle};cursor:move`;
+  header.style.cssText = `display:flex;align-items:flex-start;gap:4px;padding:7px 7px 7px 12px;border-bottom:1px solid ${T.borderSubtle}`;
   // The note's elements, one chip each (Shift-click adds or removes one).
   const chips = document.createElement("div");
   chips.className = "sn-chips";
