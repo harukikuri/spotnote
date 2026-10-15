@@ -1,5 +1,6 @@
-# Push a tag like v0.2.0 → test, publish spotnote and spotnote-mcp to npm, and
-# create the GitHub release. Bump both package.json versions to match first.
+# Push a tag like v0.2.0 → CI and Test (side by side), then, only if both pass,
+# publish spotnote and spotnote-mcp to npm and create the GitHub release. Bump
+# both package.json versions to match first.
 name: Release
 
 on:
@@ -7,12 +8,20 @@ on:
     tags: ["v*.*.*"]
 
 permissions:
-  contents: write # the GitHub release
-  id-token: write # npm trusted publishing (no token) and provenance
+  contents: read
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+  test:
+    uses: ./.github/workflows/test.yml
+
   release:
+    needs: [ci, test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # the GitHub release
+      id-token: write # npm trusted publishing (no token) and provenance
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +36,6 @@ jobs:
 
       - run: npm install -g npm@11 # trusted publishing needs npm 11.5.1 or later
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
 
       - name: Tag matches both package versions
         run: |

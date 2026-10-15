@@ -91,8 +91,9 @@ pnpm --filter @spotnote/docs dev              # http://localhost:3000
 1. Set the same version in `package/package.json` and `mcp/package.json`, commit, push.
 2. Tag it: `git tag v0.2.0 && git push origin v0.2.0`.
 
-The `Release` workflow (`.github/workflows/release.yml`) then runs the tests,
-checks the tag matches both versions, publishes `spotnote` and `spotnote-mcp`
+The `Release` workflow (`.github/workflows/release.yml`) then runs CI and Test
+(the same workflows as on main, side by side); only if both pass, it checks the
+tag matches both versions, publishes `spotnote` and `spotnote-mcp`
 to npm (with provenance), and creates the GitHub release, with notes made from
 the `feat:`, `fix:` and `perf:` commits since the last tag (changelogithub). So
 write those commit messages for users. It publishes through

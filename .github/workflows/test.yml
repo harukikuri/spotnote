@@ -1,4 +1,4 @@
-# Every push to main and every pull request: the unit tests, and the browser
+# Every push to main, every pull request and every release: the unit tests, and the browser
 # tests against each example app.
 name: Test
 
@@ -6,6 +6,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call: # from release.yml, before publishing
 
 permissions:
   contents: read
