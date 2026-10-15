@@ -37,7 +37,10 @@ async function stage() {
 // ───────────────────────────────────────────────────────────────────────
 
 const shown = await stage();
-await page.waitForTimeout(400); // let the open animation finish
+// Rest the pointer on the popover's corner: on the page it would light up an
+// element, on a launcher button it shows a tooltip.
+await shown.hover({ position: { x: 4, y: 4 } });
+await page.waitForTimeout(1500); // let the animations finish (the launcher's ✓ after a note)
 const pop = await shown.boundingBox();
 const core = await ui(".snl-core").boundingBox();
 // Frame the popover and the launcher in the corner, with the same margins as the others.
