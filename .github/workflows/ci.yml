@@ -1,0 +1,42 @@
+# Every push to main and every pull request: the tests, the docs site's
+# production build, and a build of each playground app.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version from packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+      - name: Docs build
+        run: pnpm --filter @spotnote/docs build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Playground builds
+        run: |
+          for fw in react solid vue svelte; do
+            SPOTNOTE_FW=$fw pnpm --filter spotnote-playground build
+          done
+          pnpm --filter spotnote-playground-svelte4 exec vite build
