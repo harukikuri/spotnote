@@ -1,7 +1,11 @@
 // Spotnote in a real browser: the launcher, picking, the note panel, pins, the
-// copied prompt and the launcher's menus. Spotnote's UI lives in an open
-// shadow root, which Playwright's CSS locators reach into.
-import { test, expect } from "@playwright/test";
+// copied prompt and the launcher's menus — in each playground app. Spotnote's
+// UI lives in an open shadow root, which Playwright's CSS locators reach into.
+import { test as base, expect } from "@playwright/test";
+
+// The app under test and the elements to pick in it (projects in playwright.config.js).
+const test = base.extend({ app: [{}, { option: true }] });
+const basename = (file) => file.split("/").pop();
 
 // Click an element away from the placeholder bars inside it, so the click lands
 // on the element itself (its right edge), not on a stamped child.
@@ -31,12 +35,12 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator(".snl-core")).toBeVisible();
 });
 
-test("a note leaves a numbered pin and copies a prompt with the exact spot", async ({ page }) => {
+test("a note leaves a numbered pin and copies a prompt with the exact spot", async ({ page, app }) => {
   await openLauncher(page);
-  await clickEdge(page.locator(".hero h1"));
+  await clickEdge(page.locator(app.title).first());
 
   const panel = page.locator(".sn-panel");
-  await expect(panel).toContainText("Home.jsx:");
+  await expect(panel).toContainText(`${basename(app.file)}:`);
   await panel.locator("[data-spotnote-input]").fill("Make the title bigger");
   await page.keyboard.press("Enter");
 
@@ -44,20 +48,20 @@ test("a note leaves a numbered pin and copies a prompt with the exact spot", asy
   await expect(page.locator(".sn-pin")).toHaveText("1");
   const prompt = await clipboard(page);
   expect(prompt).toContain("## Request\nMake the title bigger");
-  expect(prompt).toMatch(/- file: pages\/Home\.jsx\n- line: \d+, column: \d+/);
+  expect(prompt).toContain(`- file: ${app.file}\n- line: `);
   expect(prompt).toContain("- element: <h1>");
   expect(prompt).toContain("## Current computed styles");
 });
 
-test("a repeated element is named by its instance", async ({ page }) => {
+test("a repeated element is named by its instance", async ({ page, app }) => {
   await openLauncher(page);
-  await writeNote(page, page.locator(".card h3").nth(1), "Shorter title");
-  expect(await clipboard(page)).toContain("- instance: 2 of 6 rendered from this line");
+  await writeNote(page, page.locator(app.repeated).nth(1), "Shorter title");
+  expect(await clipboard(page)).toContain(`- instance: 2 of ${app.count} rendered from this line`);
 });
 
-test("notes survive a reload and open from the notes list", async ({ page }) => {
+test("notes survive a reload and open from the notes list", async ({ page, app }) => {
   await openLauncher(page);
-  await writeNote(page, page.locator(".hero h1"), "Kept across reloads");
+  await writeNote(page, page.locator(app.title).first(), "Kept across reloads");
 
   await page.reload();
   await expect(page.locator(".snl")).toHaveAttribute("data-open", "false"); // always starts closed
@@ -72,9 +76,9 @@ test("notes survive a reload and open from the notes list", async ({ page }) => 
   await expect(page.locator(".sn-panel [data-spotnote-input]")).toHaveText("Kept across reloads");
 });
 
-test("deleting a note asks first", async ({ page }) => {
+test("deleting a note asks first", async ({ page, app }) => {
   await openLauncher(page);
-  await writeNote(page, page.locator(".hero h1"), "Delete me");
+  await writeNote(page, page.locator(app.title).first(), "Delete me");
 
   await page.locator(".sn-pin").click();
   await page.locator('.sn-panel button[title="Remove note"]').click();
@@ -83,9 +87,9 @@ test("deleting a note asks first", async ({ page }) => {
   await expect(page.locator(".sn-pin")).toHaveCount(0);
 });
 
-test("Esc closes the panel, then pauses selecting", async ({ page }) => {
+test("Esc closes the panel, then pauses selecting", async ({ page, app }) => {
   await openLauncher(page);
-  await clickEdge(page.locator(".hero h1"));
+  await clickEdge(page.locator(app.title).first());
   await expect(page.locator(".sn-panel")).toBeVisible();
 
   await page.keyboard.press("Escape");
@@ -96,8 +100,8 @@ test("Esc closes the panel, then pauses selecting", async ({ page }) => {
   await expect(page.locator(".snl")).toHaveAttribute("data-paused", "true");
 });
 
-test("holding Alt picks without opening the launcher", async ({ page }) => {
-  const h1 = page.locator(".hero h1");
+test("holding Alt picks without opening the launcher", async ({ page, app }) => {
+  const h1 = page.locator(app.title).first();
   const box = await h1.boundingBox();
   await page.keyboard.down("Alt");
   await page.mouse.move(box.x + box.width - 3, box.y + box.height / 2);
@@ -105,7 +109,7 @@ test("holding Alt picks without opening the launcher", async ({ page }) => {
   await expect(page.locator(".sn-hover-label")).toContainText("h1");
   await page.mouse.click(box.x + box.width - 3, box.y + box.height / 2);
   await page.keyboard.up("Alt");
-  await expect(page.locator(".sn-panel")).toContainText("Home.jsx:");
+  await expect(page.locator(".sn-panel")).toContainText(`${basename(app.file)}:`);
 });
 
 test("Settings shows the agent isn't connected", async ({ page }) => {
