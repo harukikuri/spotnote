@@ -91,3 +91,11 @@ export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
   if (parent) parent.appendChild(b);
   return b;
 }
+
+// A new element with a class, appended to `parent`.
+export function el(tag, cls, parent) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (parent) parent.append(e);
+  return e;
+}

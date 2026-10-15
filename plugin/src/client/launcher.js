@@ -8,58 +8,17 @@
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
 //     copyNote, deleteNote, fileKind, mcpStatus, about, onChange }
-import { ACCENTS, uiRoot } from "./ui.js";
-import { ICONS, FRAMEWORKS, fwIcon, agentMark } from "./icons.js";
-import { getSettings, setSetting, EDITORS } from "./settings.js";
+import { uiRoot, el } from "./ui.js";
+import { LAUNCHER_ICONS } from "./icons.js";
 import { createLayer } from "./layers.js";
-import { confirmOver } from "./confirm.js";
+import { createNotesList } from "./notes-list.js";
+import { createSettingsMenu } from "./settings-menu.js";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
 // Fan start angle per corner (screen coords, y down, so +angle = clockwise).
 // The fan sweeps +90° from here, which always points into the page.
 const START = { bl: -90, br: 180, tr: 90, tl: 0 };
-
-const svg = (attrs, body) => `<svg width="18" height="18" viewBox="0 0 24 24" ${attrs}>${body}</svg>`;
-// One line style for every launcher icon (Lucide's shapes): same stroke, same
-// caps, no filled glyphs next to outlined ones.
-const LINE = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
-const S16 = (body) =>
-  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
-// Settings: theme (one icon per choice), help, chevrons.
-const SET_ICON = {
-  system: S16('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'),
-  light: S16('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
-  dark: S16('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'),
-  help: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5"/><path d="M12 16.5h.01"/></svg>',
-  next: S16('<path d="M9 6l6 6-6 6"/>'),
-  back: S16('<path d="M15 6l-6 6 6 6"/>'),
-  // GitHub's mark (Simple Icons, CC0)
-  github:
-    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
-};
-const ICON = {
-  // The core, closed: the Spotnote mark (docs/public/brand/spotnote-mark-yellow.svg),
-  // in the accent colour (applyLook sets --sn-mark / --sn-mark-fold).
-  mark: '<svg class="snl-logo" width="20" height="20" viewBox="56 56 188 188" aria-hidden="true"><path fill="var(--sn-mark)" fill-rule="evenodd" d="M56 56h188v124l-64 64H56z M150 124a26 26 0 1 0-52 0a26 26 0 1 0 52 0z"/><path fill="var(--sn-mark-fold)" d="M244 180h-64v64z"/></svg>',
-  // Open, a "+" turned 135° reads as "×".
-  plus: svg('class="snl-plus" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"', '<path d="M12 5v14M5 12h14"/>'),
-  check: svg('class="snl-check" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"', '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
-  pause: svg(LINE, '<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>'),
-  play: svg(LINE, '<path d="M7 4.5v15l12-7.5z"/>'),
-  notes: svg(LINE, '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 8h8M8 12h5"/>'),
-  gear: svg(
-    LINE,
-    '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
-  ),
-};
-
-function el(tag, cls, parent) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (parent) parent.append(e);
-  return e;
-}
 
 export function mountLauncher(ctrl) {
   const root = el("div", "snl", uiRoot());
@@ -93,13 +52,13 @@ export function mountLauncher(ctrl) {
     if (onClick) b.addEventListener("click", onClick);
     return { b, ic, t };
   };
-  const pause = item(0, ICON.pause, "Pause selecting", () => ctrl.toggleInspect());
-  const notes = item(1, ICON.notes, "Notes", () => togglePop(notesPop));
+  const pause = item(0, LAUNCHER_ICONS.pause, "Pause selecting", () => ctrl.toggleInspect());
+  const notes = item(1, LAUNCHER_ICONS.notes, "Notes", () => togglePop(notesPop));
   const badge = el("span", "snl-badge", notes.b);
-  const gear = item(2, ICON.gear, "Settings", () => togglePop(settingsPop));
+  const gear = item(2, LAUNCHER_ICONS.gear, "Settings", () => togglePop(settingsPop));
 
   const core = el("button", "snl-core snl-glass", root);
-  core.innerHTML = ICON.mark + ICON.plus + ICON.check;
+  core.innerHTML = LAUNCHER_ICONS.mark + LAUNCHER_ICONS.plus + LAUNCHER_ICONS.check;
 
   const popover = (cls, label) => {
     const p = el("div", `snl-pop ${cls} snl-glass`, root);
@@ -109,16 +68,10 @@ export function mountLauncher(ctrl) {
   };
   const notesPop = popover("snl-notes", "Notes");
   notesPop.item = notes.b;
-  // Same header as Settings: a title (with the count, muted) over a rule.
-  const notesHead = el("div", "snl-head", notesPop);
-  el("span", "snl-title", notesHead).textContent = "Notes";
-  const notesCount = el("span", "snl-count", notesHead);
-  const notesActs = el("span", "snl-head-acts", notesHead);
-  const list = el("ol", "", notesPop);
-  const empty = el("p", "snl-empty", notesPop);
+  const notesList = createNotesList(notesPop, ctrl, { onOpen: () => togglePop(null) });
   const settingsPop = popover("snl-settings", "Settings");
   settingsPop.item = gear.b;
-  empty.textContent = "No notes yet. Click an element on the page to add one.";
+  const settingsMenu = createSettingsMenu(settingsPop, ctrl);
 
   // ── Geometry ──
   function place(animate) {
@@ -157,7 +110,7 @@ export function mountLauncher(ctrl) {
     core.title = label;
     if (selecting !== shownSelecting) {
       shownSelecting = selecting;
-      pause.ic.innerHTML = selecting ? ICON.pause : ICON.play;
+      pause.ic.innerHTML = selecting ? LAUNCHER_ICONS.pause : LAUNCHER_ICONS.play;
       pause.t.textContent = selecting ? "Pause selecting" : "Resume selecting";
       pause.b.setAttribute("aria-pressed", !selecting);
     }
@@ -172,8 +125,8 @@ export function mountLauncher(ctrl) {
       }
       shownCount = count;
     }
-    if (notesPop.classList.contains("snl-show")) renderNotes();
-    if (settingsPop.classList.contains("snl-show")) renderMcp();
+    if (notesPop.classList.contains("snl-show")) notesList.render();
+    if (settingsPop.classList.contains("snl-show")) settingsMenu.refreshStatus();
   }
 
   function setOpen(v) {
@@ -199,306 +152,13 @@ export function mountLauncher(ctrl) {
         p.classList.remove("sn-confirming");
       }
       p.item.setAttribute("aria-expanded", show);
-      if (show && p === settingsPop) page = "main";
-      if (show) (p === notesPop ? renderNotes : renderSettings)();
+      if (show) (p === notesPop ? notesList.render : settingsMenu.open)();
       if (show) shown = p;
     }
     // The launcher root is the popovers' stacking context, so it takes the z-index.
     if (shown) menuLayer.show(root, shown);
     else menuLayer.hide();
   }
-  const collapsed = new Set(); // folded sections of the notes list: "here" or a page's url
-  const picked = new Set(); // notes ticked for deleting
-
-  // The header's delete button, a trash icon: with "(n)" for the ticked notes,
-  // "(all)" for all of them. Both ask first, over the dimmed list.
-  function renderNotesActions() {
-    const keys = new Set(ctrl.notes().map((n) => n.key));
-    for (const k of picked) if (!keys.has(k)) picked.delete(k);
-    notesActs.textContent = "";
-    if (!keys.size) return;
-    const b = el("button", "snl-del", notesActs);
-    // The ticked notes, or with none ticked, all of them; asked first.
-    const doomed = picked.size ? [...picked] : [...keys];
-    const count = doomed.length === 1 ? "1 note" : `${doomed.length} notes`;
-    b.title = picked.size ? `Delete ${count}` : "Delete all";
-    b.setAttribute("aria-label", b.title);
-    b.innerHTML = ICONS.trash; // hardcoded SVG constants, not user input
-    el("span", "snl-del-n", b).textContent = picked.size ? `(${picked.size})` : "(all)";
-    b.addEventListener("click", () =>
-      confirmOver(notesPop, {
-        title: picked.size ? `Delete ${count}?` : `Delete all ${count}?`,
-        body: "This can't be undone.",
-        action: "Delete",
-        onConfirm: () => {
-          for (const k of doomed) ctrl.deleteNote(k);
-          picked.clear();
-          renderNotesActions();
-        },
-      }),
-    );
-  }
-
-  function renderNotes() {
-    const all = ctrl.notes();
-    notesCount.textContent = all.length ? `(${all.length})` : "";
-    list.textContent = "";
-    // This page's notes first, then each other page's under its path. Numbers
-    // stay as on the pins.
-    const numbered = all.map((n, i) => ({ ...n, number: i + 1 }));
-    const here = numbered.filter((n) => n.here);
-    const pages = new Map();
-    for (const n of numbered) if (!n.here) pages.set(n.url, [...(pages.get(n.url) ?? []), n]);
-    // Each heading folds its section: click to collapse or expand (remembered
-    // while the page is open).
-    const section = (key, title, notes) => {
-      const li = el("li", "snl-group", list);
-      const b = el("button", "", li);
-      const open = !collapsed.has(key);
-      b.setAttribute("aria-expanded", open);
-      el("span", "snl-fold", b).innerHTML = SET_ICON.next; // hardcoded SVG constants
-      el("span", "snl-group-title", b).textContent = title;
-      el("span", "snl-count", b).textContent = `(${notes.length})`;
-      b.addEventListener("click", () => {
-        if (open) collapsed.add(key);
-        else collapsed.delete(key);
-        renderNotes();
-      });
-      if (open) notes.forEach(addRow);
-    };
-    if (here.length) section("here", "This page", here);
-    for (const [url, notes] of pages) section(url, url, notes);
-    empty.hidden = all.length > 0;
-    renderNotesActions();
-  }
-  function addRow(n) {
-    const li = el("li", [n.lost && "snl-lost", n.state !== "open" && `snl-${n.state}`].filter(Boolean).join(" "), list);
-    // A checkbox to pick notes for deleting (see renderNotesActions).
-    const pick = el("input", "snl-pick", li);
-    pick.type = "checkbox";
-    pick.checked = picked.has(n.key);
-    pick.setAttribute("aria-label", `Select note ${n.number}`);
-    pick.addEventListener("click", (e) => e.stopPropagation()); // not "open the note"
-    pick.addEventListener("change", () => {
-      if (pick.checked) picked.add(n.key);
-      else picked.delete(n.key);
-      renderNotesActions();
-    });
-    const src = el("span", "snl-src", li);
-    const num = el("span", "snl-num", src); // same as its pin: its number, or a state icon
-    if (n.mark) num.innerHTML = n.mark; // hardcoded SVG constants, not user input
-    else num.textContent = String(n.number);
-    const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
-    const mark = el("span", "snl-fw", src);
-    mark.style.color = FRAMEWORKS[kind].color;
-    mark.title = FRAMEWORKS[kind].name;
-    mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
-    el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
-    el("span", "snl-txt", li).textContent = n.note;
-    if (n.state === "working") {
-      // Who has it; what the agent then says is on the note, not here.
-      const sum = el("span", "snl-sum", li);
-      sum.textContent = sum.title = `${agentMark(n.client)?.name ?? "Agent"} is on it…`;
-    }
-    if (!n.lost) {
-      li.addEventListener("click", () => {
-        togglePop(null);
-        ctrl.openNote(n.key);
-      });
-      return;
-    }
-    // An edit moved or removed its element: it can't be opened, but it can
-    // still be copied (the prompt saved when it was written) or deleted.
-    el("span", "snl-lost-tag", src).textContent = "Not found";
-    const acts = el("span", "snl-acts", li);
-    const copy = el("button", "", acts);
-    copy.title = "Copy prompt";
-    copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
-    copy.addEventListener("click", () => {
-      ctrl.copyNote(n.key);
-      copy.innerHTML = ICONS.check;
-      setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
-    });
-    const del = el("button", "", acts);
-    del.title = "Delete note";
-    del.innerHTML = ICONS.trash;
-    del.addEventListener("click", () => ctrl.deleteNote(n.key));
-  }
-
-  // ── Settings popover ──
-  // A row of mutually exclusive choices; picking one saves it and re-renders.
-  function choices(parent, cls, name, options, render) {
-    const group = el("div", cls, parent);
-    group.setAttribute("role", "radiogroup");
-    for (const [value, label] of options) {
-      const b = el("button", "", group);
-      b.setAttribute("role", "radio");
-      b.setAttribute("aria-checked", getSettings()[name] === value);
-      render(b, value, label);
-      b.addEventListener("click", () => {
-        setSetting(name, value);
-        renderSettings();
-      });
-    }
-  }
-  // Settings: a header (name + theme), then rows of label · value, grouped by
-  // thin rules. What a row does is behind its (?), not spelled out underneath.
-  // The coding agent row opens its own page, with how to connect.
-  let page = "main"; // or "agent"
-  const THEMES = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
-  function label(parent, text, help) {
-    const l = el("span", "snl-label", parent);
-    l.append(text);
-    if (!help) return l;
-    const h = el("span", "snl-help", l);
-    h.tabIndex = 0;
-    h.setAttribute("aria-label", help);
-    h.innerHTML = SET_ICON.help; // hardcoded SVG constants, not user input
-    el("span", "snl-help-tip", h).textContent = help;
-    h.addEventListener("click", (e) => e.stopPropagation()); // help only, even inside a row that's a button
-    return l;
-  }
-  function renderSettings() {
-    settingsPop.textContent = "";
-    mcpBox = null;
-    shownMcp = null;
-    (page === "agent" ? renderAgentPage : renderMainPage)();
-  }
-  function renderMainPage() {
-    const head = el("div", "snl-head", settingsPop);
-    el("span", "snl-title", head).textContent = "Settings";
-    // Theme: one button, cycling System → Light → Dark.
-    const theme = getSettings().theme;
-    const [, name] = THEMES.find(([k]) => k === theme) ?? THEMES[0];
-    const tb = el("button", "snl-icon-btn", head);
-    tb.title = `Theme: ${name} (Spotnote's panels, not your app)`;
-    tb.setAttribute("aria-label", tb.title);
-    tb.innerHTML = SET_ICON[theme] ?? SET_ICON.system; // hardcoded SVG constants
-    tb.addEventListener("click", () => {
-      const i = THEMES.findIndex(([k]) => k === theme);
-      setSetting("theme", THEMES[(i + 1) % THEMES.length][0]);
-      renderSettings();
-    });
-
-    // Coding agent → its page
-    const agent = el("button", "snl-srow snl-link", settingsPop);
-    label(agent, "Coding agent", "Lets your agent pick up notes and reply, without copy and paste (spotnote-mcp).");
-    mcpBox = el("span", "snl-value", agent);
-    renderMcp();
-    agent.addEventListener("click", () => {
-      page = "agent";
-      renderSettings();
-    });
-
-    el("div", "snl-rule", settingsPop);
-    const accent = el("div", "snl-srow", settingsPop); // swatches on the right, like the other rows' values
-    label(accent, "Accent color", "The outline, labels and pins on your page.");
-    choices(accent, "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, n) => {
-      b.style.setProperty("--c", ACCENTS[k].accent);
-      b.title = n;
-      b.setAttribute("aria-label", n);
-    });
-
-    el("div", "snl-rule", settingsPop);
-    const files = el("label", "snl-srow", settingsPop);
-    label(files, "Open files in", "Where a file opens when you click its name in a note.");
-    const select = el("select", "snl-select", files);
-    for (const [key, { name: n }] of Object.entries(EDITORS)) {
-      const o = el("option", "", select);
-      o.value = key;
-      o.textContent = n;
-    }
-    select.value = getSettings().editor;
-    select.addEventListener("change", () => setSetting("editor", select.value));
-
-    // Footer: which Spotnote this is, and where it lives.
-    const about = ctrl.about;
-    if (!about) return;
-    const foot = el("div", "snl-foot", settingsPop);
-    // The version links to the releases: what changed in it.
-    const title = el("span", "", foot);
-    title.append("Spotnote ");
-    const ver = el("a", "snl-ver", title);
-    ver.href = `${about.repo}/releases`;
-    ver.target = "_blank";
-    ver.rel = "noopener noreferrer";
-    ver.title = "Releases on GitHub";
-    ver.textContent = `v${about.version}`;
-    const gh = el("a", "snl-icon-btn", foot);
-    gh.href = about.repo;
-    gh.target = "_blank";
-    gh.rel = "noopener noreferrer";
-    gh.title = "Spotnote on GitHub";
-    gh.setAttribute("aria-label", gh.title);
-    gh.innerHTML = SET_ICON.github; // hardcoded SVG constants, not user input
-  }
-
-  function renderAgentPage() {
-    const head = el("div", "snl-head", settingsPop);
-    const back = el("button", "snl-icon-btn snl-back", head);
-    back.title = "Back";
-    back.setAttribute("aria-label", "Back");
-    back.innerHTML = SET_ICON.back; // hardcoded SVG constants
-    back.addEventListener("click", () => {
-      page = "main";
-      renderSettings();
-    });
-    el("span", "snl-title", head).textContent = "Coding agent";
-    const status = el("div", "snl-srow", settingsPop);
-    label(status, "Status");
-    mcpBox = el("span", "snl-value", status);
-    mcpHelp = el("div", "snl-agent", settingsPop);
-    renderMcp();
-  }
-
-  // Whether spotnote-mcp is running and has our notes (live, while Settings is
-  // open). Not connected, the agent page says what connecting gives you and how.
-  const MCP = {
-    on: ["Connected", "Your agent picks up notes as you write them, and its replies show up on the note."],
-    connecting: ["Connecting…", "Syncing your notes with your agent."],
-    off: ["Not connected", "Connect your coding agent to hand it notes without copy and paste."],
-  };
-  // Not connected: how to connect, in two steps (as in the MCP guide).
-  const MCP_STEPS = [
-    ["Add Spotnote to Claude Code, once:", "claude mcp add spotnote -- npx -y spotnote-mcp", "snl-cmd-shell"],
-    ["In a new Claude Code session, ask:", "Watch my Spotnote notes.", "snl-cmd-ask"],
-  ];
-  let mcpBox = null;
-  let mcpHelp = null;
-  let shownMcp = null;
-  function renderMcp() {
-    const status = ctrl.mcpStatus();
-    if (!mcpBox || status === shownMcp) return;
-    shownMcp = status;
-    mcpBox.textContent = "";
-    const line = el("span", `snl-mcp snl-mcp-${status}`, mcpBox);
-    el("span", "snl-dot", line);
-    line.append(MCP[status][0]);
-    if (page === "main") {
-      el("span", "snl-chev", mcpBox).innerHTML = SET_ICON.next; // hardcoded SVG constants
-      return;
-    }
-    mcpHelp.textContent = "";
-    el("p", "snl-para", mcpHelp).textContent = MCP[status][1];
-    if (status !== "off") return;
-    const steps = el("ol", "snl-steps", mcpHelp);
-    for (const [text, copyText, kind] of MCP_STEPS) {
-      const li = el("li", "", steps);
-      el("p", "snl-step-text", li).textContent = text;
-      const cmd = el("div", `snl-cmd ${kind}`, li);
-      el("code", "", cmd).textContent = copyText;
-      const copy = el("button", "", cmd);
-      copy.title = "Copy";
-      copy.setAttribute("aria-label", "Copy");
-      copy.innerHTML = ICONS.copy; // hardcoded SVG constants, not user input
-      copy.addEventListener("click", () => {
-        navigator.clipboard?.writeText(copyText).catch(() => {});
-        copy.innerHTML = ICONS.check;
-        setTimeout(() => (copy.innerHTML = ICONS.copy), 1200);
-      });
-    }
-  }
-
   // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──
   let drag = null;
   let justDragged = false;

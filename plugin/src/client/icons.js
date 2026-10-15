@@ -70,3 +70,38 @@ export const ICONS = {
   check:
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
 };
+
+// ── The launcher (launcher.js, notes-list.js, settings-menu.js) ──
+const svg = (attrs, body) => `<svg width="18" height="18" viewBox="0 0 24 24" ${attrs}>${body}</svg>`;
+// One line style for every launcher icon (Lucide's shapes): same stroke, same
+// caps, no filled glyphs next to outlined ones.
+const LINE = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
+const S16 = (body) =>
+  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+// The launcher's menus: theme (one icon per choice), help, chevrons.
+export const MENU_ICONS = {
+  system: S16('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'),
+  light: S16('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  dark: S16('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'),
+  help: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5"/><path d="M12 16.5h.01"/></svg>',
+  next: S16('<path d="M9 6l6 6-6 6"/>'),
+  back: S16('<path d="M15 6l-6 6 6 6"/>'),
+  // GitHub's mark (Simple Icons, CC0)
+  github:
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
+};
+export const LAUNCHER_ICONS = {
+  // The core, closed: the Spotnote mark (docs/public/brand/spotnote-mark-yellow.svg),
+  // in the accent colour (applyLook sets --sn-mark / --sn-mark-fold).
+  mark: '<svg class="snl-logo" width="20" height="20" viewBox="56 56 188 188" aria-hidden="true"><path fill="var(--sn-mark)" fill-rule="evenodd" d="M56 56h188v124l-64 64H56z M150 124a26 26 0 1 0-52 0a26 26 0 1 0 52 0z"/><path fill="var(--sn-mark-fold)" d="M244 180h-64v64z"/></svg>',
+  // Open, a "+" turned 135° reads as "×".
+  plus: svg('class="snl-plus" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"', '<path d="M12 5v14M5 12h14"/>'),
+  check: svg('class="snl-check" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"', '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  pause: svg(LINE, '<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>'),
+  play: svg(LINE, '<path d="M7 4.5v15l12-7.5z"/>'),
+  notes: svg(LINE, '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 8h8M8 12h5"/>'),
+  gear: svg(
+    LINE,
+    '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  ),
+};
