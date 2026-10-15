@@ -234,10 +234,55 @@ test("holding Alt picks without opening the launcher", async ({ page, app }) => 
   await expect(page.locator(".sn-panel")).toContainText(`${basename(app.file)}:`);
 });
 
-test("Settings shows the agent isn't connected", async ({ page }) => {
+// The launcher's Settings (package/src/client/settings-menu.js, settings.js).
+const openSettings = async (page) => {
   await openLauncher(page);
-  await page.locator(".snl-item").nth(2).click(); // Settings
-  const settings = page.locator(".snl-settings");
-  await expect(settings).toContainText("Coding agent");
-  await expect(settings).toContainText("Not connected");
+  await page.locator(".snl-item").nth(2).click();
+  return page.locator(".snl-settings");
+};
+const host = (page) => page.locator("spotnote-root");
+
+test("Settings: theme, accent and editor apply at once and are kept", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  const settings = await openSettings(page);
+  const theme = settings.locator(".snl-head .snl-icon-btn");
+  await expect(theme).toHaveAttribute("title", /^Theme: Light/);
+  await expect(host(page)).toHaveAttribute("data-theme", "light");
+  await theme.click(); // Light → Dark → System (here: dark) → Light
+  await expect(host(page)).toHaveAttribute("data-theme", "dark");
+  await theme.click();
+  await expect(theme).toHaveAttribute("title", /^Theme: System/);
+  await expect(host(page)).toHaveAttribute("data-theme", "dark");
+  await theme.click();
+  await expect(host(page)).toHaveAttribute("data-theme", "light");
+
+  const pink = settings.getByRole("radio", { name: "Pink" });
+  await pink.click();
+  await expect(pink).toHaveAttribute("aria-checked", "true");
+  await expect(settings.getByRole("radio", { name: "Yellow" })).toHaveAttribute("aria-checked", "false");
+  const accent = () => host(page).evaluate((h) => h.style.getPropertyValue("--sn-accent"));
+  expect(await accent()).toBe("#ff375f");
+  await settings.locator("select").selectOption("cursor");
+
+  await page.reload();
+  const again = await openSettings(page);
+  await expect(again.getByRole("radio", { name: "Pink" })).toHaveAttribute("aria-checked", "true");
+  await expect(again.locator("select")).toHaveValue("cursor");
+  expect(await accent()).toBe("#ff375f");
+});
+
+test("Settings: not connected, the agent page shows how to connect", async ({ page }) => {
+  const settings = await openSettings(page);
+  await expect(settings.locator(".snl-link")).toContainText("Not connected");
+  await expect(settings.locator(".snl-ver")).toHaveText(/^v\d+\.\d+\.\d+$/);
+  await expect(settings.locator(".snl-ver")).toHaveAttribute("href", /github\.com\/.+\/releases$/);
+
+  await settings.locator(".snl-link").click();
+  await expect(settings.locator(".snl-title")).toHaveText("Coding agent");
+  await expect(settings.locator(".snl-steps li")).toHaveCount(2);
+  await settings.locator(".snl-cmd-shell").getByRole("button", { name: "Copy" }).click();
+  expect(await clipboard(page)).toBe("claude mcp add spotnote -- npx -y spotnote-mcp");
+
+  await settings.getByRole("button", { name: "Back" }).click();
+  await expect(settings.locator(".snl-title")).toHaveText("Settings");
 });

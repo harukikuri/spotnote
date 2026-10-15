@@ -80,6 +80,29 @@ test("a note goes to the agent, and its question and its answer come back", asyn
   await expect(pin).toHaveClass(/sn-done/);
 });
 
+test("an editor picked in Settings opens the agent's file links through its URL", async ({ page, app }) => {
+  // Record the editor URLs the page opens, instead of handing them to the OS.
+  await page.addInitScript(() => {
+    window.opened = [];
+    const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.protocol === "cursor:") window.opened.push(this.href);
+      else click.call(this);
+    };
+  });
+  await page.reload();
+  await openLauncher(page);
+  await page.locator(".snl-item").nth(2).click(); // Settings
+  await page.locator(".snl-settings select").selectOption("cursor");
+  await page.keyboard.press("Escape"); // close Settings
+
+  await page.locator(".sn-pin").first().click(); // the note the agent answered above
+  await page.locator(".sn-panel .sn-msg-agent button.sn-file", { hasText: `${app.file}:5` }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.opened))
+    .toEqual([`cursor://file${path.join(repo, "examples/react", app.file)}:5`]);
+});
+
 test("a second agent session reaches the notes through the first", async ({ page, app }) => {
   // A second agent session relays to the first (the owner of the port).
   const second = new Client({ name: "codex", version: "1.0.0" });
