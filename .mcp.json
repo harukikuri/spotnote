@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "spotnote": {
+      "command": "node",
+      "args": ["mcp/src/cli.js"]
+    }
+  }
+}

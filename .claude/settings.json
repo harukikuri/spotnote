@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint)",
+      "Bash(pnpm format)",
+      "Bash(pnpm test)",
+      "Bash(pnpm coverage)",
+      "Bash(pnpm test:e2e:*)",
+      "Bash(pnpm coverage:e2e)",
+      "Bash(pnpm --filter spotnote-e2e exec playwright test:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(npm view:*)",
+      "mcp__spotnote"
+    ]
+  },
+  "enabledMcpjsonServers": ["spotnote"]
+}

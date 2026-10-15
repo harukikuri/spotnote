@@ -22,8 +22,8 @@ Thumbs.db
 .env
 *.pem
 
-# Local agent instructions — not versioned
-CLAUDE.md
+# Local agent instructions at the root — not versioned (.claude/CLAUDE.md is)
+/CLAUDE.md
 
 # Build artifacts
 *.tsbuildinfo
