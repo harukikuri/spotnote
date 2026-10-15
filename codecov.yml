@@ -1,0 +1,11 @@
+# Coverage from two runs, merged: the unit tests (flag "unit": the Node side)
+# and the browser tests (flag "e2e": the browser client, and spotnote-mcp as the
+# agent uses it). Its checks only report; they never fail a commit or PR.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true

@@ -13,7 +13,7 @@ export const coverage = () =>
   MCR({
     name: "Spotnote E2E coverage",
     outputDir: "./coverage", // the HTML report: coverage/index.html
-    reports: ["console-details", "v8"],
+    reports: ["console-details", "v8", "lcovonly"], // lcovonly: coverage/lcov.info, for Codecov
     // Vite serves the client from /@fs/…/package/src/client/, and its source maps
     // name each file by its basename. styles.js and icons.js are just strings.
     entryFilter: (entry) => /\/package\/src\/client\/(?!styles\.js|icons\.js)|\/mcp\/src\//.test(entry.url),
