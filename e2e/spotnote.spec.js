@@ -51,6 +51,71 @@ test("notes survive a reload and open from the notes list", async ({ page, app }
   await expect(page.locator(".sn-panel [data-spotnote-input]")).toHaveText("Kept across reloads");
 });
 
+// The launcher's Notes list (package/src/client/notes-list.js).
+const openNotes = async (page) => {
+  await page.locator(".snl-item").nth(1).click();
+  return page.locator(".snl-notes");
+};
+
+test("the notes list puts this page first, folds a section, and deletes ticked notes", async ({ page, app }) => {
+  await openLauncher(page);
+  await writeNote(page, page.locator(app.title).first(), "On the home page");
+  await page.evaluate(() => history.pushState({}, "", "/elsewhere")); // another page, same DOM
+  await writeNote(page, page.locator(app.repeated).first(), "On this page");
+
+  const notes = await openNotes(page);
+  await expect(notes.locator(".snl-head .snl-count")).toHaveText("(2)");
+  const groups = notes.locator(".snl-group button");
+  await expect(groups).toHaveText([/This page\s*\(1\)/, /^\/\s*\(1\)/]);
+  const rows = notes.locator("li:not(.snl-group)");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText("On this page");
+  await expect(rows.first().locator(".snl-num")).toHaveText("2"); // numbered as on its pin
+
+  await groups.first().click(); // fold "This page"
+  await expect(groups.first()).toHaveAttribute("aria-expanded", "false");
+  await expect(rows).toHaveCount(1);
+  await groups.first().click();
+  await expect(rows).toHaveCount(2);
+
+  // With nothing ticked, the button deletes all (asked first: cancel).
+  const del = notes.locator(".snl-del");
+  await expect(del).toHaveAttribute("title", "Delete all");
+  await del.click();
+  await expect(notes.locator(".sn-confirm")).toContainText("Delete all 2 notes?");
+  await notes.locator(".sn-confirm").getByRole("button", { name: "Cancel" }).click();
+  await expect(rows).toHaveCount(2);
+
+  // Ticked, it deletes those.
+  await rows.first().locator(".snl-pick").check();
+  await expect(del).toHaveAttribute("title", "Delete 1 note");
+  await expect(del).toHaveText("(1)");
+  await del.click();
+  await notes.locator(".sn-confirm").getByRole("button", { name: "Delete" }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("On the home page");
+});
+
+test("a note whose element is gone is marked, and can still be copied or deleted", async ({ page, app }) => {
+  await openLauncher(page);
+  await writeNote(page, page.locator(app.title).first(), "Its element goes away");
+  await page
+    .locator(app.title)
+    .first()
+    .evaluate((el) => el.remove());
+
+  const notes = await openNotes(page);
+  const row = notes.locator("li.snl-lost");
+  await expect(row.locator(".snl-lost-tag")).toHaveText("Not found");
+  await page.evaluate(() => navigator.clipboard.writeText(""));
+  await row.getByTitle("Copy prompt").click();
+  expect(await clipboard(page)).toContain("## Request\nIts element goes away");
+
+  await row.getByTitle("Delete note").click();
+  await expect(notes.locator(".snl-empty")).toBeVisible();
+  await expect(notes.locator(".snl-del")).toHaveCount(0); // nothing left to delete
+});
+
 test("deleting a note asks first", async ({ page, app }) => {
   await openLauncher(page);
   await writeNote(page, page.locator(app.title).first(), "Delete me");
