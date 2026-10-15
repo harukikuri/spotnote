@@ -1,7 +1,12 @@
 // Spotnote in a real browser: the launcher, picking, the note panel, pins, the
 // copied prompt and the launcher's menus — in each example app, with no agent
 // connected (agent.spec.js has one).
+import { readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { test, expect, basename, clickEdge, openLauncher, shiftClick, writeNote } from "./fixtures.js";
+
+const examples = path.resolve(fileURLToPath(import.meta.url), "../../examples");
 
 const clipboard = (page) => page.evaluate(() => navigator.clipboard.readText());
 
@@ -49,6 +54,40 @@ test("notes survive a reload and open from the notes list", async ({ page, app }
   await expect(notes).toContainText("Kept across reloads");
   await notes.getByText("Kept across reloads").click();
   await expect(page.locator(".sn-panel [data-spotnote-input]")).toHaveText("Kept across reloads");
+});
+
+test("a note edited from its pin keeps its pin and copies the new prompt", async ({ page, app }) => {
+  await openLauncher(page);
+  await writeNote(page, page.locator(app.title).first(), "Make the title bigger");
+
+  await page.locator(".sn-pin").click();
+  const input = page.locator(".sn-panel [data-spotnote-input]");
+  await expect(input).toHaveText("Make the title bigger");
+  await input.fill("Make the title smaller");
+  await page.keyboard.press("Enter"); // Save
+  await expect(page.locator(".sn-panel")).toHaveCount(0);
+  await expect(page.locator(".sn-pin")).toHaveText("1");
+  expect(await clipboard(page)).toContain("## Request\nMake the title smaller");
+
+  await page.reload();
+  await openLauncher(page);
+  await page.locator(".sn-pin").click();
+  await expect(input).toHaveText("Make the title smaller");
+});
+
+test("a note from another page opens there, from the notes list", async ({ page, app }) => {
+  await openLauncher(page);
+  await writeNote(page, page.locator(app.title).first(), "Written on the home page");
+  await page.goto("/elsewhere"); // the same app, on another path
+  // and without the element (some apps render the same page on every path)
+  await page.evaluate((sel) => document.querySelector(sel)?.remove(), app.title);
+
+  await openLauncher(page);
+  await page.locator(".snl-item").nth(1).click(); // Notes
+  await page.locator(".snl-notes").getByText("Written on the home page").click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator(".sn-panel [data-spotnote-input]")).toHaveText("Written on the home page");
+  await expect(page.locator(".snl")).toHaveAttribute("data-open", "true");
 });
 
 // The launcher's Notes list (package/src/client/notes-list.js).
@@ -352,4 +391,35 @@ test("Settings: not connected, the agent page shows how to connect", async ({ pa
 
   await settings.getByRole("button", { name: "Back" }).click();
   await expect(settings.locator(".snl-title")).toHaveText("Settings");
+});
+
+test("saving the file keeps the open panel on its element", async ({ page, app }) => {
+  const file = path.join(examples, app.name, app.file);
+  const source = readFileSync(file, "utf8");
+  const logs = [];
+  page.on("console", (m) => logs.push(m.text()));
+  await openLauncher(page);
+  await clickEdge(page.locator(app.title).first());
+  const input = page.locator(".sn-panel [data-spotnote-input]");
+  await input.fill("Not sent yet");
+
+  try {
+    // A change below everything, so no element moves (Vue skips one outside its blocks).
+    const edited = file.endsWith(".vue")
+      ? source.replace(/<\/template>(?![\s\S]*<\/template>)/, "<!-- edited -->\n</template>")
+      : `${source}\n`;
+    writeFileSync(file, edited);
+    await expect.poll(() => logs.some((l) => l.includes("selection re-bound after edit"))).toBe(true);
+  } finally {
+    writeFileSync(file, source);
+  }
+  await expect(input).toHaveText("Not sent yet");
+  // The selection box is still on the element (it may be a new node, after a remount).
+  const title = await page.locator(app.title).first().boundingBox();
+  const boxes = await page.evaluate(() =>
+    [...document.querySelector("spotnote-root").shadowRoot.children]
+      .filter((e) => e.style.border.startsWith("2px solid"))
+      .map((e) => e.getBoundingClientRect().toJSON()),
+  );
+  expect(boxes.some((b) => Math.abs(b.x - title.x) < 2 && Math.abs(b.y - title.y) < 2)).toBe(true);
 });
