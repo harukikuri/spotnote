@@ -67,7 +67,7 @@ test("a note edited from its pin keeps its pin and copies the new prompt", async
   await page.keyboard.press("Enter"); // Save
   await expect(page.locator(".sn-panel")).toHaveCount(0);
   await expect(page.locator(".sn-pin")).toHaveText("1");
-  expect(await clipboard(page)).toContain("## Request\nMake the title smaller");
+  await expect.poll(() => clipboard(page)).toContain("## Request\nMake the title smaller"); // written async
 
   await page.reload();
   await openLauncher(page);
@@ -398,6 +398,7 @@ test("saving the file keeps the open panel on its element", async ({ page, app }
   const source = readFileSync(file, "utf8");
   const logs = [];
   page.on("console", (m) => logs.push(m.text()));
+  const rebinds = () => logs.filter((l) => l.includes("selection re-bound after edit")).length;
   await openLauncher(page);
   await clickEdge(page.locator(app.title).first());
   const input = page.locator(".sn-panel [data-spotnote-input]");
@@ -409,17 +410,22 @@ test("saving the file keeps the open panel on its element", async ({ page, app }
       ? source.replace(/<\/template>(?![\s\S]*<\/template>)/, "<!-- edited -->\n</template>")
       : `${source}\n`;
     writeFileSync(file, edited);
-    await expect.poll(() => logs.some((l) => l.includes("selection re-bound after edit"))).toBe(true);
+    await expect.poll(() => rebinds()).toBe(1);
   } finally {
-    writeFileSync(file, source);
+    writeFileSync(file, source); // a second update: wait it out too, so nothing moves while we look
   }
+  await expect.poll(() => rebinds()).toBe(2);
   await expect(input).toHaveText("Not sent yet");
   // The selection box is still on the element (it may be a new node, after a remount).
-  const title = await page.locator(app.title).first().boundingBox();
-  const boxes = await page.evaluate(() =>
-    [...document.querySelector("spotnote-root").shadowRoot.children]
-      .filter((e) => e.style.border.startsWith("2px solid"))
-      .map((e) => e.getBoundingClientRect().toJSON()),
-  );
-  expect(boxes.some((b) => Math.abs(b.x - title.x) < 2 && Math.abs(b.y - title.y) < 2)).toBe(true);
+  const onTitle = (sel) =>
+    page.evaluate((sel) => {
+      const t = document.querySelector(sel)?.getBoundingClientRect();
+      return [...document.querySelector("spotnote-root").shadowRoot.children]
+        .filter((e) => e.style.border.startsWith("2px solid"))
+        .some((e) => {
+          const b = e.getBoundingClientRect();
+          return !!t && Math.abs(b.x - t.x) < 2 && Math.abs(b.y - t.y) < 2;
+        });
+    }, sel);
+  await expect.poll(() => onTitle(app.title)).toBe(true);
 });
