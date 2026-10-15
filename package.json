@@ -5,6 +5,7 @@
     "dev": "pnpm --filter spotnote-playground run dev",
     "build": "pnpm -r --if-present run build",
     "test": "pnpm -r --if-present run test",
+    "test:e2e": "pnpm --filter spotnote-e2e run test:e2e",
     "dev:svelte4": "pnpm --filter spotnote-playground-svelte4 run dev"
   }
 }

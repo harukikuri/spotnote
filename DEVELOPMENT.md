@@ -1,11 +1,12 @@
 # Development
 
-Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with four parts:
+Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with five parts:
 
 - `plugin/` — the plugin + browser picker (published as `spotnote`; ships raw source)
 - `mcp/` — the MCP server agents start (published as `spotnote-mcp`)
 - `playground/` — framework demo apps that consume the plugin
 - `docs/` — the documentation site (Fumadocs / Next.js)
+- `e2e/` — browser tests (Playwright) against the React playground
 
 ## Develop
 
@@ -18,6 +19,7 @@ pnpm --filter spotnote-playground dev:svelte  # Svelte 5 playground
 pnpm dev:svelte4                              # Svelte 4 playground (own package)
 pnpm --filter spotnote-playground build       # production build (picker excluded — apply:'serve')
 pnpm test                                     # plugin + mcp tests (node:test, no extra deps)
+pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
 ```
 
 Plugin layout (`plugin/`):

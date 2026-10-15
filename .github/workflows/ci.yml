@@ -1,5 +1,5 @@
 # Every push to main and every pull request: the tests, the docs site's
-# production build, and a build of each playground app.
+# production build, a build of each playground app, and the browser tests.
 name: CI
 
 on:
@@ -40,3 +40,14 @@ jobs:
             SPOTNOTE_FW=$fw pnpm --filter spotnote-playground build
           done
           pnpm --filter spotnote-playground-svelte4 exec vite build
+
+      - name: E2E tests
+        run: |
+          pnpm --filter spotnote-e2e exec playwright install --with-deps chromium
+          pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: e2e/test-results/

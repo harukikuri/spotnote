@@ -4,5 +4,6 @@ packages:
   - playground
   - playground/svelte4
   - docs
+  - e2e
 onlyBuiltDependencies:
   - esbuild
