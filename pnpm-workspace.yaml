@@ -7,3 +7,5 @@ packages:
   - e2e
 onlyBuiltDependencies:
   - esbuild
+ignoredBuiltDependencies:
+  - sharp # its prebuilt binaries come from @img/*; the install script is only a fallback
