@@ -6,23 +6,37 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { NODE_COVERAGE } from "./coverage.js";
 import { test, expect, openLauncher, writeNote } from "./fixtures.js";
 
 const repo = path.resolve(fileURLToPath(import.meta.url), "../..");
 test.describe.configure({ mode: "serial" }); // one agent, one store, for the whole file
 
-let agent, home;
-test.beforeAll(async ({ app }) => {
-  home = mkdtempSync(path.join(tmpdir(), "spotnote-e2e-"));
-  agent = new Client({ name: "claude-code", version: "1.0.0" });
-  await agent.connect(
+let agent, home, mcpPort;
+let answered; // the id of the note the agent answers below
+// An agent session: an MCP client that names itself `name`, with its own copy of
+// spotnote-mcp. The first owns the port; later ones relay to it.
+async function startAgent(name) {
+  const client = new Client({ name, version: "1.0.0" });
+  await client.connect(
     new StdioClientTransport({
       command: process.execPath,
       args: [path.join(repo, "mcp/src/cli.js")],
       cwd: repo, // the agent works at the repository root: the example app is inside
-      env: { ...process.env, SPOTNOTE_PORT: String(app.mcpPort), SPOTNOTE_HOME: home },
+      env: {
+        ...process.env,
+        SPOTNOTE_PORT: String(mcpPort),
+        SPOTNOTE_HOME: home,
+        ...(process.env.COVERAGE && { NODE_V8_COVERAGE: NODE_COVERAGE }),
+      },
     }),
   );
+  return client;
+}
+test.beforeAll(async ({ app }) => {
+  home = mkdtempSync(path.join(tmpdir(), "spotnote-e2e-"));
+  mcpPort = app.mcpPort;
+  agent = await startAgent("claude-code");
 });
 test.afterAll(async () => {
   await agent?.close();
@@ -53,7 +67,7 @@ test("a note goes to the agent, and its question and its answer come back", asyn
   const got = await tool("watch_notes", { timeout_seconds: 30 });
   expect(got).toContain("## Request\nMake the title bigger");
   expect(got).toContain(`- file: ${app.file}`);
-  const id = got.match(/\(id: ([^)]+)\)/)[1];
+  const id = (answered = got.match(/\(id: ([^)]+)\)/)[1]);
   await expect(pin).toHaveClass(/sn-working/);
 
   // It asks, in Markdown with file links; the pin shows a question.
@@ -103,17 +117,34 @@ test("an editor picked in Settings opens the agent's file links through its URL"
     .toEqual([`cursor://file${path.join(repo, "examples/react", app.file)}:5`]);
 });
 
+test("file links: a bare name is found among the page's stamps; a link that opens clears its warning", async ({
+  page,
+  app,
+}) => {
+  // The dev server's answers, made up: first a failure, then "opened in VS Code".
+  const asked = [];
+  await page.route("**/__spotnote/open?*", (route) => {
+    asked.push(new URL(route.request().url()).searchParams.toString());
+    return asked.length === 1
+      ? route.fulfill({ status: 500, body: "{}" })
+      : route.fulfill({ json: { file: "/app/pages/Home.jsx", editor: "code" } });
+  });
+  await tool("reply_note", { id: answered, message: `It's in \`${path.basename(app.file)}:5\`.` });
+  await openLauncher(page);
+  await page.locator(".sn-pin").first().click();
+  const link = page.locator(".sn-panel .sn-msg-agent").last().locator("button.sn-file");
+
+  await link.click();
+  const hint = page.locator(".sn-panel .sn-msg-agent").last().locator(".sn-file-hint");
+  await expect(hint).toHaveAttribute("aria-label", "Couldn't open this file.");
+  await link.click();
+  await expect(hint).toHaveCount(0);
+  await expect(link).toHaveAttribute("title", "Open in your editor");
+  expect(asked).toEqual([`path=${encodeURIComponent(app.file)}&line=5`, `path=${encodeURIComponent(app.file)}&line=5`]);
+});
+
 test("a second agent session reaches the notes through the first", async ({ page, app }) => {
-  // A second agent session relays to the first (the owner of the port).
-  const second = new Client({ name: "codex", version: "1.0.0" });
-  await second.connect(
-    new StdioClientTransport({
-      command: process.execPath,
-      args: [path.join(repo, "mcp/src/cli.js")],
-      cwd: repo,
-      env: { ...process.env, SPOTNOTE_PORT: String(app.mcpPort), SPOTNOTE_HOME: home },
-    }),
-  );
+  const second = await startAgent("codex"); // relays to the first, which owns the port
   await openLauncher(page);
   await writeNote(page, page.locator(app.repeated).first(), "Shorter title");
   const listed = (await second.callTool({ name: "list_notes", arguments: {} })).content[0].text;
