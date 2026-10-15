@@ -24,7 +24,11 @@ Plugin layout (`plugin/`):
 - `src/index.js` — the Vite plugin `spotnote()`: stamping, client injection, MCP status
 - `src/plugin.cjs` — the Babel visitor that stamps `data-spotnote` in JSX
 - `src/client/` — the browser picker, auto-injected in dev:
-  - `inspector.js` — picking, note panel, pins, prompt, HMR re-bind
+  - `inspector.js` — picking, note panel, pins, HMR re-bind
+  - `prompt.js` — source locations and the prompt built from them
+  - `panel-frame.js` — dragging, resizing and shaking the note panel
+  - `conversation.js` — the agent's messages in the panel
+  - `open-file.js` — file links → your editor
   - `launcher.js` — corner button and its menu (pause · notes · settings)
   - `ui.js` — buttons, icons, accents and theme tokens
   - `layers.js` — stacking of the panel, notes list and Settings; what `Esc` closes

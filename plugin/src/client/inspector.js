@@ -4,13 +4,17 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook, agentMark } from "./ui.js";
+import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
 import { mountLauncher } from "./launcher.js";
-import { getSettings, onSettings, EDITORS } from "./settings.js";
+import { getSettings, onSettings } from "./settings.js";
 import { connectRemote } from "./remote.js";
 import { renderMarkdown } from "./markdown.js";
 import { createLayer, closeTopLayer } from "./layers.js";
 import { confirmOver } from "./confirm.js";
+import { parseLoc, occInfo, refKey, resolveRef, buildPrompt, savedPrompt } from "./prompt.js";
+import { agentName, agentLabel, thinkingMsg } from "./conversation.js";
+import { openFile, hideTip } from "./open-file.js";
+import { enablePanelDrag, applyPanelSize, enablePanelResize, nudgePanel } from "./panel-frame.js";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -316,7 +320,7 @@ function onClick(e) {
     e.stopPropagation();
     if (el === panelTarget) return;
     // Unsent text survives the first click away: nudge instead.
-    if (panelDraft?.()) return nudgePanel();
+    if (panelDraft?.()) return nudgePanel(panel);
     if (!el) return closePanel();
   }
   if (!el) return;
@@ -350,104 +354,6 @@ function fileTag(file, line, color) {
   name.textContent = `${file.split("/").pop()}:${line}`;
   wrap.append(icon, name);
   return wrap;
-}
-
-// "src/App.jsx:12:4" -> {file, line, column}  (split from the RIGHT: path may contain ':')
-function parseLoc(s) {
-  const i = s.lastIndexOf(":");
-  const j = s.lastIndexOf(":", i - 1);
-  return { file: s.slice(0, j), line: Number(s.slice(j + 1, i)), column: Number(s.slice(i + 1)) };
-}
-
-// Identity for a picked element: data-spotnote + occurrence index among same-loc
-// siblings, so identical .map() items (e.g. <li>) can be told apart.
-function occInfo(el) {
-  const loc = el.getAttribute("data-spotnote");
-  const same = [...document.querySelectorAll(`[data-spotnote="${loc}"]`)];
-  const index = same.indexOf(el);
-  return { loc, index: index < 0 ? 0 : index, total: same.length };
-}
-function refKey(loc, index) {
-  return `${loc}@${index}`;
-}
-function resolveRef(loc, index) {
-  return document.querySelectorAll(`[data-spotnote="${loc}"]`)[index] || null;
-}
-
-// A ready-to-paste prompt: request first, then precise target + context, in a
-// labeled/structured layout that's easy for a coding agent to act on.
-// Walk up the DOM from `el`, collecting the distinct owning components off the
-// data-spotnote stamps (outer → inner) — e.g. App > Products > ProductCard.
-// Uses the stamped component name when present, else the file's basename. Only
-// reads stamps already in the DOM, so it stays framework-agnostic.
-function sourcePath(el) {
-  const up = []; // inner → outer
-  for (let node = el; node; node = node.parentElement) {
-    if (node.hasAttribute("data-spotnote-ui")) continue; // skip our own overlay
-    const loc = node.getAttribute("data-spotnote");
-    if (!loc) continue;
-    const label =
-      node.getAttribute("data-spotnote-name") ||
-      parseLoc(loc).file.split("/").pop().replace(/\.\w+$/, "");
-    if (up[up.length - 1] !== label) up.push(label); // dedupe consecutive same component
-  }
-  return up.reverse(); // outer → inner
-}
-
-function buildPrompt(el, note) {
-  const l = parseLoc(el.getAttribute("data-spotnote"));
-  const occ = occInfo(el);
-  const tag = el.tagName.toLowerCase();
-  const cls =
-    typeof el.className === "string" && el.className.trim() ? ` class="${el.className.trim()}"` : "";
-  const id = el.id ? ` id="${el.id}"` : "";
-  const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60);
-  const cs = getComputedStyle(el);
-  const round = (v) => v.replace(/(\d+\.\d{2})\d+/g, "$1"); // trim fractional px
-  const styles = [
-    ["padding", "padding"],
-    ["margin", "margin"],
-    ["color", "color"],
-    ["background", "background-color"],
-    ["font-size", "font-size"],
-    ["font-weight", "font-weight"],
-    ["border-radius", "border-radius"],
-  ]
-    .map(([label, prop]) => `  ${label}: ${round(cs.getPropertyValue(prop))}`)
-    .join("\n");
-
-  // If the actual click landed on a deeper element with no stamp, flag it —
-  // it's likely from a dependency or injected HTML, and `el` is the nearest
-  // stamped ancestor (not the exact clicked node).
-  const raw = selectedRawTarget;
-  const rawUnstamped = raw && raw !== el && el.contains(raw);
-
-  const path = sourcePath(el); // outer → inner
-
-  return [
-    `## Request`,
-    note,
-    "",
-    `## Target`,
-    `- file: ${l.file}`,
-    `- line: ${l.line}, column: ${l.column}`,
-    `- element: <${tag}${id}${cls}>`,
-    text ? `- text: "${text}"` : null,
-    occ.total > 1
-      ? `- instance: ${occ.index + 1} of ${occ.total} rendered from this line (by DOM order) — target the one matching the text above`
-      : null,
-    rawUnstamped
-      ? `- note: the clicked <${raw.tagName.toLowerCase()}> has no source stamp (likely from a dependency or injected HTML); this is the nearest stamped ancestor`
-      : null,
-    path.length > 1 ? "" : null,
-    path.length > 1 ? `## Source path (outer → inner)` : null,
-    path.length > 1 ? path.join(" > ") : null,
-    "",
-    `## Current computed styles`,
-    styles,
-  ]
-    .filter((x) => x !== null)
-    .join("\n");
 }
 
 // ── Keep the selection across HMR ─────────────────────────────────────
@@ -605,45 +511,6 @@ function panelLabel(el) {
   return wrap;
 }
 
-// What to call the agent on this note: the last one that wrote on it.
-const agentName = (pin) => agentMark(pin?.thread?.findLast((m) => m.from === "agent")?.client)?.name ?? "The agent";
-
-// "✳ Claude Code" over an agent's message: its mark (when we have one) and its
-// name; just "Agent" when it didn't say which it is.
-function agentLabel(client) {
-  const who = document.createElement("span");
-  who.className = "sn-who";
-  const mark = agentMark(client);
-  if (mark?.svg) {
-    const i = document.createElement("span");
-    i.className = "sn-agent-mark";
-    i.innerHTML = mark.svg; // hardcoded SVG constants, not user input
-    who.append(i);
-  }
-  who.append(mark?.name ?? "Agent");
-  return who;
-}
-
-// The agent's message while it works: "Thinking…", "Reading the code…", … in
-// turn, with moving dots (still under reduced motion: just "Thinking").
-const THINKING = ["Thinking", "Reading the code", "Looking around", "Working on it", "Weighing it up", "Almost there"];
-function thinkingMsg(client) {
-  const msg = document.createElement("div");
-  msg.className = "sn-msg sn-msg-agent sn-thinking";
-  const text = document.createElement("span");
-  text.className = "sn-msg-body sn-thinking-text";
-  text.textContent = THINKING[0];
-  msg.append(agentLabel(client), text);
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    let i = 0;
-    const t = setInterval(() => {
-      if (!text.isConnected) return clearInterval(t);
-      text.textContent = THINKING[(i = (i + 1) % THINKING.length)];
-    }, 2400);
-  }
-  return msg;
-}
-
 // What a note's panel is for:
 //   "edit"     write or change the note (also a new one, with no pin yet)
 //   "working"  an agent has it: show the conversation, no input until it answers
@@ -652,79 +519,6 @@ function noteMode(pin) {
   if (!pin) return "edit";
   if (pin.working) return "working";
   return pin.thread?.length > 0 || pin.done || pin.dismissed ? "talking" : "edit";
-}
-
-// A file the agent mentioned → open it in your editor: the one picked in
-// Settings (through its URL), or with "Auto" the one running (the dev server
-// launches it). A bare name ("router.jsx") is looked up among the page's stamps
-// first; the dev server then finds it on disk (see /__spotnote/open).
-async function openFile({ path, line, column }, button) {
-  if (!path.includes("/")) {
-    const known = new Set([...document.querySelectorAll("[data-spotnote]")].map((e) => parseLoc(e.getAttribute("data-spotnote")).file));
-    const hits = [...known].filter((f) => f.split("/").pop() === path);
-    if (hits.length === 1) path = hits[0];
-  }
-  const editor = EDITORS[getSettings().editor] ?? EDITORS.auto;
-  const q = new URLSearchParams({ path, ...(line && { line }), ...(column && { column }), ...(editor.scheme && { resolve: "1" }) });
-  const res = await fetch(`/__spotnote/open?${q}`).catch(() => null);
-  const body = res && (await res.json().catch(() => null));
-  if (res?.status === 404) return fileProblem(button, "Couldn't find this file in your project", true);
-  if (res?.status === 409) return fileProblem(button, "No editor is running. Pick yours in Settings → Open files in.");
-  if (!res?.ok || !body?.file) return fileProblem(button, "Couldn't open this file.");
-  clearFileProblem(button); // it worked this time: drop what an earlier try said
-  // An editor picked in Settings, or the running one whose command-line tool
-  // isn't installed (the dev server says which): open it through its URL.
-  const scheme = editor.scheme ?? body.scheme;
-  if (scheme) {
-    const p = body.file.replace(/\\/g, "/");
-    const a = document.createElement("a");
-    a.href = `${scheme}://file${p.startsWith("/") ? "" : "/"}${p}${line ? `:${line}` : ""}${line && column ? `:${column}` : ""}`;
-    a.click();
-  }
-}
-function clearFileProblem(button) {
-  button.classList.remove("sn-file-missing");
-  if (button.dataset.title != null) button.title = button.dataset.title;
-  if (button.nextSibling?.className === "sn-file-hint") button.nextSibling.remove();
-  hideTip();
-}
-// Say why a file link didn't open: a warning icon right after it, with the
-// reason on hover (or focus).
-function fileProblem(button, text, missing = false) {
-  if (missing) button.classList.add("sn-file-missing");
-  button.dataset.title ??= button.title; // to put back once it opens
-  button.title = text;
-  let hint = button.nextSibling;
-  if (hint?.className !== "sn-file-hint") {
-    hint = document.createElement("span");
-    hint.className = "sn-file-hint";
-    hint.tabIndex = 0;
-    hint.setAttribute("role", "img");
-    hint.innerHTML = ICONS.warning; // hardcoded SVG constants, not user input
-    const show = () => showTip(hint, hint.getAttribute("aria-label"));
-    hint.addEventListener("mouseenter", show);
-    hint.addEventListener("focus", show);
-    hint.addEventListener("mouseleave", hideTip);
-    hint.addEventListener("blur", hideTip);
-    button.after(hint);
-  }
-  hint.setAttribute("aria-label", text);
-}
-
-// One tooltip, fixed on top of everything: the panel and the conversation clip
-// their contents, so it can't live inside them.
-let tip = null;
-function showTip(anchor, text) {
-  tip ??= Object.assign(document.createElement("div"), { className: "sn-tip" });
-  tip.textContent = text;
-  uiRoot().append(tip);
-  const a = anchor.getBoundingClientRect();
-  const w = tip.offsetWidth;
-  tip.style.left = `${Math.max(8, Math.min(a.left + a.width / 2 - w / 2, innerWidth - w - 8))}px`;
-  tip.style.top = `${a.bottom + 6}px`;
-}
-function hideTip() {
-  tip?.remove();
 }
 
 // Is the coding agent connected (spotnote-mcp has our notes)?
@@ -787,7 +581,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       onClick: () => {
         const note = talking ? pins.get(key).note : (input.textContent || "").trim();
         if (!note) return;
-        navigator.clipboard?.writeText(buildPrompt(target, note)).catch(() => {});
+        navigator.clipboard?.writeText(buildPrompt(target, note, selectedRawTarget)).catch(() => {});
         copyBtn.innerHTML = ICONS.check; // green tick feedback, then revert
         clearTimeout(copyBtn._t);
         copyBtn._t = setTimeout(() => {
@@ -897,7 +691,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       panelRefresh();
       return;
     }
-    const prompt = buildPrompt(target, note);
+    const prompt = buildPrompt(target, note, selectedRawTarget);
     // With the agent connected, it gets the note directly: leave the clipboard be.
     if (!agentConnected()) {
       navigator.clipboard?.writeText(prompt).catch(() => {});
@@ -962,8 +756,8 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
   applyPanelSize(panel);
   positionPanel(target);
-  enablePanelDrag(panel);
-  enablePanelResize(panel);
+  enablePanelDrag(panel, () => (panelDragged = true));
+  enablePanelResize(panel, () => (panelDragged = true));
   refreshPointer();
   setTimeout(() => {
     if (mode === "working") return panel?.focus();
@@ -980,107 +774,6 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     }
   }, 50);
   setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
-}
-
-// Drag the panel from anywhere on it — except the note input (typing / caret /
-// text selection) and buttons (their own clicks). Once moved, it stays put
-// instead of snapping back to the target on scroll.
-// A drag that ends off the panel still fires a click on the page, which would
-// close the panel or pick an element. Eat that one click (it fires right after
-// mouseup, before any timer).
-function swallowNextClick() {
-  const eat = (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  };
-  window.addEventListener("click", eat, { capture: true, once: true });
-  setTimeout(() => window.removeEventListener("click", eat, true), 0);
-}
-
-function enablePanelDrag(panelEl) {
-  panelEl.addEventListener("mousedown", (e) => {
-    if (
-      !(e.target instanceof Element) ||
-      e.target.closest("[data-spotnote-input]") ||
-      e.target.closest("button")
-    )
-      return;
-    e.preventDefault(); // no text selection while dragging
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const r = panelEl.getBoundingClientRect();
-    const ox = r.left;
-    const oy = r.top;
-    panelDragged = true;
-    const onMove = (ev) => {
-      const left = Math.max(8, Math.min(ox + (ev.clientX - startX), window.innerWidth - panelEl.offsetWidth - 8));
-      const top = Math.max(8, Math.min(oy + (ev.clientY - startY), window.innerHeight - panelEl.offsetHeight - 8));
-      panelEl.style.left = left + "px";
-      panelEl.style.top = top + "px";
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove, true);
-      document.removeEventListener("mouseup", onUp, true);
-      swallowNextClick();
-    };
-    document.addEventListener("mousemove", onMove, true);
-    document.addEventListener("mouseup", onUp, true);
-  });
-}
-
-// ── Panel size: drag the bottom-right grip; every note's panel keeps it ──
-const SIZE_KEY = "data-spotnote-panel-size";
-const MIN_W = 260;
-const MIN_H = 140;
-function savedPanelSize() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SIZE_KEY) || "null");
-    return s && s.w > 0 && s.h > 0 ? s : null;
-  } catch {
-    return null;
-  }
-}
-function applyPanelSize(panelEl) {
-  const s = savedPanelSize();
-  if (!s) return;
-  panelEl.classList.add("sn-sized");
-  panelEl.style.width = Math.max(MIN_W, Math.min(s.w, innerWidth - 16)) + "px";
-  panelEl.style.height = Math.max(MIN_H, Math.min(s.h, innerHeight - 16)) + "px";
-}
-function enablePanelResize(panelEl) {
-  const grip = document.createElement("div");
-  grip.className = "sn-resize";
-  // hardcoded SVG: two diagonal strokes
-  grip.innerHTML =
-    '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M13 7l-6 6M13 11l-2 2"/></svg>';
-  panelEl.append(grip);
-  grip.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-    e.stopPropagation(); // not a panel drag
-    const r = panelEl.getBoundingClientRect();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    panelDragged = true; // stay where it is, don't re-anchor to the target
-    panelEl.style.left = r.left + "px";
-    panelEl.style.top = r.top + "px";
-    panelEl.classList.add("sn-sized");
-    const onMove = (ev) => {
-      panelEl.style.width = Math.max(MIN_W, Math.min(r.width + ev.clientX - startX, innerWidth - r.left - 8)) + "px";
-      panelEl.style.height = Math.max(MIN_H, Math.min(r.height + ev.clientY - startY, innerHeight - r.top - 8)) + "px";
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove, true);
-      document.removeEventListener("mouseup", onUp, true);
-      swallowNextClick();
-      try {
-        localStorage.setItem(SIZE_KEY, JSON.stringify({ w: panelEl.offsetWidth, h: panelEl.offsetHeight }));
-      } catch {
-        /* ignore */
-      }
-    };
-    document.addEventListener("mousemove", onMove, true);
-    document.addEventListener("mouseup", onUp, true);
-  });
 }
 
 function positionPanel(target) {
@@ -1107,18 +800,6 @@ function onDocDown(e) {
   if (!panel || overOwnUI(e)) return;
   e.preventDefault();
   e.stopPropagation();
-}
-
-// "You have an unsent note": a short shake (a border flash under reduced motion).
-function nudgePanel() {
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const cs = getComputedStyle(panel); // keyframes need resolved colours, not var()
-  panel.animate(
-    still
-      ? [{ borderColor: cs.getPropertyValue("--sn-accent") }, { borderColor: cs.getPropertyValue("--sn-border") }]
-      : [0, -6, 6, -4, 4, 0].map((x) => ({ transform: `translateX(${x}px)` })),
-    { duration: still ? 600 : 320, easing: "ease-out" },
-  );
 }
 
 function closePanel({ instant = false } = {}) {
@@ -1317,21 +998,12 @@ function upsertPin(occ, note) {
   // Keep the last full prompt, so the note can still be copied after an edit
   // moves its element away (see savedPrompt).
   const el = resolveRef(occ.loc, occ.index);
-  if (el) pin.prompt = buildPrompt(el, note);
+  if (el) pin.prompt = buildPrompt(el, note, selectedRawTarget);
   pin.updated = Date.now();
   savePins();
   remote?.send({ op: "upsert", note: wire(key, pin) });
   repositionPins();
   notify();
-}
-
-// The prompt for a note whose element can't be found: the one saved when it was
-// written, flagged as possibly stale (older notes have none — rebuild the basics).
-function savedPrompt(pin) {
-  const stale = "- note: this location is from when the note was written; the code has changed since, so look near it";
-  if (pin.prompt) return pin.prompt.replace("## Target\n", `## Target\n${stale}\n`);
-  const l = parseLoc(pin.loc);
-  return ["## Request", pin.note, "", "## Target", stale, `- file: ${l.file}`, `- line: ${l.line}, column: ${l.column}`].join("\n");
 }
 
 function deletePin(key) {
