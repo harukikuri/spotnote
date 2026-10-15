@@ -93,6 +93,8 @@ pnpm --filter @spotnote/docs dev              # http://localhost:3000
 
 The `Release` workflow (`.github/workflows/release.yml`) then runs the tests,
 checks the tag matches both versions, publishes `spotnote` and `spotnote-mcp`
-to npm (with provenance), and creates the GitHub release. It publishes through
+to npm (with provenance), and creates the GitHub release, with notes made from
+the `feat:`, `fix:` and `perf:` commits since the last tag (changelogithub). So
+write those commit messages for users. It publishes through
 npm's trusted publishing: each package's Settings → Trusted Publisher on
 npmjs.com names `harukikuri/spotnote` and `release.yml`, so there's no token.
