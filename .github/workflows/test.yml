@@ -1,5 +1,5 @@
 # Every push to main and every pull request: the unit tests, and the browser
-# tests against each playground app.
+# tests against each example app.
 name: Test
 
 on:

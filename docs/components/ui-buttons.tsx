@@ -1,6 +1,6 @@
 // Spotnote's buttons, sized to sit inline in a sentence or a table cell, so the
 // docs show what you'll actually click. Icons and colours mirror the client
-// (plugin/src/client/ui.js ICONS and THEMES, launcher.js ICON), in the theme
+// (package/src/client/ui.js ICONS and THEMES, launcher.js ICON), in the theme
 // that matches the docs.
 import type { ReactNode } from 'react';
 

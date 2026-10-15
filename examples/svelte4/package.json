@@ -1,5 +1,5 @@
 {
-  "name": "spotnote-playground-svelte4",
+  "name": "spotnote-examples-svelte4",
   "private": true,
   "type": "module",
   "description": "Svelte 4 demo app for the local spotnote plugin (Svelte 4 has its own parser AST).",

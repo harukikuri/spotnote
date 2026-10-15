@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import spotnote from "spotnote";
 
-// Pick the playground framework with SPOTNOTE_FW (react | solid | vue | svelte).
+// Pick the example framework with SPOTNOTE_FW (react | solid | vue | svelte).
 const FW = process.env.SPOTNOTE_FW || "react";
 
 async function frameworkPlugin() {
@@ -12,11 +12,11 @@ async function frameworkPlugin() {
 }
 
 export default defineConfig(async () => ({
-  // Each framework has its own app under playground/<fw>.
+  // Each framework has its own app under examples/<fw>.
   root: FW,
   server: {
     // spotnote is a symlinked workspace dep; allow the repo root so Vite can
-    // serve the injected picker client from plugin/src.
+    // serve the injected picker client from package/src.
     fs: { allow: ["../.."] },
   },
   // spotnote is apply:'serve' + self-injecting, so prod builds stay untouched.

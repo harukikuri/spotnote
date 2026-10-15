@@ -1,6 +1,6 @@
 // A note's pin, sized to sit inline in a sentence or a table cell. Mirrors the
 // client's `.sn-pin` with the default (yellow) accent, in the theme that matches
-// the docs (plugin/src/client/ui.js: .sn-pin rules, STATE_ICONS, THEMES).
+// the docs (package/src/client/ui.js: .sn-pin rules, STATE_ICONS, THEMES).
 type PinState = 'number' | 'working' | 'asked' | 'done' | 'dismissed';
 
 const STROKE = {

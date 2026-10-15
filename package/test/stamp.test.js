@@ -1,12 +1,12 @@
 // Stamping through the plugin's own transform hook, as Vite calls it. Vue and
-// Svelte use the compilers installed in the playground, as an app's would be.
+// Svelte use the compilers installed in examples/, as an app's would be.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import spotnote from "../src/index.js";
 
-const root = path.resolve(fileURLToPath(import.meta.url), "../../../playground");
+const root = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
 
 async function stamp(rel, code) {
   const plugin = spotnote();

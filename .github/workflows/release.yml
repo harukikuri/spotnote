@@ -30,7 +30,7 @@ jobs:
       - name: Tag matches both package versions
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          for p in plugin mcp; do
+          for p in package mcp; do
             v=$(node -p "require('./$p/package.json').version")
             [ "$v" = "$tag" ] || { echo "::error::$p/package.json is $v, tag is v$tag"; exit 1; }
           done
@@ -40,7 +40,7 @@ jobs:
       # skipped, so a re-run after a partial failure finishes the rest.
       - name: Publish to npm
         run: |
-          for p in plugin mcp; do
+          for p in package mcp; do
             name=$(node -p "require('./$p/package.json').name")
             if npm view "$name@${GITHUB_REF_NAME#v}" version >/dev/null 2>&1; then
               echo "$name@${GITHUB_REF_NAME#v} is already published"

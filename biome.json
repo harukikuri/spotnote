@@ -54,7 +54,7 @@
       }
     },
     {
-      "includes": ["playground/**"],
+      "includes": ["examples/**"],
       "linter": {
         "rules": {
           "a11y": {
@@ -67,7 +67,7 @@
       }
     },
     {
-      "includes": ["playground/solid/**"],
+      "includes": ["examples/solid/**"],
       "linter": {
         "rules": {
           "correctness": {

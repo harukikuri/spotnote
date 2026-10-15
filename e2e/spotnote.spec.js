@@ -1,5 +1,5 @@
 // Spotnote in a real browser: the launcher, picking, the note panel, pins, the
-// copied prompt and the launcher's menus — in each playground app. Spotnote's
+// copied prompt and the launcher's menus — in each example app. Spotnote's
 // UI lives in an open shadow root, which Playwright's CSS locators reach into.
 import { test as base, expect } from "@playwright/test";
 

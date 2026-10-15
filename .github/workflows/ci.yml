@@ -1,5 +1,5 @@
 # Every push to main and every pull request: format and lint (Biome), the docs
-# site's production build and a build of each playground app. The tests are in
+# site's production build and a build of each example app. The tests are in
 # test.yml.
 name: CI
 
@@ -48,9 +48,9 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
-      - name: Playground builds
+      - name: Example builds
         run: |
           for fw in react solid vue svelte; do
-            SPOTNOTE_FW=$fw pnpm --filter spotnote-playground build
+            SPOTNOTE_FW=$fw pnpm --filter spotnote-examples build
           done
-          pnpm --filter spotnote-playground-svelte4 exec vite build
+          pnpm --filter spotnote-examples-svelte4 exec vite build

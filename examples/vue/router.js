@@ -1,5 +1,5 @@
 // Minimal dependency-free router: History API + a custom navigate event,
-// exposed as a shared reactive `route` ref (mirrors the React playground).
+// exposed as a shared reactive `route` ref (mirrors the React example).
 import { ref } from "vue";
 
 function current() {

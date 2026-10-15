@@ -2,32 +2,32 @@
 
 Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with five parts:
 
-- `plugin/` — the plugin + browser picker (published as `spotnote`; ships raw source)
+- `package/` — the plugin + browser picker (published as `spotnote`; ships raw source)
 - `mcp/` — the MCP server agents start (published as `spotnote-mcp`)
-- `playground/` — framework demo apps that consume the plugin
+- `examples/` — framework demo apps that consume the plugin
 - `docs/` — the documentation site (Fumadocs / Next.js)
-- `e2e/` — browser tests (Playwright) against every playground app
+- `e2e/` — browser tests (Playwright) against every example app
 
 ## Develop
 
 ```bash
 pnpm install                                  # from the repo root — links the workspace
-pnpm dev                                      # React playground (multi-page demo) + picker
-pnpm --filter spotnote-playground dev:solid   # Solid playground
-pnpm --filter spotnote-playground dev:vue     # Vue playground
-pnpm --filter spotnote-playground dev:svelte  # Svelte 5 playground
-pnpm dev:svelte4                              # Svelte 4 playground (own package)
-pnpm --filter spotnote-playground build       # production build (picker excluded — apply:'serve')
-pnpm test                                     # plugin + mcp tests (node:test, no extra deps)
+pnpm dev                                      # React example (multi-page demo) + picker
+pnpm --filter spotnote-examples dev:solid     # Solid example
+pnpm --filter spotnote-examples dev:vue       # Vue example
+pnpm --filter spotnote-examples dev:svelte    # Svelte 5 example
+pnpm dev:svelte4                              # Svelte 4 example (own package)
+pnpm --filter spotnote-examples build         # production build (picker excluded — apply:'serve')
+pnpm test                                     # package + mcp tests (node:test, no extra deps)
 pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
 pnpm lint                                     # format + lint check (Biome, config in biome.json)
 pnpm format                                   # apply Biome's formatting and safe fixes
 ```
 
 CI runs on every push to main and every PR: `test.yml` (unit + E2E) and
-`ci.yml` (lint, docs build, playground builds).
+`ci.yml` (lint, docs build, example builds).
 
-Plugin layout (`plugin/`):
+Plugin layout (`package/`):
 
 - `src/index.js` — the Vite plugin `spotnote()`: stamping, client injection, MCP status
 - `src/plugin.cjs` — the Babel visitor that stamps `data-spotnote` in JSX
@@ -62,7 +62,7 @@ To try local MCP changes, point your agent at the source instead of npm:
 claude mcp add spotnote-dev -- node /absolute/path/to/spotnote/mcp/src/cli.js
 ```
 
-Playground layout (`playground/`):
+Examples layout (`examples/`):
 
 - `<framework>/` — a demo app per framework (`react`, `solid`, `vue`, `svelte`)
 - `svelte4/` — a Svelte 4 app in its own package (Svelte 4 and 5 can't share
@@ -85,7 +85,7 @@ pnpm --filter @spotnote/docs dev              # http://localhost:3000
 
 ## Release
 
-1. Set the same version in `plugin/package.json` and `mcp/package.json`, commit, push.
+1. Set the same version in `package/package.json` and `mcp/package.json`, commit, push.
 2. Tag it: `git tag v0.2.0 && git push origin v0.2.0`.
 
 The `Release` workflow (`.github/workflows/release.yml`) then runs the tests,

@@ -1,5 +1,5 @@
 {
-  "name": "spotnote-playground",
+  "name": "spotnote-examples",
   "private": true,
   "type": "module",
   "description": "Framework demo apps that consume the local spotnote plugin.",

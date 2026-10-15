@@ -1,4 +1,4 @@
-// End-to-end tests: every playground app (../playground) in dev, driven in
+// End-to-end tests: every example app (../examples) in dev, driven in
 // Chromium. One project per framework, each with its own dev server and the
 // elements the tests pick in it (see `app` in spotnote.spec.js).
 import { defineConfig, devices } from "@playwright/test";
@@ -15,8 +15,8 @@ const APPS = [
 
 const devServer = ({ name, port }) =>
   name === "svelte4"
-    ? `pnpm --filter spotnote-playground-svelte4 exec vite --port ${port} --strictPort`
-    : `pnpm --filter spotnote-playground exec vite --port ${port} --strictPort`;
+    ? `pnpm --filter spotnote-examples-svelte4 exec vite --port ${port} --strictPort`
+    : `pnpm --filter spotnote-examples exec vite --port ${port} --strictPort`;
 
 export default defineConfig({
   testDir: ".",

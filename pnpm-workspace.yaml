@@ -1,8 +1,8 @@
 packages:
-  - plugin
+  - package
   - mcp
-  - playground
-  - playground/svelte4
+  - examples
+  - examples/svelte4
   - docs
   - e2e
 onlyBuiltDependencies:
