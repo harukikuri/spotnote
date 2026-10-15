@@ -1,6 +1,6 @@
 ---
 title: Connect Your Agent (MCP)
-description: About 1 minute to set up. Then write notes in the browser, and your agent picks them up, asks questions and marks them done.
+description: About 1 minute to set up. Then write notes in the browser, and your agent picks them up.
 ---
 
 ## Set up
@@ -35,6 +35,8 @@ codex mcp add spotnote -- npx -y spotnote-mcp
   }
 }
 ```
+
+Or let your agent add it: the [`spotnote-setup` skill](https://github.com/harukikuri/spotnote/tree/main/skills) does this step too.
 
 There's nothing else to run. The agent starts the server, and the launcher in your app connects to it on its own.
 
