@@ -25,7 +25,7 @@ export function createSettingsMenu(pop, ctrl) {
   }
   // Settings: a header (name + theme), then rows of label · value, grouped by
   // thin rules. What a row does is behind its (?), not spelled out underneath.
-  // The coding agent row opens its own page, with how to connect.
+  // The MCP row opens its own page, with how to connect.
   let page = "main"; // or "agent"
   const THEMES = [
     ["system", "System"],
@@ -66,9 +66,9 @@ export function createSettingsMenu(pop, ctrl) {
       renderSettings();
     });
 
-    // Coding agent → its page
+    // MCP → its page
     const agent = el("button", "snl-srow snl-link", pop);
-    label(agent, "Coding agent", "Lets your agent pick up notes and reply, without copy and paste (spotnote-mcp).");
+    label(agent, "MCP", "Lets your agent pick up notes and reply, without copy and paste (spotnote-mcp).");
     mcpBox = el("span", "snl-value", agent);
     renderMcp();
     agent.addEventListener("click", () => {
@@ -135,7 +135,7 @@ export function createSettingsMenu(pop, ctrl) {
       page = "main";
       renderSettings();
     });
-    el("span", "snl-title", head).textContent = "Coding agent";
+    el("span", "snl-title", head).textContent = "MCP";
     const status = el("div", "snl-srow", pop);
     label(status, "Status");
     mcpBox = el("span", "snl-value", status);

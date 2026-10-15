@@ -455,7 +455,7 @@ export const CSS = [
     "box-shadow:0 0 0 2px transparent;transition:box-shadow .12s ease,transform .12s ease}",
   ".snl-swatches button:hover{transform:scale(1.08)}",
   '.snl-swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--sn-pop),0 0 0 4px var(--c)}',
-  // Coding agent: status with a dot; its page explains and shows the command.
+  // MCP: status with a dot; its page explains and shows the command.
   ".snl-mcp{display:inline-flex;align-items:center;gap:7px}",
   ".snl-dot{width:7px;height:7px;border-radius:50%;background:var(--sn-sub)}",
   ".snl-mcp-on .snl-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18)}",

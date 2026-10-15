@@ -345,7 +345,7 @@ test("Settings: not connected, the agent page shows how to connect", async ({ pa
   await expect(settings.locator(".snl-ver")).toHaveAttribute("href", /github\.com\/.+\/releases$/);
 
   await settings.locator(".snl-link").click();
-  await expect(settings.locator(".snl-title")).toHaveText("Coding agent");
+  await expect(settings.locator(".snl-title")).toHaveText("MCP");
   await expect(settings.locator(".snl-steps li")).toHaveCount(2);
   await settings.locator(".snl-cmd-shell").getByRole("button", { name: "Copy" }).click();
   expect(await clipboard(page)).toBe("claude mcp add spotnote -- npx -y spotnote-mcp");
