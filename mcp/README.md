@@ -6,6 +6,8 @@ note when a request is unclear, and marks it done.
 
 You don't run it yourself: your agent starts it.
 
+**Docs:** https://spotnote-weld.vercel.app/guides/mcp
+
 ## Add it to your agent
 
 ```bash

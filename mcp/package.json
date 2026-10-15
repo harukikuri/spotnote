@@ -1,11 +1,10 @@
 {
   "name": "spotnote-mcp",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "type": "module",
   "description": "MCP server for Spotnote: lets a local coding agent pick up the notes you write on your running app, ask you questions, and mark them done.",
   "license": "MIT",
-  "homepage": "https://github.com/harukikuri/spotnote#readme",
+  "homepage": "https://spotnote-weld.vercel.app/guides/mcp",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/harukikuri/spotnote.git",

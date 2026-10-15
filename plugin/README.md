@@ -4,6 +4,8 @@
 what should change, and hand your coding agent its exact file, line and column —
 no more guessing, no more grepping.
 
+**Docs:** https://spotnote-weld.vercel.app
+
 ## Install
 
 ```bash
