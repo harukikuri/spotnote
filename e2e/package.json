@@ -8,6 +8,7 @@
     "coverage": "COVERAGE=1 playwright test"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "~1.30.1",
     "@playwright/test": "1.56.1",
     "monocart-coverage-reports": "2.13.2"
   }

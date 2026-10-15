@@ -1,45 +1,7 @@
 // Spotnote in a real browser: the launcher, picking, the note panel, pins, the
-// copied prompt and the launcher's menus — in each example app. Spotnote's
-// UI lives in an open shadow root, which Playwright's CSS locators reach into.
-import { test as base, expect } from "@playwright/test";
-import { coverage } from "./coverage.js";
-
-// The app under test and the elements to pick in it (projects in playwright.config.js),
-// and, with COVERAGE=1, what each test ran of the client (see coverage.js).
-const test = base.extend({
-  app: [{}, { option: true }],
-  coverage: [
-    async ({ page }, use) => {
-      if (!process.env.COVERAGE) return use();
-      await page.coverage.startJSCoverage({ resetOnNavigation: false });
-      await use();
-      await coverage().add(await page.coverage.stopJSCoverage());
-    },
-    { auto: true },
-  ],
-});
-const basename = (file) => file.split("/").pop();
-
-// Click an element away from the placeholder bars inside it, so the click lands
-// on the element itself (its right edge), not on a stamped child.
-async function clickEdge(locator) {
-  const box = await locator.boundingBox();
-  await locator.click({ position: { x: box.width - 3, y: box.height / 2 } });
-}
-
-async function openLauncher(page) {
-  await page.locator(".snl-core").click();
-  await expect(page.locator(".snl")).toHaveAttribute("data-open", "true");
-}
-
-async function writeNote(page, target, text) {
-  await clickEdge(target);
-  const panel = page.locator(".sn-panel");
-  await expect(panel).toBeVisible();
-  await panel.locator("[data-spotnote-input]").fill(text);
-  await page.keyboard.press("Enter");
-  await expect(panel).toHaveCount(0);
-}
+// copied prompt and the launcher's menus — in each example app, with no agent
+// connected (agent.spec.js has one).
+import { test, expect, basename, clickEdge, openLauncher, writeNote } from "./fixtures.js";
 
 const clipboard = (page) => page.evaluate(() => navigator.clipboard.readText());
 
