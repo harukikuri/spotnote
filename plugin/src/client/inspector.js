@@ -1,8 +1,8 @@
 // Framework-agnostic client picker for `data-spotnote`.
 // - Inspect via the launcher toggle OR by holding Alt; hover highlights the
 //   nearest data-spotnote element, click opens a selection panel.
-// - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
-//   location + element + styles + your note) to the clipboard, and drops a pin.
+// - Write a note; Enter saves it, drops a pin and copies a ready-to-paste prompt
+//   (see prompt.js) — or, with spotnote-mcp connected, leaves it to the agent.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
 import { createIconBtn, uiRoot, applyLook } from "./ui.js";
 import { T } from "./styles.js";
