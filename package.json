@@ -5,12 +5,14 @@
     "dev": "pnpm --filter spotnote-examples run dev",
     "build": "pnpm -r --if-present run build",
     "test": "pnpm -r --if-present run test",
+    "coverage": "c8 node --test \"package/test/*.test.js\" \"mcp/test/*.test.js\"",
     "test:e2e": "pnpm --filter spotnote-e2e run test:e2e",
     "dev:svelte4": "pnpm --filter spotnote-examples-svelte4 run dev",
     "lint": "biome check .",
     "format": "biome check --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15"
+    "@biomejs/biome": "2.5.15",
+    "c8": "12.0.0"
   }
 }

@@ -58,3 +58,7 @@ test("Svelte: markup elements are stamped, the script isn't", async () => {
   assert.match(out, /let n = '<b>';/);
   assert.doesNotMatch(out, /<Child data-spotnote/);
 });
+
+test("Svelte: a file that can't be parsed is left to the Svelte plugin", async () => {
+  assert.equal(await stamp("src/Broken.svelte", "<h1>{n</h1>\n"), undefined);
+});

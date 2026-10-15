@@ -27,7 +27,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - run: pnpm coverage # the tests, with a coverage report in the log
 
   e2e:
     runs-on: ubuntu-latest

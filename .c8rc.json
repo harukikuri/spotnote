@@ -1,0 +1,8 @@
+{
+  "all": true,
+  "src": ["package/src", "mcp/src"],
+  "include": ["package/src/**", "mcp/src/**"],
+  "exclude": ["package/src/client/styles.js", "package/src/client/icons.js"],
+  "reporter": ["text", "html"],
+  "reportsDirectory": "coverage"
+}

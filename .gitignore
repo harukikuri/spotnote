@@ -5,6 +5,7 @@ dist/
 # Test
 test-results/
 playwright-report/
+coverage/
 .playwright-mcp/
 
 # IDE
