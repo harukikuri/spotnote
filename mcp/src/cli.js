@@ -28,7 +28,9 @@ const log = (msg) => console.error(`[spotnote-mcp] ${msg}`); // stdout is the MC
 // This copy's code: a hash of its source, and when that source last changed.
 const CODE = (() => {
   const dir = path.dirname(fileURLToPath(import.meta.url));
-  const files = readdirSync(dir).filter((f) => f.endsWith(".js")).sort();
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".js"))
+    .sort();
   const hash = createHash("sha1");
   let time = 0;
   for (const f of files) {
@@ -101,12 +103,22 @@ const client = () => mcp.server.getClientVersion()?.name ?? null;
 async function call(name, args, signal) {
   if (owner) return owner.runTool(name, args, cwd, signal, agent, client());
   try {
-    const res = await fetch(`${BASE}/rpc`, { method: "POST", body: JSON.stringify({ tool: name, args, cwd, agent, client: client() }), signal });
+    const res = await fetch(`${BASE}/rpc`, {
+      method: "POST",
+      body: JSON.stringify({ tool: name, args, cwd, agent, client: client() }),
+      signal,
+    });
     return await res.json();
   } catch {
     if (signal?.aborted) return { text: "Cancelled." };
     // The owner went away mid-call: take its place and run the call here.
-    if (await becomeOwner().then(() => true, () => false)) return call(name, args, signal);
+    if (
+      await becomeOwner().then(
+        () => true,
+        () => false,
+      )
+    )
+      return call(name, args, signal);
     return { text: `The Spotnote server on port ${PORT} stopped answering.`, isError: true };
   }
 }
@@ -116,7 +128,9 @@ try {
 } catch (e) {
   const info = e.code === "EADDRINUSE" && (await ownerInfo());
   if (!info) {
-    log(`port ${PORT} is taken by something else. Set SPOTNOTE_PORT to a free port (and the same in your dev server's env).`);
+    log(
+      `port ${PORT} is taken by something else. Set SPOTNOTE_PORT to a free port (and the same in your dev server's env).`,
+    );
     process.exit(1);
   }
   if (!(await takeFromOlder(info))) {

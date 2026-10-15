@@ -1,9 +1,4 @@
 {
   "title": "Reference",
-  "pages": [
-    "plugin-api",
-    "prompt-format",
-    "storage",
-    "framework-support"
-  ]
+  "pages": ["plugin-api", "prompt-format", "storage", "framework-support"]
 }

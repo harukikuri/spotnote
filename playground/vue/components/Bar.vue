@@ -1,7 +1,11 @@
 <!-- A text-free placeholder bar (Suspense-skeleton look) so demo recordings
      show layout only, no readable copy. -->
 <script setup>
-const props = defineProps({ w: { type: [Number, String], default: "100%" }, h: { type: Number, default: 12 }, dark: Boolean });
+const props = defineProps({
+  w: { type: [Number, String], default: "100%" },
+  h: { type: Number, default: 12 },
+  dark: Boolean,
+});
 const px = (v) => (typeof v === "number" ? v + "px" : v);
 </script>
 

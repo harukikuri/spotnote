@@ -8,7 +8,8 @@
 // is shown as code anyway. File references like `router.jsx:28` become links;
 // `onFile(ref, button)` opens them.
 
-const FILE_REF = /(?<![\w/.-])((?:[\w.@-]+\/)*[\w.@-]+\.(?:jsx|tsx|js|ts|mjs|cjs|vue|svelte|css|scss|sass|less|html|json|md))(?::(\d+))?(?::(\d+))?(?![\w/])/g;
+const FILE_REF =
+  /(?<![\w/.-])((?:[\w.@-]+\/)*[\w.@-]+\.(?:jsx|tsx|js|ts|mjs|cjs|vue|svelte|css|scss|sass|less|html|json|md))(?::(\d+))?(?::(\d+))?(?![\w/])/g;
 
 export function renderMarkdown(text, onFile) {
   const out = document.createDocumentFragment();

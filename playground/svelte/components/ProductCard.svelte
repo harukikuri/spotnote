@@ -1,7 +1,7 @@
 <!-- Reused across the products grid — its host elements stamp to
      ProductCard.svelte, and its many instances exercise the occurrence-index id. -->
 <script>
-  import Bar from "./Bar.svelte";
+import Bar from "./Bar.svelte";
 </script>
 
 <div class="product">

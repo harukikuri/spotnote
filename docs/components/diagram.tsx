@@ -10,7 +10,17 @@
 import { useRef } from 'react';
 
 const icon = (d: string) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d={d} />
   </svg>
 );
@@ -19,17 +29,7 @@ const CLOSE = icon('M18 6 6 18M6 6l12 12');
 const BUTTON =
   'inline-flex size-8 items-center justify-center rounded-md border bg-fd-background/80 text-fd-muted-foreground backdrop-blur-sm transition-colors hover:text-fd-foreground';
 
-export function Diagram({
-  name,
-  alt,
-  width,
-  height,
-}: {
-  name: string;
-  alt: string;
-  width: number;
-  height: number;
-}) {
+export function Diagram({ name, alt, width, height }: { name: string; alt: string; width: number; height: number }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const img = (src: string, className: string) => (
     // eslint-disable-next-line @next/next/no-img-element
@@ -53,6 +53,7 @@ export function Diagram({
       >
         {EXPAND}
       </button>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: Esc closes a <dialog> natively */}
       <dialog
         ref={dialog}
         aria-label={alt}

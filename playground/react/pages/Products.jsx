@@ -24,9 +24,7 @@ export default function Products({ query }) {
   const sort = query.get("sort") || "name";
 
   let items = PRODUCTS.filter((p) => category === "all" || p.category === category);
-  items = [...items].sort((a, b) =>
-    sort === "price" ? a.price - b.price : a.name.localeCompare(b.name),
-  );
+  items = [...items].sort((a, b) => (sort === "price" ? a.price - b.price : a.name.localeCompare(b.name)));
 
   const setParam = (k, v) => {
     const q = new URLSearchParams(query.toString());
@@ -37,8 +35,12 @@ export default function Products({ query }) {
   return (
     <div>
       <section className="section">
-        <h2><Bar w={140} h={24} dark /></h2>
-        <p className="muted"><Bar w={220} /></p>
+        <h2>
+          <Bar w={140} h={24} dark />
+        </h2>
+        <p className="muted">
+          <Bar w={220} />
+        </p>
       </section>
 
       <div className="filters">
@@ -55,11 +57,7 @@ export default function Products({ query }) {
           <Bar w={30} h={10} />
         </span>
         {["name", "price"].map((s) => (
-          <button
-            key={s}
-            className={"chip" + (s === sort ? " chip-active" : "")}
-            onClick={() => setParam("sort", s)}
-          >
+          <button key={s} className={"chip" + (s === sort ? " chip-active" : "")} onClick={() => setParam("sort", s)}>
             <Bar w={36} h={10} dark={s === sort} />
           </button>
         ))}

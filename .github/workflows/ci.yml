@@ -1,5 +1,6 @@
-# Every push to main and every pull request: the docs site's production build
-# and a build of each playground app. The tests are in test.yml.
+# Every push to main and every pull request: format and lint (Biome), the docs
+# site's production build and a build of each playground app. The tests are in
+# test.yml.
 name: CI
 
 on:
@@ -15,6 +16,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version from packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
   build:
     runs-on: ubuntu-latest
     steps:

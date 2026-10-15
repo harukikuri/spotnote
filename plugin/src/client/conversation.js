@@ -3,7 +3,8 @@
 import { agentMark } from "./icons.js";
 
 // What to call the agent on this note: the last one that wrote on it.
-export const agentName = (pin) => agentMark(pin?.thread?.findLast((m) => m.from === "agent")?.client)?.name ?? "The agent";
+export const agentName = (pin) =>
+  agentMark(pin?.thread?.findLast((m) => m.from === "agent")?.client)?.name ?? "The agent";
 
 // "✳ Claude Code" over an agent's message: its mark (when we have one) and its
 // name; just "Agent" when it didn't say which it is.

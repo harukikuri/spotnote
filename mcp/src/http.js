@@ -52,13 +52,22 @@ export function createHttpServer(store, runTool, { code, onHandover }) {
 
     try {
       if (req.method === "OPTIONS") {
-        res.writeHead(204, { "Access-Control-Allow-Methods": "GET, POST", "Access-Control-Allow-Headers": "Content-Type" }).end();
+        res
+          .writeHead(204, {
+            "Access-Control-Allow-Methods": "GET, POST",
+            "Access-Control-Allow-Headers": "Content-Type",
+          })
+          .end();
       } else if (req.method === "GET" && url.pathname === "/health") {
         res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ spotnote: 1, ...code }));
       } else if (req.method === "GET" && url.pathname === "/events" && fromPage) {
         const root = url.searchParams.get("root");
         if (!root) return void res.writeHead(400).end();
-        res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
+        res.writeHead(200, {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        });
         const send = () => res.write(`event: snapshot\ndata: ${JSON.stringify(store.snapshot(root))}\n\n`);
         send();
         const off = store.onChange((r) => r === root && send());
@@ -70,7 +79,8 @@ export function createHttpServer(store, runTool, { code, onHandover }) {
         if (op.op === "upsert" && validNote(op.note)) store.upsert(op.root, op.note);
         else if (op.op === "remove" && str(op.key)) store.remove(op.root, op.key);
         else if (op.op === "reply" && str(op.key) && str(op.text)) store.reply(op.root, op.key, op.text);
-        else if (op.op === "merge" && Array.isArray(op.notes) && op.notes.every(validNote)) store.merge(op.root, op.notes);
+        else if (op.op === "merge" && Array.isArray(op.notes) && op.notes.every(validNote))
+          store.merge(op.root, op.notes);
         else return void res.writeHead(400).end();
         // The result, so the page needn't wait for it on /events.
         res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(store.snapshot(op.root)));

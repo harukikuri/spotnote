@@ -95,7 +95,8 @@ export function createNotesList(pop, ctrl, { onOpen }) {
     });
     const src = el("span", "snl-src", li);
     const num = el("span", "snl-num", src); // same as its pin: its number, or a state icon
-    if (n.mark) num.innerHTML = n.mark; // hardcoded SVG constants, not user input
+    if (n.mark)
+      num.innerHTML = n.mark; // hardcoded SVG constants, not user input
     else num.textContent = String(n.number);
     const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
     const mark = el("span", "snl-fw", src);

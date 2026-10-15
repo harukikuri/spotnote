@@ -5,8 +5,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'Spotnote',
-  description:
-    'Dev-only Vite plugin — click a UI element and copy its exact source location for your coding agent.',
+  description: 'Dev-only Vite plugin — click a UI element and copy its exact source location for your coding agent.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

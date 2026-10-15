@@ -26,9 +26,7 @@ const sort = computed(() => route.value.query.get("sort") || "name");
 
 const items = computed(() => {
   const list = PRODUCTS.filter((p) => category.value === "all" || p.category === category.value);
-  return [...list].sort((a, b) =>
-    sort.value === "price" ? a.price - b.price : a.name.localeCompare(b.name),
-  );
+  return [...list].sort((a, b) => (sort.value === "price" ? a.price - b.price : a.name.localeCompare(b.name)));
 });
 
 function setParam(k, v) {

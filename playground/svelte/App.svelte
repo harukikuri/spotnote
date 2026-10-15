@@ -1,6 +1,6 @@
 <script>
-  import ProductCard from "./components/ProductCard.svelte";
-  import Bar from "./components/Bar.svelte";
+import ProductCard from "./components/ProductCard.svelte";
+import Bar from "./components/Bar.svelte";
 </script>
 
 <header class="nav">

@@ -1,6 +1,6 @@
-@import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 /* One heavy weight on the site: 500. Tailwind's semibold/bold utilities
    (ours and Fumadocs') and the prose headings, which default to 600–900. */
@@ -65,7 +65,7 @@ html:not(.dark) #nd-sidebar {
 }
 
 /* The current page in the sidebar reads as highlighted text. */
-#nd-sidebar a[data-active='true'] {
+#nd-sidebar a[data-active="true"] {
   background-color: var(--sn-marker);
   color: var(--color-fd-foreground);
 }

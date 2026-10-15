@@ -14,8 +14,12 @@ export default function App() {
   else
     page = (
       <div className="section">
-        <h2><Bar w={120} h={24} dark /></h2>
-        <Link to="/"><Bar w={100} /></Link>
+        <h2>
+          <Bar w={120} h={24} dark />
+        </h2>
+        <Link to="/">
+          <Bar w={100} />
+        </Link>
       </div>
     );
 
@@ -23,16 +27,26 @@ export default function App() {
     <div>
       <header className="nav">
         <div className="nav-inner">
-          <span className="brand"><Bar w={96} h={18} dark /></span>
+          <span className="brand">
+            <Bar w={96} h={18} dark />
+          </span>
           <nav className="nav-links">
-            <Link to="/"><Bar w={44} /></Link>
-            <Link to="/products?category=all&sort=name"><Bar w={64} /></Link>
-            <Link to="/about"><Bar w={52} /></Link>
+            <Link to="/">
+              <Bar w={44} />
+            </Link>
+            <Link to="/products?category=all&sort=name">
+              <Bar w={64} />
+            </Link>
+            <Link to="/about">
+              <Bar w={52} />
+            </Link>
           </nav>
         </div>
       </header>
       <main className="page">{page}</main>
-      <footer className="footer"><Bar w={180} /></footer>
+      <footer className="footer">
+        <Bar w={180} />
+      </footer>
     </div>
   );
 }

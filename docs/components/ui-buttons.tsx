@@ -71,8 +71,7 @@ const NAMES = {
 };
 
 // The panel's surface (ui.js THEMES: bg, border, icon).
-const PANEL =
-  'border border-[#e4e4e7] bg-white text-[#71717a] dark:border-[#333] dark:bg-[#1a1a1a] dark:text-[#999]';
+const PANEL = 'border border-[#e4e4e7] bg-white text-[#71717a] dark:border-[#333] dark:bg-[#1a1a1a] dark:text-[#999]';
 // The launcher's glass (ui.js .snl-glass).
 const GLASS =
   'border border-black/[.08] bg-white/90 text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,.12)] ' +
@@ -113,11 +112,11 @@ export function LauncherItem({ icon }: { icon: 'pause' | 'notes' | 'settings' })
 export function SendButton({ label }: { label: string }) {
   return (
     <span
-      className={
-        'mx-0.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-px align-middle text-[0.85em] ' + PANEL
-      }
+      className={'mx-0.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-px align-middle text-[0.85em] ' + PANEL}
     >
-      <kbd className="rounded border border-[#e4e4e7] px-1 font-mono text-[0.9em] leading-tight dark:border-[#333]">↵</kbd>
+      <kbd className="rounded border border-[#e4e4e7] px-1 font-mono text-[0.9em] leading-tight dark:border-[#333]">
+        ↵
+      </kbd>
       {label}
     </span>
   );

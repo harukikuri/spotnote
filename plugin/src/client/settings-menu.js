@@ -27,7 +27,11 @@ export function createSettingsMenu(pop, ctrl) {
   // thin rules. What a row does is behind its (?), not spelled out underneath.
   // The coding agent row opens its own page, with how to connect.
   let page = "main"; // or "agent"
-  const THEMES = [["system", "System"], ["light", "Light"], ["dark", "Dark"]];
+  const THEMES = [
+    ["system", "System"],
+    ["light", "Light"],
+    ["dark", "Dark"],
+  ];
   function label(parent, text, help) {
     const l = el("span", "snl-label", parent);
     l.append(text);
@@ -75,11 +79,17 @@ export function createSettingsMenu(pop, ctrl) {
     el("div", "snl-rule", pop);
     const accent = el("div", "snl-srow", pop); // swatches on the right, like the other rows' values
     label(accent, "Accent color", "The outline, labels and pins on your page.");
-    choices(accent, "snl-swatches", "accent", Object.entries(ACCENTS).map(([k, a]) => [k, a.name]), (b, k, n) => {
-      b.style.setProperty("--c", ACCENTS[k].accent);
-      b.title = n;
-      b.setAttribute("aria-label", n);
-    });
+    choices(
+      accent,
+      "snl-swatches",
+      "accent",
+      Object.entries(ACCENTS).map(([k, a]) => [k, a.name]),
+      (b, k, n) => {
+        b.style.setProperty("--c", ACCENTS[k].accent);
+        b.title = n;
+        b.setAttribute("aria-label", n);
+      },
+    );
 
     el("div", "snl-rule", pop);
     const files = el("label", "snl-srow", pop);

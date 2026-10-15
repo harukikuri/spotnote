@@ -22,13 +22,21 @@ const guessEditor = require("launch-editor/guess.js");
 const TERMINAL_EDITORS = new Set(["vi", "vim", "nvim", "nano", "emacs", "pico", "ed", "micro", "hx", "helix"]);
 // Editors that also open from a URL: used when their command-line tool isn't
 // installed (VS Code's `code` often isn't), so the page opens the URL instead.
-const EDITOR_SCHEMES = { code: "vscode", "code-insiders": "vscode-insiders", cursor: "cursor", windsurf: "windsurf", zed: "zed" };
+const EDITOR_SCHEMES = {
+  code: "vscode",
+  "code-insiders": "vscode-insiders",
+  cursor: "cursor",
+  windsurf: "windsurf",
+  zed: "zed",
+};
 
 // Can `cmd` be run? (An absolute path that exists, or a name found on PATH.)
 function runnable(cmd) {
   if (path.isAbsolute(cmd)) return existsSync(cmd);
   const exts = process.platform === "win32" ? ["", ".exe", ".cmd", ".bat"] : [""];
-  return (process.env.PATH || "").split(path.delimiter).some((dir) => exts.some((ext) => existsSync(path.join(dir, cmd + ext))));
+  return (process.env.PATH || "")
+    .split(path.delimiter)
+    .some((dir) => exts.some((ext) => existsSync(path.join(dir, cmd + ext))));
 }
 const babelVisitor = require("./plugin.cjs"); // the JSX-stamping Babel plugin
 const clientEntry = fileURLToPath(new URL("./client/inspector.js", import.meta.url));
@@ -101,7 +109,7 @@ async function getSvelteParse(root) {
     const m = await import(url.href);
     // svelte/compiler is CJS — importing the file by path exposes `parse` on the
     // interop default, not as a named export.
-    svelteParse = m.parse || (m.default && m.default.parse) || null;
+    svelteParse = m.parse || m.default?.parse || null;
   } catch {
     svelteParse = null; // no Svelte in this project — silently skip .svelte stamping
   }
@@ -155,14 +163,19 @@ function stampSvelte(code, file, root, parse) {
   // components and <svelte:*> are other node types (in Svelte 4, <svelte:element>
   // is an Element named "svelte:element") → skipped.
   const markup = ast.fragment ?? ast.html;
-  const isTag = ast.fragment ? (n) => n.type === "RegularElement" : (n) => n.type === "Element" && !n.name.includes(":");
+  const isTag = ast.fragment
+    ? (n) => n.type === "RegularElement"
+    : (n) => n.type === "Element" && !n.name.includes(":");
   walkSvelte(markup, (node) => {
     if (!node.name || !isTag(node)) return;
     if (typeof node.start !== "number") return;
     const already = (node.attributes || []).some((a) => a && a.name === "data-spotnote");
     if (already) return;
     const { line, column } = offsetToLineCol(code, node.start);
-    s.appendLeft(node.start + 1 + node.name.length, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
+    s.appendLeft(
+      node.start + 1 + node.name.length,
+      ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`,
+    );
     touched = true;
   });
   if (!touched) return;
@@ -206,7 +219,10 @@ export default function spotnote() {
       const check = async () => {
         const now = await fetch(`http://127.0.0.1:${MCP_PORT}/health`)
           .then((r) => r.json())
-          .then((j) => j.spotnote === 1, () => false);
+          .then(
+            (j) => j.spotnote === 1,
+            () => false,
+          );
         if (now !== up) server.ws.send("spotnote:mcp", { up: (up = now) });
       };
       const timer = setInterval(check, 2000);
@@ -243,7 +259,11 @@ export default function spotnote() {
           return scheme ? reply(200, { file, scheme }) : reply(409, { error: "no-editor" });
         }
         const at = [file, q.get("line"), q.get("column")].filter(Boolean).join(":");
-        launchEditor(at, editor, (_, err) => err && server.config.logger.warn(`[spotnote] couldn't open ${at}: ${err}`));
+        launchEditor(
+          at,
+          editor,
+          (_, err) => err && server.config.logger.warn(`[spotnote] couldn't open ${at}: ${err}`),
+        );
         reply(200, { file, editor: path.basename(editor) });
       });
     },
@@ -291,7 +311,9 @@ export default function spotnote() {
             // the framework's own compiler unstamped instead of erroring.
             if (!warnedParse.has(file)) {
               warnedParse.add(file);
-              console.warn(`[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`);
+              console.warn(
+                `[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`,
+              );
             }
             return;
           }

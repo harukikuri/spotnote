@@ -10,8 +10,7 @@ type LauncherState = 'closed' | 'open' | 'paused' | 'done';
 const GLASS =
   'border border-black/[.08] bg-white/90 text-[#18181b] shadow-[inset_0_1px_0_rgba(255,255,255,.7),0_2px_6px_rgba(0,0,0,.15)] ' +
   'dark:border-white/10 dark:bg-[rgba(24,24,28,.92)] dark:text-[#f2f2f3] dark:shadow-[inset_0_1px_0_rgba(255,255,255,.06),0_2px_6px_rgba(0,0,0,.25)]';
-const ACCENT =
-  'bg-[#ffd84d] text-[#1a1600] shadow-[0_0_0_4px_rgba(255,216,77,.38),0_2px_6px_rgba(0,0,0,.25)]';
+const ACCENT = 'bg-[#ffd84d] text-[#1a1600] shadow-[0_0_0_4px_rgba(255,216,77,.38),0_2px_6px_rgba(0,0,0,.25)]';
 
 const LABEL: Record<LauncherState, string> = {
   closed: 'Spotnote launcher',

@@ -20,7 +20,12 @@ pnpm dev:svelte4                              # Svelte 4 playground (own package
 pnpm --filter spotnote-playground build       # production build (picker excluded — apply:'serve')
 pnpm test                                     # plugin + mcp tests (node:test, no extra deps)
 pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
+pnpm lint                                     # format + lint check (Biome, config in biome.json)
+pnpm format                                   # apply Biome's formatting and safe fixes
 ```
+
+CI runs on every push to main and every PR: `test.yml` (unit + E2E) and
+`ci.yml` (lint, docs build, playground builds).
 
 Plugin layout (`plugin/`):
 

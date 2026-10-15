@@ -1,10 +1,10 @@
 <script>
-  import ProductCard from "./components/ProductCard.svelte";
-  import Card from "./components/Card.svelte";
-  import Bar from "./components/Bar.svelte";
+import ProductCard from "./components/ProductCard.svelte";
+import Card from "./components/Card.svelte";
+import Bar from "./components/Bar.svelte";
 
-  let showMore = false;
-  let tag = "em";
+let showMore = false;
+let tag = "em";
 </script>
 
 <header class="nav">

@@ -22,31 +22,90 @@ export const T = {
 // Theme surfaces. Dark is the original look; light mirrors it.
 const THEMES = {
   dark: {
-    bg: "#1a1a1a", "bg-input": "#141414", border: "#333", "border-subtle": "#262626",
-    text: "#ededed", muted: "#888", icon: "#999", sub: "#a1a1aa", placeholder: "#666",
-    hover: "rgba(255,255,255,.06)", "hover-strong": "rgba(255,255,255,.08)", "text-strong": "#fff",
-    glass: "rgba(24,24,28,.74)", "glass-border": "rgba(255,255,255,.10)", "glass-inset": "rgba(255,255,255,.06)",
-    "glass-text": "#f2f2f3", "glass-hover": "rgba(44,44,50,.86)", track: "#a1a1aa",
-    "lost-num": "#3f3f46", lost: "#fb923c", shadow: "rgba(0,0,0,.5)", pop: "rgba(24,24,28,.97)", foot: "rgba(0,0,0,.3)",
-    "fw-react": "#61dafb", "fw-solid": "#76b3e1", "fw-vue": "#42b883", "fw-svelte": "#ff3e00", "fw-jsx": "#a1a1aa",
+    bg: "#1a1a1a",
+    "bg-input": "#141414",
+    border: "#333",
+    "border-subtle": "#262626",
+    text: "#ededed",
+    muted: "#888",
+    icon: "#999",
+    sub: "#a1a1aa",
+    placeholder: "#666",
+    hover: "rgba(255,255,255,.06)",
+    "hover-strong": "rgba(255,255,255,.08)",
+    "text-strong": "#fff",
+    glass: "rgba(24,24,28,.74)",
+    "glass-border": "rgba(255,255,255,.10)",
+    "glass-inset": "rgba(255,255,255,.06)",
+    "glass-text": "#f2f2f3",
+    "glass-hover": "rgba(44,44,50,.86)",
+    track: "#a1a1aa",
+    "lost-num": "#3f3f46",
+    lost: "#fb923c",
+    shadow: "rgba(0,0,0,.5)",
+    pop: "rgba(24,24,28,.97)",
+    foot: "rgba(0,0,0,.3)",
+    "fw-react": "#61dafb",
+    "fw-solid": "#76b3e1",
+    "fw-vue": "#42b883",
+    "fw-svelte": "#ff3e00",
+    "fw-jsx": "#a1a1aa",
     // code in the agent's messages (GitHub's dark palette)
-    "tk-tag": "#7ee787", "tk-attr": "#79c0ff", "tk-str": "#a5d6ff", "tk-kw": "#ff7b72", "tk-num": "#79c0ff", "tk-com": "#8b949e",
-    "code-bg": "rgba(255,255,255,.06)", "code-border": "rgba(255,255,255,.09)", "code-text": "#e6edf3",
+    "tk-tag": "#7ee787",
+    "tk-attr": "#79c0ff",
+    "tk-str": "#a5d6ff",
+    "tk-kw": "#ff7b72",
+    "tk-num": "#79c0ff",
+    "tk-com": "#8b949e",
+    "code-bg": "rgba(255,255,255,.06)",
+    "code-border": "rgba(255,255,255,.09)",
+    "code-text": "#e6edf3",
   },
   light: {
-    bg: "#ffffff", "bg-input": "#f4f4f5", border: "#e4e4e7", "border-subtle": "#f0f0f1",
-    text: "#18181b", muted: "#71717a", icon: "#71717a", sub: "#71717a", placeholder: "#a1a1aa",
-    hover: "rgba(0,0,0,.04)", "hover-strong": "rgba(0,0,0,.06)", "text-strong": "#000",
-    glass: "rgba(255,255,255,.8)", "glass-border": "rgba(0,0,0,.08)", "glass-inset": "rgba(255,255,255,.7)",
-    "glass-text": "#18181b", "glass-hover": "rgba(244,244,245,.94)", track: "#71717a",
-    "lost-num": "#e4e4e7", lost: "#c2410c", shadow: "rgba(0,0,0,.18)", pop: "rgba(255,255,255,.98)", foot: "rgba(0,0,0,.04)",
-    "fw-react": "#087ea4", "fw-solid": "#2c4f7c", "fw-vue": "#2f9768", "fw-svelte": "#e63900", "fw-jsx": "#71717a",
+    bg: "#ffffff",
+    "bg-input": "#f4f4f5",
+    border: "#e4e4e7",
+    "border-subtle": "#f0f0f1",
+    text: "#18181b",
+    muted: "#71717a",
+    icon: "#71717a",
+    sub: "#71717a",
+    placeholder: "#a1a1aa",
+    hover: "rgba(0,0,0,.04)",
+    "hover-strong": "rgba(0,0,0,.06)",
+    "text-strong": "#000",
+    glass: "rgba(255,255,255,.8)",
+    "glass-border": "rgba(0,0,0,.08)",
+    "glass-inset": "rgba(255,255,255,.7)",
+    "glass-text": "#18181b",
+    "glass-hover": "rgba(244,244,245,.94)",
+    track: "#71717a",
+    "lost-num": "#e4e4e7",
+    lost: "#c2410c",
+    shadow: "rgba(0,0,0,.18)",
+    pop: "rgba(255,255,255,.98)",
+    foot: "rgba(0,0,0,.04)",
+    "fw-react": "#087ea4",
+    "fw-solid": "#2c4f7c",
+    "fw-vue": "#2f9768",
+    "fw-svelte": "#e63900",
+    "fw-jsx": "#71717a",
     // code in the agent's messages (GitHub's light palette)
-    "tk-tag": "#116329", "tk-attr": "#0550ae", "tk-str": "#0a3069", "tk-kw": "#cf222e", "tk-num": "#0550ae", "tk-com": "#6e7781",
-    "code-bg": "#f6f8fa", "code-border": "#d8dee4", "code-text": "#1f2328",
+    "tk-tag": "#116329",
+    "tk-attr": "#0550ae",
+    "tk-str": "#0a3069",
+    "tk-kw": "#cf222e",
+    "tk-num": "#0550ae",
+    "tk-com": "#6e7781",
+    "code-bg": "#f6f8fa",
+    "code-border": "#d8dee4",
+    "code-text": "#1f2328",
   },
 };
-const vars = (o) => Object.entries(o).map(([k, v]) => `--sn-${k}:${v}`).join(";");
+const vars = (o) =>
+  Object.entries(o)
+    .map(([k, v]) => `--sn-${k}:${v}`)
+    .join(";");
 
 // Spring easing (damping 0.52): ~15% overshoot, settled by the end.
 const SPRING =
@@ -283,7 +342,9 @@ export const CSS = [
   // Page headings in the notes list ("This page", then each other page's path):
   // a band edge to edge, in the Settings footer's colour.
   `.snl-notes li.snl-group{display:block;margin:0;padding:5px 14px;border-radius:0;background:var(--sn-foot);` +
-    "border-top:1px solid var(--sn-glass-border);font:500 11px/16px " + T.font + ";color:var(--sn-sub);cursor:default;" +
+    "border-top:1px solid var(--sn-glass-border);font:500 11px/16px " +
+    T.font +
+    ";color:var(--sn-sub);cursor:default;" +
     "white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-notes li.snl-group:hover{background:var(--sn-foot)}",
   // The heading is a button that folds its section.
@@ -305,7 +366,9 @@ export const CSS = [
   // The checkbox in front of each note, and the header's delete button.
   ".snl-pick{grid-row:span 2;align-self:start;margin:2px 0 0;cursor:pointer}", // the browser's own checkbox
   ".snl-head-acts{margin-left:auto;display:flex}",
-  ".snl .snl-del{padding:3px 8px;border:none;border-radius:6px;background:none;color:var(--sn-sub);font:500 12px " + T.font + ";cursor:pointer}",
+  ".snl .snl-del{padding:3px 8px;border:none;border-radius:6px;background:none;color:var(--sn-sub);font:500 12px " +
+    T.font +
+    ";cursor:pointer}",
   ".snl .snl-del:hover{background:var(--sn-hover-strong);color:var(--sn-glass-text)}",
   // A trash icon like the other header icons, wider with a "(n)".
   ".snl .snl-del{display:flex;align-items:center;justify-content:center;gap:3px;min-width:28px;height:28px;margin-right:-6px;padding:0 7px;border-radius:7px}",
@@ -389,7 +452,9 @@ export const CSS = [
   ".snl-steps{list-style:none;margin:14px 0 0;padding:0;counter-reset:snl-step;display:flex;flex-direction:column;gap:14px}",
   ".snl-steps li{position:relative;padding-left:28px;counter-increment:snl-step}",
   ".snl-steps li::before{content:counter(snl-step);position:absolute;left:0;top:0;display:grid;place-items:center;width:18px;height:18px;box-sizing:border-box;" +
-    "border:1px solid var(--sn-glass-border);border-radius:50%;font:600 10px/1 " + T.font + ";color:var(--sn-sub);font-variant-numeric:tabular-nums}",
+    "border:1px solid var(--sn-glass-border);border-radius:50%;font:600 10px/1 " +
+    T.font +
+    ";color:var(--sn-sub);font-variant-numeric:tabular-nums}",
   ".snl-steps li:not(:last-child)::after{content:'';position:absolute;left:8.5px;top:22px;bottom:-10px;width:1px;background:var(--sn-glass-border)}", // the rail
   ".snl-step-text{margin:0;font-size:12px;line-height:18px;color:var(--sn-glass-text)}",
   ".snl-steps .snl-cmd{margin-top:6px}",

@@ -11,7 +11,15 @@ const { createStore } = await import("../src/store.js");
 const { createRunner } = await import("../src/tools.js");
 
 const root = path.join(home, "app");
-const note = (key, text, extra = {}) => ({ key, loc: key.split("@")[0], index: 0, url: "/", note: text, prompt: `## Request\n${text}`, ...extra });
+const note = (key, text, extra = {}) => ({
+  key,
+  loc: key.split("@")[0],
+  index: 0,
+  url: "/",
+  note: text,
+  prompt: `## Request\n${text}`,
+  ...extra,
+});
 
 let store;
 before(() => (store = createStore()));
@@ -45,7 +53,10 @@ test("merge keeps the newer copy and can't revive a deleted note", () => {
 
   store.remove(root, "b.jsx:2:2@0");
   store.merge(root, [note("b.jsx:2:2@0", "Stale browser", { updated: 1 })]);
-  assert.equal(store.notes(root).some((n) => n.key === "b.jsx:2:2@0"), false);
+  assert.equal(
+    store.notes(root).some((n) => n.key === "b.jsx:2:2@0"),
+    false,
+  );
 });
 
 test("tools: list_notes, then reply / resolve by id", async () => {

@@ -347,7 +347,8 @@ function fileTag(file, line, color) {
   const kind = fileKind(file);
   const wrap = document.createElement("span");
   // margin-left: a little extra air after the tag/class, so the file reads as its own group.
-  wrap.style.cssText = "display:inline-flex;align-items:center;gap:4px;margin-left:4px;white-space:nowrap;flex-shrink:0";
+  wrap.style.cssText =
+    "display:inline-flex;align-items:center;gap:4px;margin-left:4px;white-space:nowrap;flex-shrink:0";
   wrap.title = FRAMEWORKS[kind].name;
   const icon = document.createElement("span");
   icon.style.cssText = `display:inline-flex;color:${color ?? FRAMEWORKS[kind].color}`;
@@ -395,8 +396,7 @@ function setLabel(labelEl, el) {
   tag.textContent = el.tagName.toLowerCase();
   labelEl.appendChild(tag);
 
-  const cls =
-    typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
+  const cls = typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
   if (cls) {
     const c = document.createElement("span");
     c.style.opacity = "0.6"; // the label's ink, faded
@@ -477,7 +477,7 @@ function removeSelect() {
 }
 
 function repositionSelect() {
-  if (selectBox && selectedEl && selectedEl.isConnected) placeAbs(selectBox, selectedEl);
+  if (selectBox && selectedEl?.isConnected) placeAbs(selectBox, selectedEl);
 }
 
 // ── Selection panel (note input + actions) ────────────────────────────
@@ -490,8 +490,7 @@ function panelLabel(el) {
   tag.textContent = el.tagName.toLowerCase();
   wrap.append(tag);
 
-  const cls =
-    typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
+  const cls = typeof el.className === "string" ? el.className.trim().split(/\s+/).filter(Boolean)[0] : "";
   if (cls) {
     // The class is the flexible bit — let it ellipsize so a long name can't
     // push the file:line out of the panel.
@@ -614,7 +613,10 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       for (const m of [{ from: "you", text: pin.note }, ...(pin.thread ?? [])]) {
         const msg = document.createElement("div");
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
-        const who = m.from === "agent" ? agentLabel(m.client) : Object.assign(document.createElement("span"), { className: "sn-who", textContent: "You" });
+        const who =
+          m.from === "agent"
+            ? agentLabel(m.client)
+            : Object.assign(document.createElement("span"), { className: "sn-who", textContent: "You" });
         if (m.dismisses) who.append(" · won't do");
         if (m.pending) who.append(" · not sent yet"); // written while the agent was away
         msg.append(who);
@@ -624,7 +626,8 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
           body.className = "sn-msg-body sn-md";
           body.append(renderMarkdown(m.text, openFile));
           msg.append(body);
-        } else msg.append(Object.assign(document.createElement("div"), { className: "sn-msg-body", textContent: m.text }));
+        } else
+          msg.append(Object.assign(document.createElement("div"), { className: "sn-msg-body", textContent: m.text }));
         thread.append(msg);
       }
       // While an agent works on it: a message from the agent, still being written.
@@ -895,7 +898,18 @@ function applySnapshot(list) {
   const next = new Map();
   for (const n of list) {
     const pin = pins.get(n.key) ?? { marker: makePinMarker(n.key, n.loc, n.index) };
-    Object.assign(pin, { loc: n.loc, index: n.index, note: n.note, url: n.url, prompt: n.prompt, thread: n.thread, done: n.done, dismissed: n.dismissed, working: n.working, updated: n.updated });
+    Object.assign(pin, {
+      loc: n.loc,
+      index: n.index,
+      note: n.note,
+      url: n.url,
+      prompt: n.prompt,
+      thread: n.thread,
+      done: n.done,
+      dismissed: n.dismissed,
+      working: n.working,
+      updated: n.updated,
+    });
     showState(pin);
     next.set(n.key, pin);
   }
@@ -949,7 +963,18 @@ function restorePins() {
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
     const marker = makePinMarker(s.key, s.loc, s.index);
-    const pin = { loc: s.loc, index: s.index, note: s.note, url: s.url, prompt: s.prompt, done: s.done, dismissed: s.dismissed, thread: s.thread, updated: s.updated, marker };
+    const pin = {
+      loc: s.loc,
+      index: s.index,
+      note: s.note,
+      url: s.url,
+      prompt: s.prompt,
+      done: s.done,
+      dismissed: s.dismissed,
+      thread: s.thread,
+      updated: s.updated,
+      marker,
+    };
     pins.set(s.key, pin);
     showState(pin);
   }
@@ -1032,11 +1057,12 @@ function repositionPins() {
     const span = pin.marker.firstChild;
     if (span.dataset.mark !== label) {
       span.dataset.mark = label;
-      if (STATE_ICONS[state]) span.innerHTML = STATE_ICONS[state]; // hardcoded SVG constants
+      if (STATE_ICONS[state])
+        span.innerHTML = STATE_ICONS[state]; // hardcoded SVG constants
       else span.textContent = label;
     }
     const el = resolveRef(pin.loc, pin.index);
-    if (pinsVisible && el && el.isConnected) {
+    if (pinsVisible && el?.isConnected) {
       const r = el.getBoundingClientRect();
       pin.marker.style.display = "";
       pin.marker.style.left = r.left + window.scrollX - 11 + "px";

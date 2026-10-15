@@ -15,10 +15,10 @@ export const INSTRUCTIONS =
   "what it returns, then call it again. A wait that ends with nothing is normal: keep watching until the developer " +
   "tells you to stop. The developer is looking at the browser, not at this chat: ask questions with reply_note (they " +
   "answer in the browser and the answer comes back through watch_notes). End every note you get with resolve_note, " +
-  "dismiss_note or reply_note, even when there's nothing to change. A note can be a question (\"what does this do?\"): " +
+  'dismiss_note or reply_note, even when there\'s nothing to change. A note can be a question ("what does this do?"): ' +
   "answer it in resolve_note's summary. If the developer only says thanks or confirms, resolve it with a word or two. " +
   "Messages show as Markdown in a narrow panel: " +
-  "keep them short, split points into paragraphs or a \"- \" list, put code and props in `backticks`, and write files " +
+  'keep them short, split points into paragraphs or a "- " list, put code and props in `backticks`, and write files ' +
   "as path:line (the developer can click them to open the file).";
 
 // An app is the agent's business when it's inside the agent's folder (or the
@@ -48,7 +48,12 @@ export function createRunner(store) {
   // Show the developer an agent has these, until it replies, resolves or dismisses.
   function handOut(list, agent, client) {
     for (const root of new Set(list.map((v) => v.root)))
-      store.working(root, list.filter((v) => v.root === root).map((v) => v.key), agent, client);
+      store.working(
+        root,
+        list.filter((v) => v.root === root).map((v) => v.key),
+        agent,
+        client,
+      );
   }
   const signature = (v) => `${v.root}\n${v.key}\n${v.asked}\n${v.note}\n${v.thread.length}`;
 
@@ -96,7 +101,11 @@ export function createRunner(store) {
     list_notes(_, cwd, signal, agent, client) {
       const all = notes(cwd);
       const list = all.filter(open);
-      handOut(list.filter((v) => v.thread.at(-1)?.from !== "agent"), agent, client); // not the ones waiting on the developer
+      handOut(
+        list.filter((v) => v.thread.at(-1)?.from !== "agent"),
+        agent,
+        client,
+      ); // not the ones waiting on the developer
       return ok(list.length ? list.map(format).join("\n\n---\n\n") : all.length ? "No open notes." : empty);
     },
     reply_note({ id, message }, cwd, signal, agent, client) {
@@ -139,7 +148,13 @@ export function registerTools(mcp, call) {
       "them in a batch, or nothing after the timeout. Answer each note it returns with resolve_note, dismiss_note or " +
       "reply_note (resolve it if nothing needs changing), then call it again to keep working hands-free.",
     inputSchema: {
-      timeout_seconds: z.number().int().min(1).max(MAX_WAIT_S).optional().describe(`How long to wait. Default and max ${MAX_WAIT_S}.`),
+      timeout_seconds: z
+        .number()
+        .int()
+        .min(1)
+        .max(MAX_WAIT_S)
+        .optional()
+        .describe(`How long to wait. Default and max ${MAX_WAIT_S}.`),
     },
     annotations: { readOnlyHint: true },
   });
@@ -155,7 +170,11 @@ export function registerTools(mcp, call) {
       "They see it on the note in the browser; their answer comes back through watch_notes.",
     inputSchema: {
       id: z.string().describe("The note's id."),
-      message: z.string().describe("What to tell or ask the developer. Short Markdown: a paragraph or two, or a list; `code`; files as path:line."),
+      message: z
+        .string()
+        .describe(
+          "What to tell or ask the developer. Short Markdown: a paragraph or two, or a list; `code`; files as path:line.",
+        ),
     },
   });
   tool("dismiss_note", {
@@ -174,15 +193,20 @@ export function registerTools(mcp, call) {
       "the note. If they reply that it isn't right, the note comes back through watch_notes.",
     inputSchema: {
       id: z.string().describe("The note's id."),
-      summary: z.string().describe("Markdown: what you changed, and in which file (path:line); or, for a question, the answer."),
+      summary: z
+        .string()
+        .describe("Markdown: what you changed, and in which file (path:line); or, for a question, the answer."),
     },
   });
 }
 
 // A note for the agent: where its app is, its prompt, then the conversation so far.
 function format(v) {
-  const who = (m) => (m.from === "agent" ? (m.resolves ? "you (resolved)" : m.dismisses ? "you (dismissed)" : "you") : "developer");
-  const convo = v.thread.length ? `\n\n## Conversation\n${v.thread.map((m) => `- ${who(m)}: ${m.text}`).join("\n")}` : "";
+  const who = (m) =>
+    m.from === "agent" ? (m.resolves ? "you (resolved)" : m.dismisses ? "you (dismissed)" : "you") : "developer";
+  const convo = v.thread.length
+    ? `\n\n## Conversation\n${v.thread.map((m) => `- ${who(m)}: ${m.text}`).join("\n")}`
+    : "";
   const app = v.app === "." ? "" : `app: ${v.app}/ (the file path below is relative to it)\n`;
   return `### Note ${v.n} (id: ${v.id})\n${app}page: ${v.url}\n\n${v.prompt}${convo}`;
 }

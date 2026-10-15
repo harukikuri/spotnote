@@ -1,9 +1,4 @@
 {
   "title": "Guides",
-  "pages": [
-    "picking-elements",
-    "notes",
-    "settings",
-    "mcp"
-  ]
+  "pages": ["picking-elements", "notes", "settings", "mcp"]
 }

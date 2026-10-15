@@ -11,12 +11,19 @@ import { parseLoc } from "./prompt.js";
 // first; the dev server then finds it on disk (see /__spotnote/open).
 export async function openFile({ path, line, column }, button) {
   if (!path.includes("/")) {
-    const known = new Set([...document.querySelectorAll("[data-spotnote]")].map((e) => parseLoc(e.getAttribute("data-spotnote")).file));
+    const known = new Set(
+      [...document.querySelectorAll("[data-spotnote]")].map((e) => parseLoc(e.getAttribute("data-spotnote")).file),
+    );
     const hits = [...known].filter((f) => f.split("/").pop() === path);
     if (hits.length === 1) path = hits[0];
   }
   const editor = EDITORS[getSettings().editor] ?? EDITORS.auto;
-  const q = new URLSearchParams({ path, ...(line && { line }), ...(column && { column }), ...(editor.scheme && { resolve: "1" }) });
+  const q = new URLSearchParams({
+    path,
+    ...(line && { line }),
+    ...(column && { column }),
+    ...(editor.scheme && { resolve: "1" }),
+  });
   const res = await fetch(`/__spotnote/open?${q}`).catch(() => null);
   const body = res && (await res.json().catch(() => null));
   if (res?.status === 404) return fileProblem(button, "Couldn't find this file in your project", true);

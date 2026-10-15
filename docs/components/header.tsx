@@ -7,14 +7,23 @@ import { FullSearchTrigger } from 'fumadocs-ui/layouts/shared/slots/search-trigg
 export function Header() {
   return (
     <header className="sticky top-0 z-50 h-14 border-b bg-fd-background/80 backdrop-blur-sm">
-      <div
-        className="mx-auto flex h-full items-center px-4"
-        style={{ maxWidth: 'var(--fd-layout-width, 97rem)' }}
-      >
+      <div className="mx-auto flex h-full items-center px-4" style={{ maxWidth: 'var(--fd-layout-width, 97rem)' }}>
         <Link href="/" className="ps-3" aria-label="Spotnote">
           {/* The light-theme logo is dark ink, and the other way round. */}
-          <img src="/brand/spotnote-logo-light.svg" alt="Spotnote" width={122} height={22} className="h-[22px] w-auto dark:hidden" />
-          <img src="/brand/spotnote-logo-dark.svg" alt="Spotnote" width={122} height={22} className="hidden h-[22px] w-auto dark:block" />
+          <img
+            src="/brand/spotnote-logo-light.svg"
+            alt="Spotnote"
+            width={122}
+            height={22}
+            className="h-[22px] w-auto dark:hidden"
+          />
+          <img
+            src="/brand/spotnote-logo-dark.svg"
+            alt="Spotnote"
+            width={122}
+            height={22}
+            className="hidden h-[22px] w-auto dark:block"
+          />
         </Link>
         <div className="flex-1" />
         <nav className="flex items-center gap-3">

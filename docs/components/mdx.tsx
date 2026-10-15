@@ -38,9 +38,7 @@ const tabIcons: Record<string, ReactNode> = {
   'Gemini CLI': <SiGooglegemini />,
 };
 
-function CustomCodeBlockTabsTrigger(
-  props: React.ComponentProps<typeof CodeBlockTabsTrigger>,
-): React.ReactNode {
+function CustomCodeBlockTabsTrigger(props: React.ComponentProps<typeof CodeBlockTabsTrigger>): React.ReactNode {
   const label = typeof props.children === 'string' ? props.children : '';
   const icon = tabIcons[label];
   return (

@@ -62,7 +62,10 @@ export function createStore() {
     versions.set(root, (versions.get(root) ?? 0) + 1);
     // Save shortly after, and tell the browsers and watchers now.
     clearTimeout(timers.get(root));
-    timers.set(root, setTimeout(() => save(root), 200));
+    timers.set(
+      root,
+      setTimeout(() => save(root), 200),
+    );
     for (const cb of listeners) cb(root);
   }
 
@@ -92,12 +95,27 @@ export function createStore() {
       const old = a.notes.find((x) => x.key === n.key);
       if (!old) {
         const now = Date.now();
-        a.notes.push({ ...fromBrowser(n), thread: [], done: false, dismissed: false, working: false, asked: now, updated: now });
+        a.notes.push({
+          ...fromBrowser(n),
+          thread: [],
+          done: false,
+          dismissed: false,
+          working: false,
+          asked: now,
+          updated: now,
+        });
         delete a.deleted[n.key];
       } else {
         // A rewritten note is a new request: start its conversation over.
         if (old.note !== n.note)
-          Object.assign(old, { thread: [], done: false, dismissed: false, working: false, reopened: null, asked: Date.now() });
+          Object.assign(old, {
+            thread: [],
+            done: false,
+            dismissed: false,
+            working: false,
+            reopened: null,
+            asked: Date.now(),
+          });
         Object.assign(old, fromBrowser(n), { updated: Date.now() });
       }
       changed(root);
@@ -130,7 +148,15 @@ export function createStore() {
         if (i >= 0 && a.notes[i].updated >= updated) continue;
         const thread = Array.isArray(n.thread) ? n.thread : [];
         const asked = Number(n.asked) || updated;
-        const note = { ...fromBrowser(n), thread, done: !!n.done, dismissed: !!n.dismissed, working: false, asked, updated };
+        const note = {
+          ...fromBrowser(n),
+          thread,
+          done: !!n.done,
+          dismissed: !!n.dismissed,
+          working: false,
+          asked,
+          updated,
+        };
         if (i >= 0) a.notes[i] = note;
         else a.notes.push(note);
         any = true;

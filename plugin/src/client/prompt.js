@@ -37,7 +37,10 @@ function sourcePath(el) {
     if (!loc) continue;
     const label =
       node.getAttribute("data-spotnote-name") ||
-      parseLoc(loc).file.split("/").pop().replace(/\.\w+$/, "");
+      parseLoc(loc)
+        .file.split("/")
+        .pop()
+        .replace(/\.\w+$/, "");
     if (up[up.length - 1] !== label) up.push(label); // dedupe consecutive same component
   }
   return up.reverse(); // outer → inner
@@ -47,8 +50,7 @@ export function buildPrompt(el, note, raw = null) {
   const l = parseLoc(el.getAttribute("data-spotnote"));
   const occ = occInfo(el);
   const tag = el.tagName.toLowerCase();
-  const cls =
-    typeof el.className === "string" && el.className.trim() ? ` class="${el.className.trim()}"` : "";
+  const cls = typeof el.className === "string" && el.className.trim() ? ` class="${el.className.trim()}"` : "";
   const id = el.id ? ` id="${el.id}"` : "";
   const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60);
   const cs = getComputedStyle(el);
@@ -104,5 +106,13 @@ export function savedPrompt(pin) {
   const stale = "- note: this location is from when the note was written; the code has changed since, so look near it";
   if (pin.prompt) return pin.prompt.replace("## Target\n", `## Target\n${stale}\n`);
   const l = parseLoc(pin.loc);
-  return ["## Request", pin.note, "", "## Target", stale, `- file: ${l.file}`, `- line: ${l.line}, column: ${l.column}`].join("\n");
+  return [
+    "## Request",
+    pin.note,
+    "",
+    "## Target",
+    stale,
+    `- file: ${l.file}`,
+    `- line: ${l.line}, column: ${l.column}`,
+  ].join("\n");
 }

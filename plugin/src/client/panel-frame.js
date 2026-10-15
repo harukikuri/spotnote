@@ -19,11 +19,7 @@ function swallowNextClick() {
 
 export function enablePanelDrag(panelEl, onMoved) {
   panelEl.addEventListener("mousedown", (e) => {
-    if (
-      !(e.target instanceof Element) ||
-      e.target.closest("[data-spotnote-input]") ||
-      e.target.closest("button")
-    )
+    if (!(e.target instanceof Element) || e.target.closest("[data-spotnote-input]") || e.target.closest("button"))
       return;
     e.preventDefault(); // no text selection while dragging
     const startX = e.clientX;
