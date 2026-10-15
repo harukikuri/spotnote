@@ -133,7 +133,7 @@ test("Shift-click puts one note on several elements, each with the same pin", as
   await shiftClick(page.locator(app.repeated).nth(0));
   await shiftClick(page.locator(app.repeated).nth(1));
   await expect(chips).toHaveCount(3);
-  await expect(remove).toHaveCount(2); // the note's own element stays on
+  await expect(remove).toHaveCount(3); // any can come off
   await chips.nth(1).hover(); // lights up its element on the page
   const lit = () =>
     page.evaluate(
@@ -148,7 +148,10 @@ test("Shift-click puts one note on several elements, each with the same pin", as
   await chips.nth(2).getByTitle("Take off this note").click(); // or off from its chip
   await expect(chips).toHaveCount(2);
   await expect(panel).toBeVisible();
-  await shiftClick(page.locator(app.title).first()); // the note's own element stays on
+  await chips.nth(0).getByTitle("Take off this note").click(); // the first too: the next keys the note
+  await expect(chips).toHaveCount(1);
+  await expect(remove).toHaveCount(0); // but not the last
+  await shiftClick(page.locator(app.title).first()); // back on, last
   await expect(chips).toHaveCount(2);
 
   await panel.locator("[data-spotnote-input]").fill("Make these match");
@@ -157,14 +160,14 @@ test("Shift-click puts one note on several elements, each with the same pin", as
   await expect(page.locator(".sn-pin")).toHaveText(["1", "1"]);
   const prompt = await clipboard(page);
   expect(prompt).toMatch(/^## Request\nMake these match\n\n## Target 1 of 2\n- file: /);
-  expect(prompt).toContain(`## Target 1 of 2\n- file: ${app.file}`);
-  expect(prompt).toMatch(/## Target 2 of 2\n- file: .+\n- line: [\s\S]*- instance: 1 of \d+ rendered/);
+  expect(prompt).toMatch(/## Target 1 of 2\n- file: .+\n- line: [\s\S]*- instance: 1 of \d+ rendered/);
+  expect(prompt).toContain(`## Target 2 of 2\n- file: ${app.file}`);
 
   // Either pin opens the note; the list shows it once, on 2 elements.
   await page.locator(".sn-pin").nth(1).click();
   await expect(panel.locator("[data-spotnote-input]")).toHaveText("Make these match");
   await expect(chips).toHaveCount(2);
-  await expect(remove).toHaveCount(0); // neither the note's own element nor the one it opened on
+  await expect(remove).toHaveCount(2);
   await page.keyboard.press("Escape");
   await page.locator(".snl-item").nth(1).click(); // Notes
   await expect(page.locator(".snl-notes li:not(.snl-group)")).toHaveCount(1);
@@ -173,6 +176,17 @@ test("Shift-click puts one note on several elements, each with the same pin", as
   await page.reload();
   await openLauncher(page);
   await expect(page.locator(".sn-pin")).toHaveText(["1", "1"]);
+
+  // A saved note's first element can come off too: it moves to the next.
+  await page.locator(".sn-pin").first().click();
+  await chips.nth(0).getByTitle("Take off this note").click();
+  await page.keyboard.press("Escape"); // saves on close
+  await expect(page.locator(".sn-pin")).toHaveCount(1);
+  await page.reload();
+  await openLauncher(page);
+  await expect(page.locator(".sn-pin")).toHaveCount(1);
+  await page.locator(".sn-pin").click();
+  await expect(panel.locator("[data-spotnote-input]")).toHaveText("Make these match");
 });
 
 test("deleting a note asks first", async ({ page, app }) => {

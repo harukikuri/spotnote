@@ -541,15 +541,26 @@ function glow(ref, on) {
   const box = boxOf(ref);
   if (box) box.style.boxShadow = on ? `0 0 0 4px rgba(${ACCENT_RGB},0.45)` : "";
 }
-// Shift-click: put another element on the open note, or take it off again.
+// Shift-click: put another element on the open note, or take it off again
+// (any of them, as long as one is left).
 function toggleMore(el) {
   if (panelMoreLocked) return; // an agent has the note: its elements stay as sent
   const occ = occInfo(el);
   const ref = { loc: occ.loc, index: occ.index };
-  if (sameRef(ref, panelPrimary) || sameRef(ref, { loc: selectedLoc, index: selectedIndex })) return;
   const i = panelMore.findIndex((t) => sameRef(t, ref));
   if (i >= 0) panelMore.splice(i, 1);
-  else panelMore.push(ref);
+  else if (!sameRef(ref, panelPrimary)) panelMore.push(ref);
+  else if (panelMore.length)
+    panelPrimary = panelMore.shift(); // the next one keys the note
+  else return;
+  // Took off the element the panel opened on: select the note's first instead.
+  if (![panelPrimary, ...panelMore].some((t) => sameRef(t, { loc: selectedLoc, index: selectedIndex }))) {
+    selectedEl = panelTarget = resolveRef(panelPrimary.loc, panelPrimary.index);
+    selectedLoc = panelPrimary.loc;
+    selectedIndex = panelPrimary.index;
+    selectedRawTarget = null;
+    drawSelect(selectedEl);
+  }
   drawMoreBoxes();
   panelMoreShown?.();
 }
@@ -660,7 +671,13 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   panelPrimary = saved ? { loc: saved.loc, index: saved.index } : { loc: occ.loc, index: occ.index };
   panelMore = [...(saved?.more ?? [])];
   panelMoreLocked = talking;
-  const moreChanged = () => JSON.stringify(panelMore) !== JSON.stringify(saved?.more ?? []);
+  const moreChanged = () =>
+    JSON.stringify([panelPrimary, ...panelMore]) !== JSON.stringify(saved ? targetsOf(saved) : []);
+  // Save the note; under its new first element's key when its first was taken off.
+  const save = (note) => {
+    if (refKey(panelPrimary.loc, panelPrimary.index) !== key) deletePin(key);
+    upsertPin(panelPrimary, note, panelMore);
+  };
   // Clicking an element that already has a note edits it, so start from that
   // note — otherwise the save-on-close would overwrite it with fresh text.
   prefillNote = talking ? null : (prefillNote ?? pins.get(key)?.note);
@@ -693,13 +710,12 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   panelMoreShown = () => {
     chips.textContent = "";
     const refs = [panelPrimary, ...panelMore];
-    const clicked = { loc: selectedLoc, index: selectedIndex };
     for (const ref of refs) {
       const el = resolveRef(ref.loc, ref.index);
       if (!el) continue; // not on this page
       const several = refs.length > 1;
-      // The note's own element (and the one the panel opened on) stay on.
-      const removable = several && !panelMoreLocked && !sameRef(ref, panelPrimary) && !sameRef(ref, clicked);
+      // Any can come off, but the last one.
+      const removable = several && !panelMoreLocked;
       chips.append(chip(el, ref, { base: several && sameRef(ref, panelPrimary), removable }));
     }
   };
@@ -833,7 +849,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       navigator.clipboard?.writeText(prompt).catch(() => {});
       console.log("[spotnote] copied prompt:\n" + prompt);
     }
-    upsertPin(panelPrimary, note, panelMore); // leave a marker on each element
+    save(note); // leave a marker on each element
     closePanel(); // selection mode stays on while the launcher is open
     launcher?.flash(); // ✓ on the launcher core
   }
@@ -869,8 +885,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     panelSave = () => {
       const note = (input.textContent || "").trim();
       // Skip a note just deleted from this panel, and an emptied one.
-      if (note && pins.has(key) && (note !== pins.get(key).note || moreChanged()))
-        upsertPin(panelPrimary, note, panelMore);
+      if (note && pins.has(key) && (note !== pins.get(key).note || moreChanged())) save(note);
     };
   }
 
