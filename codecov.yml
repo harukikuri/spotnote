@@ -9,3 +9,8 @@ coverage:
     patch:
       default:
         informational: true
+codecov:
+  notify:
+    # Wait for both uploads (unit and e2e): a run cancelled halfway (a newer push)
+    # would otherwise report one flag's partial coverage as the commit's.
+    after_n_builds: 2
