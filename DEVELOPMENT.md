@@ -75,3 +75,13 @@ export default defineConfig({ plugins: [react(), spotnote()] });
 ```bash
 pnpm --filter @spotnote/docs dev              # http://localhost:3000
 ```
+
+## Release
+
+1. Set the same version in `plugin/package.json` and `mcp/package.json`, commit, push.
+2. Tag it: `git tag v0.2.0 && git push origin v0.2.0`.
+
+The `Release` workflow (`.github/workflows/release.yml`) then runs the tests,
+checks the tag matches both versions, publishes `spotnote` and `spotnote-mcp`
+to npm (with provenance), and creates the GitHub release. It needs an
+`NPM_TOKEN` repository secret (an npm automation token).
