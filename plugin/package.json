@@ -32,5 +32,8 @@
     "@babel/core": "^7.26.0",
     "launch-editor": "~2.14.1",
     "magic-string": "^0.30.0"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.6"
   }
 }
