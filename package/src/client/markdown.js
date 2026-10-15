@@ -113,7 +113,7 @@ const TOKENS = new RegExp(
     /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->)/, // 1 comment
     /("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/, // 2 string
     /(<\/?)([A-Za-z][\w.:-]*)/, // 3 bracket, 4 tag name
-    /([A-Za-z_:@][\w:.-]*)(?=\s*=)/, // 5 attribute
+    /([A-Za-z_:@][\w:.-]*)(?==(?![=>]))/, // 5 attribute: `name=`, not `a = b`, `a == b` or `a=>`
     /\b(const|let|var|function|return|import|export|from|default|if|else|for|while|new|class|extends|async|await|true|false|null|undefined)\b/, // 6 keyword
     /(#[0-9a-fA-F]{3,8}\b|-?\b\d+(?:\.\d+)?(?:px|rem|em|vh|vw|ms|s|%)?\b)/, // 7 number
   ]

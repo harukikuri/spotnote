@@ -41,7 +41,7 @@ test("**bold** and `code`; short code stays on one line", () => {
 });
 
 test("code blocks are coloured by token, up to the closing fence or the end", () => {
-  const div = box('```jsx\n// note\n<Button size="lg" n={2}>\nconst a = "b";\n```\nafter');
+  const div = box('```jsx\n// note\n<Button size="lg" n={2}>\nconst a = "b";\nok = a== b;\n```\nafter');
   const pre = div.querySelector("pre");
   const kinds = [...pre.querySelectorAll("span")].map((s) => `${s.className.slice(6)}:${s.textContent}`);
   assert.deepEqual(kinds, [
@@ -52,10 +52,9 @@ test("code blocks are coloured by token, up to the closing fence or the end", ()
     "attr:n",
     "num:2",
     "kw:const",
-    "attr:a",
     'str:"b"',
-  ]); // `a =` reads as an attribute
-  assert.equal(pre.textContent, '// note\n<Button size="lg" n={2}>\nconst a = "b";');
+  ]); // JS assignments and comparisons aren't attributes
+  assert.equal(pre.textContent, '// note\n<Button size="lg" n={2}>\nconst a = "b";\nok = a== b;');
   assert.equal(div.querySelector("p").textContent, "after");
   assert.equal(box("```\nopen").querySelector("pre").textContent, "open");
 });
