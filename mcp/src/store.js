@@ -3,8 +3,9 @@
 // is the source of truth; browsers mirror it and fall back to localStorage
 // when it's gone.
 //
-// A note: { key, loc, index, url, note, prompt, thread, done, dismissed, working, asked, updated }
-//   key       "path:line:col@index" — one note per element
+// A note: { key, loc, index, more, url, note, prompt, thread, done, dismissed, working, asked, updated }
+//   key       "path:line:col@index" — of the element the note was written on
+//   more      [{ loc, index }]: the other elements it's on (added with Shift-click)
 //   asked     when this request was written, in ms: a note deleted and written again
 //             word for word is still a new request
 //   thread    [{ id, from: "agent" | "you", text, at, resolves?, dismisses?, client? }]
@@ -74,6 +75,9 @@ export function createStore() {
     key: n.key,
     loc: n.loc,
     index: n.index,
+    more: Array.isArray(n.more)
+      ? n.more.filter((t) => typeof t?.loc === "string").map((t) => ({ loc: t.loc, index: Number(t.index) || 0 }))
+      : [],
     url: n.url,
     note: n.note,
     prompt: n.prompt,

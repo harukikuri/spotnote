@@ -46,7 +46,21 @@ function sourcePath(el) {
   return up.reverse(); // outer → inner
 }
 
-export function buildPrompt(el, note, raw = null) {
+// `target`: one element, or several for a note on more than one (each gets its
+// own "## Target i of n" section, in the order they were picked). `raw` is the
+// node actually clicked on the first.
+export function buildPrompt(target, note, raw = null) {
+  const els = Array.isArray(target) ? target : [target];
+  const heading = (i) => (els.length > 1 ? `## Target ${i + 1} of ${els.length}` : "## Target");
+  return [
+    "## Request",
+    note,
+    ...els.flatMap((el, i) => ["", ...targetSection(el, heading(i), i === 0 ? raw : null)]),
+  ].join("\n");
+}
+
+// One element's part of the prompt: where it is, what it is, its owners, its styles.
+function targetSection(el, heading, raw) {
   const l = parseLoc(el.getAttribute("data-spotnote"));
   const occ = occInfo(el);
   const tag = el.tagName.toLowerCase();
@@ -75,10 +89,7 @@ export function buildPrompt(el, note, raw = null) {
   const path = sourcePath(el); // outer → inner
 
   return [
-    `## Request`,
-    note,
-    "",
-    `## Target`,
+    heading,
     `- file: ${l.file}`,
     `- line: ${l.line}, column: ${l.column}`,
     `- element: <${tag}${id}${cls}>`,
@@ -95,16 +106,14 @@ export function buildPrompt(el, note, raw = null) {
     "",
     `## Current computed styles`,
     styles,
-  ]
-    .filter((x) => x !== null)
-    .join("\n");
+  ].filter((x) => x !== null);
 }
 
 // The prompt for a note whose element can't be found: the one saved when it was
 // written, flagged as possibly stale (older notes have none — rebuild the basics).
 export function savedPrompt(pin) {
   const stale = "- note: this location is from when the note was written; the code has changed since, so look near it";
-  if (pin.prompt) return pin.prompt.replace("## Target\n", `## Target\n${stale}\n`);
+  if (pin.prompt) return pin.prompt.replace(/^## Target( \d+ of \d+)?\n/gm, (h) => `${h}${stale}\n`);
   const l = parseLoc(pin.loc);
   return [
     "## Request",

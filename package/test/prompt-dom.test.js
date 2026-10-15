@@ -58,3 +58,14 @@ test("buildPrompt leaves out the source path when one component owns it all", ()
   document.body.innerHTML = '<p data-spotnote="App.jsx:1:1" data-spotnote-name="App">hi</p>';
   assert.doesNotMatch(buildPrompt(document.querySelector("p"), "x"), /## Source path/);
 });
+
+test("buildPrompt on several elements: one numbered target section each", () => {
+  const button = document.querySelector("button");
+  const prompt = buildPrompt([pick(), button], "Match these");
+  assert.match(prompt, /^## Request\nMatch these\n\n## Target 1 of 2\n- file: components\/Card\.jsx\n/);
+  assert.match(
+    prompt,
+    /\n\n## Target 2 of 2\n- file: pages\/Products\.jsx\n- line: 20, column: 9\n- element: <button>/,
+  );
+  assert.equal(prompt.match(/## Current computed styles/g).length, 2);
+});

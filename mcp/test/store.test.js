@@ -37,6 +37,12 @@ test("upsert adds a note; rewriting it starts its conversation over", () => {
   assert.deepEqual([n.note, n.done, n.thread.length], ["Smaller", false, 0]);
 });
 
+test("a note keeps the other elements it's on, and only their loc and index", () => {
+  store.upsert(root, note("c.jsx:3:3@0", "Match", { more: [{ loc: "d.jsx:4:4", index: 1, extra: "x" }, { bad: 1 }] }));
+  assert.deepEqual(store.notes(root).find((n) => n.key === "c.jsx:3:3@0").more, [{ loc: "d.jsx:4:4", index: 1 }]);
+  store.remove(root, "c.jsx:3:3@0");
+});
+
 test("a reply reopens a done note", () => {
   store.say(root, "a.jsx:1:1@0", { text: "Done", resolves: true });
   store.reply(root, "a.jsx:1:1@0", "One more thing");

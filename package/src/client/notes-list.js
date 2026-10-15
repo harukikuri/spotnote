@@ -20,7 +20,7 @@ export function createNotesList(pop, ctrl, { onOpen }) {
   const picked = new Set(); // notes ticked for deleting
 
   // The header's delete button, a trash icon: with "(n)" for the ticked notes,
-  // "(all)" for all of them. Both ask first, over the dimmed list.
+  // bare for all of them. Both ask first, over the dimmed list.
   function renderNotesActions() {
     const keys = new Set(ctrl.notes().map((n) => n.key));
     for (const k of picked) if (!keys.has(k)) picked.delete(k);
@@ -33,7 +33,7 @@ export function createNotesList(pop, ctrl, { onOpen }) {
     b.title = picked.size ? `Delete ${count}` : "Delete all";
     b.setAttribute("aria-label", b.title);
     b.innerHTML = ICONS.trash; // hardcoded SVG constants, not user input
-    el("span", "snl-del-n", b).textContent = picked.size ? `(${picked.size})` : "(all)";
+    if (picked.size) el("span", "snl-del-n", b).textContent = `(${picked.size})`;
     b.addEventListener("click", () =>
       confirmOver(pop, {
         title: picked.size || doomed.length === 1 ? `Delete ${count}?` : `Delete all ${count}?`,
@@ -98,18 +98,40 @@ export function createNotesList(pop, ctrl, { onOpen }) {
     if (n.mark)
       num.innerHTML = n.mark; // hardcoded SVG constants, not user input
     else num.textContent = String(n.number);
-    const kind = ctrl.fileKind(n.loc.replace(/:\d+:\d+$/, "")); // drop :line:col
-    const mark = el("span", "snl-fw", src);
-    mark.style.color = FRAMEWORKS[kind].color;
-    mark.title = FRAMEWORKS[kind].name;
-    mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
-    el("span", "", src).textContent = n.loc.split("/").pop() + (n.index > 0 ? ` · #${n.index + 1}` : "");
-    el("span", "snl-txt", li).textContent = n.note;
-    if (n.state === "working") {
-      // Who has it; what the agent then says is on the note, not here.
-      const sum = el("span", "snl-sum", li);
-      sum.textContent = sum.title = `${agentMark(n.client)?.name ?? "Agent"} is on it…`;
+    // Its first element as a chip, like the panel's header (tag.class, then
+    // file:line); any others as a "+n" chip, named in its tooltip. One line.
+    const chips = el("span", "sn-chips snl-chips", src);
+    const [first, ...rest] = n.targets;
+    for (const t of [first]) {
+      const c = el("span", "sn-chip", chips);
+      if (t.tag) {
+        const name = el("span", "sn-chip-el", c);
+        el("b", "", name).textContent = t.tag;
+        if (t.cls) el("span", "sn-chip-cls", name).textContent = `.${t.cls}`;
+      }
+      const file = t.loc.replace(/:\d+$/, ""); // drop :col
+      const kind = ctrl.fileKind(file.replace(/:\d+$/, ""));
+      const mark = el("span", "snl-fw", c);
+      mark.style.color = FRAMEWORKS[kind].color;
+      mark.title = FRAMEWORKS[kind].name;
+      mark.innerHTML = fwIcon(kind); // hardcoded SVG constants, not user input
+      el("span", "snl-loc", c).textContent = file.split("/").pop();
     }
+    if (rest.length) {
+      const more = el("span", "sn-chip snl-more", chips);
+      more.textContent = `+${rest.length}`;
+      more.title = rest
+        .map((t) =>
+          [t.tag && t.tag + (t.cls ? `.${t.cls}` : ""), t.loc.split("/").pop().replace(/:\d+$/, "")]
+            .filter(Boolean)
+            .join(" "),
+        )
+        .join("\n");
+    }
+    // One line: the conversation's latest, or the agent thinking while it works.
+    const txt = el("span", "snl-txt", li);
+    txt.textContent = txt.title =
+      n.state === "working" ? `${agentMark(n.client)?.name ?? "Agent"} is thinking…` : n.latest.replace(/\s+/g, " ");
     if (!n.lost) {
       li.addEventListener("click", () => {
         onOpen();

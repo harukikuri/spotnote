@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { NODE_COVERAGE } from "./coverage.js";
-import { test, expect, openLauncher, writeNote } from "./fixtures.js";
+import { test, expect, openLauncher, shiftClick, clickEdge, writeNote } from "./fixtures.js";
 
 const repo = path.resolve(fileURLToPath(import.meta.url), "../..");
 test.describe.configure({ mode: "serial" }); // one agent, one store, for the whole file
@@ -141,6 +141,24 @@ test("file links: a bare name is found among the page's stamps; a link that open
   await expect(hint).toHaveCount(0);
   await expect(link).toHaveAttribute("title", "Open in your editor");
   expect(asked).toEqual([`path=${encodeURIComponent(app.file)}&line=5`, `path=${encodeURIComponent(app.file)}&line=5`]);
+});
+
+test("a note on several elements reaches the agent with each of them", async ({ page, app }) => {
+  await openLauncher(page);
+  const before = await page.locator(".sn-pin").count();
+  await clickEdge(page.locator(app.repeated).nth(1));
+  await shiftClick(page.locator(app.repeated).nth(2));
+  await page.locator(".sn-panel [data-spotnote-input]").fill("Same size, please");
+  await page.keyboard.press("Enter");
+  const got = await tool("watch_notes", { timeout_seconds: 30 });
+  expect(got).toContain("## Request\nSame size, please\n\n## Target 1 of 2\n");
+  expect(got).toContain("- instance: 2 of ");
+  expect(got).toContain("## Target 2 of 2\n");
+  expect(got).toContain("- instance: 3 of ");
+  await tool("resolve_note", { id: got.match(/\(id: ([^)]+)\)/)[1], summary: "Done." });
+  // Both of its pins, kept through the server's snapshots, show it's done.
+  await expect(page.locator(".sn-pin")).toHaveCount(before + 2);
+  await expect(page.locator(".sn-pin:not(.sn-done)")).toHaveCount(0);
 });
 
 test("a second agent session reaches the notes through the first", async ({ page, app }) => {

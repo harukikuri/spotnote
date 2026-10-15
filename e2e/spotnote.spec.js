@@ -1,7 +1,7 @@
 // Spotnote in a real browser: the launcher, picking, the note panel, pins, the
 // copied prompt and the launcher's menus — in each example app, with no agent
 // connected (agent.spec.js has one).
-import { test, expect, basename, clickEdge, openLauncher, writeNote } from "./fixtures.js";
+import { test, expect, basename, clickEdge, openLauncher, shiftClick, writeNote } from "./fixtures.js";
 
 const clipboard = (page) => page.evaluate(() => navigator.clipboard.readText());
 
@@ -120,6 +120,59 @@ test("a note whose element is gone is marked, and can still be copied or deleted
   await row.getByTitle("Delete note").click();
   await expect(notes.locator(".snl-empty")).toBeVisible();
   await expect(notes.locator(".snl-del")).toHaveCount(0); // nothing left to delete
+});
+
+test("Shift-click puts one note on several elements, each with the same pin", async ({ page, app }) => {
+  await openLauncher(page);
+  await clickEdge(page.locator(app.title).first());
+  const panel = page.locator(".sn-panel");
+  const chips = panel.locator(".sn-chip"); // one per element on the note
+  const remove = chips.getByTitle("Take off this note");
+  await expect(chips).toHaveCount(1);
+  await expect(remove).toHaveCount(0);
+  await shiftClick(page.locator(app.repeated).nth(0));
+  await shiftClick(page.locator(app.repeated).nth(1));
+  await expect(chips).toHaveCount(3);
+  await expect(remove).toHaveCount(2); // the note's own element stays on
+  await chips.nth(1).hover(); // lights up its element on the page
+  const lit = () =>
+    page.evaluate(
+      () => [...document.querySelector("spotnote-root").shadowRoot.children].filter((e) => e.style.boxShadow).length,
+    );
+  await expect.poll(lit).toBe(1);
+  await panel.locator("[data-spotnote-input]").hover();
+  await expect.poll(lit).toBe(0);
+  await shiftClick(page.locator(app.repeated).nth(1)); // again: off
+  await expect(chips).toHaveCount(2);
+  await shiftClick(page.locator(app.repeated).nth(1));
+  await chips.nth(2).getByTitle("Take off this note").click(); // or off from its chip
+  await expect(chips).toHaveCount(2);
+  await expect(panel).toBeVisible();
+  await shiftClick(page.locator(app.title).first()); // the note's own element stays on
+  await expect(chips).toHaveCount(2);
+
+  await panel.locator("[data-spotnote-input]").fill("Make these match");
+  await page.keyboard.press("Enter");
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator(".sn-pin")).toHaveText(["1", "1"]);
+  const prompt = await clipboard(page);
+  expect(prompt).toMatch(/^## Request\nMake these match\n\n## Target 1 of 2\n- file: /);
+  expect(prompt).toContain(`## Target 1 of 2\n- file: ${app.file}`);
+  expect(prompt).toMatch(/## Target 2 of 2\n- file: .+\n- line: [\s\S]*- instance: 1 of \d+ rendered/);
+
+  // Either pin opens the note; the list shows it once, on 2 elements.
+  await page.locator(".sn-pin").nth(1).click();
+  await expect(panel.locator("[data-spotnote-input]")).toHaveText("Make these match");
+  await expect(chips).toHaveCount(2);
+  await expect(remove).toHaveCount(0); // neither the note's own element nor the one it opened on
+  await page.keyboard.press("Escape");
+  await page.locator(".snl-item").nth(1).click(); // Notes
+  await expect(page.locator(".snl-notes li:not(.snl-group)")).toHaveCount(1);
+  await expect(page.locator(".snl-notes .snl-more")).toHaveText("+1");
+
+  await page.reload();
+  await openLauncher(page);
+  await expect(page.locator(".sn-pin")).toHaveText(["1", "1"]);
 });
 
 test("deleting a note asks first", async ({ page, app }) => {

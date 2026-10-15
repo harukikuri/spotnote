@@ -24,10 +24,11 @@ export const basename = (file) => file.split("/").pop();
 
 // Click an element away from the placeholder bars inside it, so the click lands
 // on the element itself (its right edge), not on a stamped child.
-export async function clickEdge(locator) {
+export async function clickEdge(locator, options = {}) {
   const box = await locator.boundingBox();
-  await locator.click({ position: { x: box.width - 3, y: box.height / 2 } });
+  await locator.click({ position: { x: box.width - 3, y: box.height / 2 }, ...options });
 }
+export const shiftClick = (locator) => clickEdge(locator, { modifiers: ["Shift"] });
 
 export async function openLauncher(page) {
   await page.locator(".snl-core").click();

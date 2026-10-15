@@ -244,6 +244,18 @@ export const CSS = [
   ".sn-loc span>span:last-child{text-decoration:underline dotted;text-underline-offset:2px}",
   ".sn-loc:hover span>span:last-child{text-decoration-style:solid}",
   `.sn-loc:focus-visible{outline:2px solid ${T.accent};outline-offset:2px}`,
+  // The panel header's chips: one per element on the note.
+  ".sn-chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding:1px 0}",
+  `.sn-chip{display:inline-flex;align-items:center;gap:4px;max-width:100%;min-width:0;height:26px;padding:0 10px;border-radius:6px;` +
+    `background:var(--sn-hover);border:1px solid ${T.borderSubtle};cursor:pointer}`,
+  `.sn-chip-base{border-color:${T.border}}`,
+  `.sn-chip-el{display:inline-flex;align-items:baseline;min-width:0;color:${T.text};font-size:12px}`,
+  ".sn-chip-el b{font-weight:600;font-size:13px}",
+  `.sn-chip-cls{color:${T.textMuted};min-width:0;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`,
+  `.sn-chip-rm{all:unset;display:inline-flex;cursor:pointer;color:${T.textMuted};margin-left:2px;border-radius:4px}`,
+  `.sn-chip-rm:hover{color:${T.text}}`,
+  ".sn-chip-rm svg{width:12px;height:12px}",
+  `.sn-chip-rm:focus-visible{outline:2px solid ${T.accent};outline-offset:2px}`,
   // Settings → Editor
   ".snl-select{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;color:var(--sn-glass-text);background:none;border:none;" +
     "padding:4px 18px 4px 6px;margin-right:-4px;border-radius:6px;cursor:pointer;text-align:right;" +
@@ -376,9 +388,13 @@ export const CSS = [
   `.snl-src{display:flex;min-width:0;font:12px ${T.mono};white-space:nowrap}`,
   ".snl-src{align-items:center;gap:5px}",
   ".snl-fw{display:inline-flex;flex:none}",
-  // The note (and the agent line) starts under the framework icon, past the pin number: 16px + the 5px gap.
-  ".snl-txt,.snl-sum{padding-left:21px}",
-  ".snl-fw+span{overflow:hidden;text-overflow:ellipsis}",
+  // The note line starts past the pin number: 16px + the 5px gap.
+  ".snl-txt{padding-left:21px}",
+  // The note's elements: the panel's chips, smaller, and only to read (the row opens the note).
+  `.snl-chips{flex:1 1 auto;flex-wrap:nowrap;padding:0;gap:4px;font-family:${T.font}}`,
+  ".snl-chips .sn-chip{height:22px;padding:0 7px;gap:5px;cursor:inherit}",
+  `.snl-more{flex:none;color:${T.textMuted};font:500 11px ${T.font}}`,
+  `.snl-loc{color:${T.textMuted};font:11px ${T.mono};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}`,
   ".snl-txt{font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   ".snl-empty{margin:4px 8px 10px;font-size:12px;color:var(--sn-sub);line-height:1.5}",
   // A note an agent resolved over MCP: a check instead of its number, and its summary.
@@ -389,7 +405,6 @@ export const CSS = [
     `border-top-color:${T.accent};animation:sn-spin .9s linear infinite}`,
   ".snl-done .snl-num{background:none;color:var(--sn-accent-text)}", // just the check, no ring
   ".snl-done .snl-num svg{width:14px;height:14px}", // as big as the ring was, so it reads on its own
-  ".snl-sum{grid-column:2;font-size:12px;color:var(--sn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
   // A note whose element an edit moved away: dimmed, with copy/delete instead of open.
   ".snl-notes li.snl-lost{grid-template-columns:auto 1fr auto;cursor:default}",
   ".snl-lost .snl-num{background:var(--sn-lost-num);color:var(--sn-sub)}",
