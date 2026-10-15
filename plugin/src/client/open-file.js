@@ -1,6 +1,7 @@
 // File links (the panel's file:line, files the agent mentions) → your editor,
 // and the warning shown next to a link that didn't open.
-import { ICONS, uiRoot } from "./ui.js";
+import { uiRoot } from "./ui.js";
+import { ICONS } from "./icons.js";
 import { getSettings, EDITORS } from "./settings.js";
 import { parseLoc } from "./prompt.js";
 

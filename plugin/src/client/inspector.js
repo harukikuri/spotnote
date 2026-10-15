@@ -4,7 +4,9 @@
 // - Write a note; "Copy for agent" copies a ready-to-paste prompt (exact source
 //   location + element + styles + your note) to the clipboard, and drops a pin.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { T, createIconBtn, ICONS, STATE_ICONS, FRAMEWORKS, fwIcon, uiRoot, applyLook } from "./ui.js";
+import { createIconBtn, uiRoot, applyLook } from "./ui.js";
+import { T } from "./styles.js";
+import { ICONS, STATE_ICONS, FRAMEWORKS, fwIcon } from "./icons.js";
 import { mountLauncher } from "./launcher.js";
 import { getSettings, onSettings } from "./settings.js";
 import { connectRemote } from "./remote.js";

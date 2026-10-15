@@ -30,7 +30,9 @@ Plugin layout (`plugin/`):
   - `conversation.js` — the agent's messages in the panel
   - `open-file.js` — file links → your editor
   - `launcher.js` — corner button and its menu (pause · notes · settings)
-  - `ui.js` — buttons, icons, accents and theme tokens
+  - `ui.js` — the shadow root, accents and the icon button
+  - `styles.js` — theme tokens and the stylesheet
+  - `icons.js` — framework, note-state, agent and button icons
   - `layers.js` — stacking of the panel, notes list and Settings; what `Esc` closes
   - `remote.js` — the link to spotnote-mcp while it runs
   - `settings.js` — accent, theme and editor, per browser

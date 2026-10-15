@@ -8,7 +8,8 @@
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
 //     copyNote, deleteNote, fileKind, mcpStatus, about, onChange }
-import { ICONS, ACCENTS, FRAMEWORKS, fwIcon, uiRoot, agentMark } from "./ui.js";
+import { ACCENTS, uiRoot } from "./ui.js";
+import { ICONS, FRAMEWORKS, fwIcon, agentMark } from "./icons.js";
 import { getSettings, setSetting, EDITORS } from "./settings.js";
 import { createLayer } from "./layers.js";
 import { confirmOver } from "./confirm.js";

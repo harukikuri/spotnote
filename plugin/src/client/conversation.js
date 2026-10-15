@@ -1,6 +1,6 @@
 // The agent's side of a note's conversation in the panel: who wrote a message,
 // and the "Thinking…" message while it works.
-import { agentMark } from "./ui.js";
+import { agentMark } from "./icons.js";
 
 // What to call the agent on this note: the last one that wrote on it.
 export const agentName = (pin) => agentMark(pin?.thread?.findLast((m) => m.from === "agent")?.client)?.name ?? "The agent";
