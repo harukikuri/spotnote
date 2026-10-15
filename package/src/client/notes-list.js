@@ -36,7 +36,7 @@ export function createNotesList(pop, ctrl, { onOpen }) {
     el("span", "snl-del-n", b).textContent = picked.size ? `(${picked.size})` : "(all)";
     b.addEventListener("click", () =>
       confirmOver(pop, {
-        title: picked.size ? `Delete ${count}?` : `Delete all ${count}?`,
+        title: picked.size || doomed.length === 1 ? `Delete ${count}?` : `Delete all ${count}?`,
         body: "This can't be undone.",
         action: "Delete",
         onConfirm: () => {

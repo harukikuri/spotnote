@@ -94,6 +94,12 @@ test("the notes list puts this page first, folds a section, and deletes ticked n
   await notes.locator(".sn-confirm").getByRole("button", { name: "Delete" }).click();
   await expect(rows).toHaveCount(1);
   await expect(rows.first()).toContainText("On the home page");
+
+  // "All" of one note is just that note.
+  await del.click();
+  await expect(notes.locator(".sn-confirm")).toContainText("Delete 1 note?");
+  await notes.locator(".sn-confirm").getByRole("button", { name: "Delete" }).click();
+  await expect(notes.locator(".snl-empty")).toBeVisible();
 });
 
 test("a note whose element is gone is marked, and can still be copied or deleted", async ({ page, app }) => {
