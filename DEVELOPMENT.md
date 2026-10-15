@@ -17,6 +17,7 @@ pnpm --filter spotnote-playground dev:vue     # Vue playground
 pnpm --filter spotnote-playground dev:svelte  # Svelte 5 playground
 pnpm dev:svelte4                              # Svelte 4 playground (own package)
 pnpm --filter spotnote-playground build       # production build (picker excluded — apply:'serve')
+pnpm test                                     # plugin + mcp tests (node:test, no extra deps)
 ```
 
 Plugin layout (`plugin/`):

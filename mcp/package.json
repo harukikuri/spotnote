@@ -11,6 +11,9 @@
     "url": "git+https://github.com/harukikuri/spotnote.git",
     "directory": "mcp"
   },
+  "scripts": {
+    "test": "node --test"
+  },
   "bin": {
     "spotnote-mcp": "src/cli.js"
   },

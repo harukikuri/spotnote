@@ -11,6 +11,9 @@
     "url": "git+https://github.com/harukikuri/spotnote.git",
     "directory": "plugin"
   },
+  "scripts": {
+    "test": "node --test"
+  },
   "main": "src/index.js",
   "types": "index.d.ts",
   "exports": {
