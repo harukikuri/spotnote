@@ -4,9 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "coverage": "COVERAGE=1 playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1"
+    "@playwright/test": "1.56.1",
+    "monocart-coverage-reports": "2.13.2"
   }
 }

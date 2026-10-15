@@ -20,6 +20,8 @@ const devServer = ({ name, port }) =>
 
 export default defineConfig({
   testDir: ".",
+  globalSetup: "./coverage.js",
+  globalTeardown: "./coverage-teardown.js",
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: {

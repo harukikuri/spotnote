@@ -2,9 +2,22 @@
 // copied prompt and the launcher's menus — in each example app. Spotnote's
 // UI lives in an open shadow root, which Playwright's CSS locators reach into.
 import { test as base, expect } from "@playwright/test";
+import { coverage } from "./coverage.js";
 
-// The app under test and the elements to pick in it (projects in playwright.config.js).
-const test = base.extend({ app: [{}, { option: true }] });
+// The app under test and the elements to pick in it (projects in playwright.config.js),
+// and, with COVERAGE=1, what each test ran of the client (see coverage.js).
+const test = base.extend({
+  app: [{}, { option: true }],
+  coverage: [
+    async ({ page }, use) => {
+      if (!process.env.COVERAGE) return use();
+      await page.coverage.startJSCoverage({ resetOnNavigation: false });
+      await use();
+      await coverage().add(await page.coverage.stopJSCoverage());
+    },
+    { auto: true },
+  ],
+});
 const basename = (file) => file.split("/").pop();
 
 // Click an element away from the placeholder bars inside it, so the click lands

@@ -21,6 +21,7 @@ pnpm --filter spotnote-examples build         # production build (picker exclude
 pnpm test                                     # package + mcp tests (node:test, no extra deps)
 pnpm coverage                                 # the same tests, with a coverage report (c8; HTML in coverage/)
 pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
+pnpm coverage:e2e                             # the browser tests, with a coverage report of package/src/client (HTML in e2e/coverage/)
 pnpm lint                                     # format + lint check (Biome, config in biome.json)
 pnpm format                                   # apply Biome's formatting and safe fixes
 ```
