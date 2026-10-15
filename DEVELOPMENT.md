@@ -20,7 +20,7 @@ pnpm --filter spotnote-examples dev:svelte    # Svelte 5 example
 pnpm dev:svelte4                              # Svelte 4 example (own package)
 pnpm --filter spotnote-examples build         # production build (picker excluded — apply:'serve')
 pnpm test                                     # package + mcp tests (node:test, no extra deps)
-pnpm coverage                                 # the same tests, with a coverage report (c8; HTML in coverage/; mcp/src/cli.js is in coverage:e2e's)
+pnpm coverage                                 # the same tests, with a coverage report of the files they load (c8; HTML in coverage/)
 pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
 pnpm coverage:e2e                             # the browser tests, with a coverage report of package/src/client and mcp/src (HTML in e2e/coverage/)
 pnpm lint                                     # format + lint check (Biome, config in biome.json)

@@ -17,8 +17,11 @@ export const coverage = () =>
     // Vite serves the client from /@fs/…/package/src/client/, and its source maps
     // name each file by its basename. styles.js and icons.js are just strings.
     entryFilter: (entry) => /\/package\/src\/client\/(?!styles\.js|icons\.js)|\/mcp\/src\//.test(entry.url),
+    // It's called again on paths it already made (for the lcov report): keep those.
     sourcePath: (file) =>
-      file.includes("mcp/src/") ? file.replace(/^.*(mcp\/src\/)/, "$1") : `package/src/client/${file}`,
+      /(^|\/)(mcp\/src|package\/src\/client)\//.test(file)
+        ? file.replace(/^.*?((mcp\/src|package\/src\/client)\/)/, "$1")
+        : `package/src/client/${file}`,
   });
 
 export default async function globalSetup() {
