@@ -67,19 +67,47 @@ The frameworks above also work inside these. They render pages on the server fir
 
 | Framework | Status | Where to add `spotnote()` |
 | --- | --- | --- |
-| SvelteKit | Tested ✅ (SvelteKit 2, 3) | `vite.config.js` |
-| Nuxt | Tested ✅ (Nuxt 3, 4) | `vite.plugins` in `nuxt.config.ts` |
-| React Router, framework mode | Tested ✅ (React Router 7, 8) | `vite.config.ts` |
-| SolidStart | Tested ✅ (SolidStart 1, 2) | `vite.config.ts` (SolidStart 1: `vite.plugins` in `app.config.ts`) |
+| <Framework name="SvelteKit" /> | Tested ✅ (SvelteKit 2, 3) | `vite.config.js` |
+| <Framework name="Nuxt" /> | Tested ✅ (Nuxt 3, 4) | `vite.plugins` in `nuxt.config.ts` |
+| <Framework name="React Router">React Router, framework mode</Framework> | Tested ✅ (React Router 7, 8) | `vite.config.ts` |
+| <Framework name="SolidStart" /> | Tested ✅ (SolidStart 1, 2) | `vite.config.ts` (SolidStart 1: `vite.plugins` in `app.config.ts`) |
 
 Each major in wide use is tested, with the newest framework inside it, and spread over Vite 5 to 8 like the apps above. Where a meta-framework fixes its Vite, that's the one:
 
-| Meta-framework | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
+<Tabs items={['SvelteKit', 'Nuxt', 'React Router', 'SolidStart']} className="bg-transparent border-0 rounded-none [&>[role=tablist]]:px-0">
+<Tab value="SvelteKit" className="px-0">
+
+|  | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
 | --- | --- | --- | --- | --- |
-| SvelteKit | SvelteKit 2 | | | SvelteKit 3 |
-| Nuxt | | | Nuxt 3 | Nuxt 4 |
-| React Router | React Router 7 | | React Router 8 | |
-| SolidStart | | SolidStart 1 | | SolidStart 2 |
+| <Framework name="SvelteKit">SvelteKit 2</Framework> | Tested ✅ |  |  |  |
+| <Framework name="SvelteKit">SvelteKit 3</Framework> |  |  |  | Tested ✅ |
+
+</Tab>
+<Tab value="Nuxt" className="px-0">
+
+|  | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
+| --- | --- | --- | --- | --- |
+| <Framework name="Nuxt">Nuxt 3</Framework> |  |  | Tested ✅ |  |
+| <Framework name="Nuxt">Nuxt 4</Framework> |  |  |  | Tested ✅ |
+
+</Tab>
+<Tab value="React Router" className="px-0">
+
+|  | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
+| --- | --- | --- | --- | --- |
+| <Framework name="React Router">React Router 7</Framework> | Tested ✅ |  |  |  |
+| <Framework name="React Router">React Router 8</Framework> |  |  | Tested ✅ |  |
+
+</Tab>
+<Tab value="SolidStart" className="px-0">
+
+|  | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
+| --- | --- | --- | --- | --- |
+| <Framework name="SolidStart">SolidStart 1</Framework> |  | Tested ✅ |  |  |
+| <Framework name="SolidStart">SolidStart 2</Framework> |  |  |  | Tested ✅ |
+
+</Tab>
+</Tabs>
 
 Astro is tested end to end: see its row above, and [Astro](#astro) below.
 

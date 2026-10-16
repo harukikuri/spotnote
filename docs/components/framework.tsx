@@ -2,7 +2,7 @@
 // colour; the darker ones get a lighter shade in dark mode so they stay
 // visible.
 import type { IconType } from 'react-icons';
-import { SiAstro, SiPreact, SiReact, SiSolid, SiSvelte, SiVuedotjs } from 'react-icons/si';
+import { SiAstro, SiNuxt, SiPreact, SiReact, SiReactrouter, SiSolid, SiSvelte, SiVuedotjs } from 'react-icons/si';
 
 const icons: Record<string, { Icon: IconType; color?: string }> = {
   React: { Icon: SiReact, color: 'text-[#61DAFB]' },
@@ -11,6 +11,10 @@ const icons: Record<string, { Icon: IconType; color?: string }> = {
   Svelte: { Icon: SiSvelte, color: 'text-[#FF3E00]' },
   Astro: { Icon: SiAstro, color: 'text-[#BC52EE]' },
   Preact: { Icon: SiPreact, color: 'text-[#673AB8] dark:text-[#9A74E0]' },
+  SvelteKit: { Icon: SiSvelte, color: 'text-[#FF3E00]' },
+  Nuxt: { Icon: SiNuxt, color: 'text-[#00DC82]' },
+  'React Router': { Icon: SiReactrouter, color: 'text-[#CA4245]' },
+  SolidStart: { Icon: SiSolid, color: 'text-[#2C4F7C] dark:text-[#5B8FD1]' },
 };
 
 export function Framework({ name, children }: { name: string; children?: React.ReactNode }) {
