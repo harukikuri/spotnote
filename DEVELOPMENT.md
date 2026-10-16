@@ -26,9 +26,9 @@ pnpm lint                                     # format + lint check (Biome, conf
 pnpm format                                   # apply Biome's formatting and safe fixes
 ```
 
-CI runs on every push to main and every PR: `test.yml` (unit, and E2E with one
-job per example app, side by side) and `ci.yml` (lint, docs build, example
-builds, `sync.mjs --check`). Renovate updates the example apps weekly
+CI runs on every push to main and every PR: `test.yml` (unit), `e2e.yml` (E2E,
+one job per example app, side by side; the docs link its latest run) and
+`ci.yml` (lint, docs build, example builds, `sync.mjs --check`). Renovate updates the example apps weekly
 (`renovate.json`): a new framework or Vite major shows up as a PR, labelled
 "new major".
 
@@ -110,8 +110,8 @@ pnpm --filter @spotnote/docs dev              # http://localhost:3000
 1. Set the same version in `package/package.json` and `mcp/package.json`, commit, push.
 2. Tag it: `git tag v0.2.0 && git push origin v0.2.0`.
 
-The `Release` workflow (`.github/workflows/release.yml`) then runs CI and Test
-(the same workflows as on main, side by side); only if both pass, it checks the
+The `Release` workflow (`.github/workflows/release.yml`) then runs CI, Test and
+E2E (the same workflows as on main, side by side); only if all pass, it checks the
 tag matches both versions, publishes `spotnote` and `spotnote-mcp`
 to npm (with provenance), and creates the GitHub release, with notes made from
 the `feat:`, `fix:` and `perf:` commits since the last tag (changelogithub). So

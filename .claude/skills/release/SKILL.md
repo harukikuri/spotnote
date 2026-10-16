@@ -1,11 +1,11 @@
 ---
 name: release
-description: Release a new version of spotnote and spotnote-mcp to npm. Bumps both package.json versions, waits for CI and Test on main, pushes the tag, and checks the release workflow and npm. Use when the user asks to release, publish or cut a new version.
+description: Release a new version of spotnote and spotnote-mcp to npm. Bumps both package.json versions, waits for CI, Test and E2E on main, pushes the tag, and checks the release workflow and npm. Use when the user asks to release, publish or cut a new version.
 ---
 
 # Release
 
-The tag does the publishing: `.github/workflows/release.yml` runs CI and Test,
+The tag does the publishing: `.github/workflows/release.yml` runs CI, Test and E2E,
 then publishes both packages (trusted publishing, with provenance) and creates
 the GitHub release. See "Release" in DEVELOPMENT.md.
 
@@ -30,10 +30,10 @@ version. Both packages always get the same one.
 
 ## 4. Wait for main to pass
 
-Wait for the `Test` and `CI` runs of that commit, and check both succeeded:
+Wait for the `CI`, `Test` and `E2E` runs of that commit, and check all three succeeded:
 
 ```bash
-gh run list --branch main --limit 4 --json name,status,conclusion,headSha
+gh run list --branch main --limit 6 --json name,status,conclusion,headSha
 gh run watch <id> --exit-status
 ```
 

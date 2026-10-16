@@ -1,4 +1,4 @@
-# Push a tag like v0.2.0 → CI and Test (side by side), then, only if both pass,
+# Push a tag like v0.2.0 → CI, Test and E2E (side by side), then, only if both pass,
 # publish spotnote and spotnote-mcp to npm and create the GitHub release. Bump
 # both package.json versions to match first.
 name: Release
@@ -16,9 +16,12 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
     secrets: inherit # CODECOV_TOKEN, for its Codecov uploads
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    secrets: inherit # CODECOV_TOKEN, for its Codecov uploads
 
   release:
-    needs: [ci, test]
+    needs: [ci, test, e2e]
     runs-on: ubuntu-latest
     permissions:
       contents: write # the GitHub release

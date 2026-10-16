@@ -57,7 +57,7 @@ line.
 ## 4. Test it
 
 - Add it to `ALL` in `e2e/playwright.config.js` (its `name`, `dir` and what the
-  tests pick) and to the `e2e` matrix in `.github/workflows/test.yml`.
+  tests pick) and to the `e2e` matrix in `.github/workflows/e2e.yml`.
 - `E2E_APPS=<app> pnpm test:e2e`, then `pnpm test:e2e`: every test, in the new
   project too. A test that can't apply to it gets a `test.skip` with the reason.
 - CI builds every example app and runs `node examples/sync.mjs --check`: nothing
