@@ -19,6 +19,22 @@ export const test = base.extend({
     },
     { auto: true },
   ],
+  // No errors in the page: a stamp that differs between the server's HTML and
+  // the browser's (a hydration mismatch) shows up here, and so would Spotnote's own.
+  pageErrors: [
+    async ({ page }, use) => {
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(e.message));
+      page.on("console", (m) => {
+        // A failed request is logged too: some tests expect one (a file not found).
+        if (/^Failed to load resource/.test(m.text())) return;
+        if (m.type() === "error" || /hydrat/i.test(m.text())) errors.push(m.text());
+      });
+      await use();
+      expect(errors, "errors in the page").toEqual([]);
+    },
+    { auto: true },
+  ],
 });
 export const basename = (file) => file.split("/").pop();
 

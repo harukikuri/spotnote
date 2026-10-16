@@ -1,0 +1,15 @@
+{
+  "name": "spotnote-examples-nuxt3",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: Nuxt 3 (Vue 3.5, Vite 7).",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build"
+  },
+  "dependencies": {
+    "nuxt": "~3.21.11",
+    "vue": "^3.5.13",
+    "spotnote": "workspace:*"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "spotnote-examples-react-router7",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: React Router 7, framework mode (React 19), on Vite 5.",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build"
+  },
+  "dependencies": {
+    "@react-router/node": "^7.18.4",
+    "isbot": "^5.1.36",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^7.18.4",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.18.4",
+    "vite": "^5.4.11"
+  }
+}

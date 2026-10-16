@@ -18,8 +18,9 @@ others:
 node examples/sync.mjs
 ```
 
-Svelte 4 and 5 are written differently: a change to one goes into the other by
-hand. A file one version needs to keep different (React 17's `main.jsx`) is
+It copies into the meta-framework apps too (`examples/meta/`, a folder of their
+own). Svelte 4 and 5 are written differently: a change to one goes into the
+other by hand. A file one version needs to keep different (React 17's `main.jsx`) is
 listed as its own in `sync.mjs`.
 
 ## 1. The E2E app table

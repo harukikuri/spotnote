@@ -90,7 +90,7 @@ Vite 5 or later (tested on 5, 6, 7 and 8).
 | Svelte | Tested ✅ (Svelte 4, 5) |
 | Astro | Tested ✅ (Astro 5, 6, 7) |
 | Preact, other JSX | Untested |
-| SvelteKit, Nuxt, React Router, SolidStart | Works (checked by hand) |
+| SvelteKit, Nuxt, React Router, SolidStart | Tested ✅ (SvelteKit 2, 3; Nuxt 3, 4; React Router 7, 8; SolidStart 1, 2) |
 
 ## How it works
 

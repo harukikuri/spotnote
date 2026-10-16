@@ -78,8 +78,10 @@ test("a note edited from its pin keeps its pin and copies the new prompt", async
 test("a note from another page opens there, from the notes list", async ({ page, app }) => {
   await openLauncher(page);
   await writeNote(page, page.locator(app.title).first(), "Written on the home page");
-  await page.goto("/elsewhere"); // the same app, on another path
-  // and without the element (some apps render the same page on every path)
+  // The same app, on another path, once it's running (a page rendered on the
+  // server would put the element back as it hydrates)...
+  await page.goto("/elsewhere", { waitUntil: "networkidle" });
+  // ...and without the element (some apps render the same page on every path)
   await page.evaluate((sel) => document.querySelector(sel)?.remove(), app.title);
 
   await openLauncher(page);
@@ -248,8 +250,11 @@ test("Esc closes the panel, then pauses selecting", async ({ page, app }) => {
   await expect(page.locator(".sn-panel")).toHaveCount(0);
   await expect(page.locator(".snl")).toHaveAttribute("data-paused", "false");
 
+  const cursor = () => page.evaluate(() => getComputedStyle(document.body).cursor);
+  expect(await cursor()).toBe("crosshair"); // selecting
   await page.keyboard.press("Escape");
   await expect(page.locator(".snl")).toHaveAttribute("data-paused", "true");
+  expect(await cursor()).toBe("auto");
 });
 
 // The panel's frame (package/src/client/panel-frame.js).
@@ -395,7 +400,7 @@ test("Settings: not connected, the agent page shows how to connect", async ({ pa
 
 test("saving the file keeps the open panel on its element", async ({ page, app }) => {
   test.skip(!!app.astro, "Astro reloads the page when an .astro file is saved, like any server-rendered page");
-  const file = path.join(examples, app.dir, app.file);
+  const file = path.join(examples, app.dir, app.srcRoot ?? "", app.file);
   const source = readFileSync(file, "utf8");
   const logs = [];
   page.on("console", (m) => logs.push(m.text()));
@@ -405,6 +410,7 @@ test("saving the file keeps the open panel on its element", async ({ page, app }
   const input = page.locator(".sn-panel [data-spotnote-input]");
   await input.fill("Not sent yet");
 
+  let saved = 0; // re-binds before the file goes back (some frameworks re-render more than once)
   try {
     // A change below everything, so no element moves. Vue skips one outside its
     // blocks, and Svelte 5's plugin one that compiles the same (a blank line).
@@ -414,11 +420,12 @@ test("saving the file keeps the open panel on its element", async ({ page, app }
         ? `${source}\n<i hidden></i>\n`
         : `${source}\n`;
     writeFileSync(file, edited);
-    await expect.poll(() => rebinds()).toBe(1);
+    await expect.poll(() => rebinds()).toBeGreaterThan(0);
   } finally {
+    saved = rebinds();
     writeFileSync(file, source); // a second update: wait it out too, so nothing moves while we look
   }
-  await expect.poll(() => rebinds()).toBe(2);
+  await expect.poll(() => rebinds()).toBeGreaterThan(saved);
   await expect(input).toHaveText("Not sent yet");
   // The selection box is still on the element (it may be a new node, after a remount).
   const onTitle = (sel) =>

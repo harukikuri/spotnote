@@ -1,0 +1,19 @@
+{
+  "name": "spotnote-examples-solidstart2",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: SolidStart 2 (Solid 1.9) on Vite 8.",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "^1.0.0",
+    "@solidjs/start": "^2.0.6",
+    "nitro": "^3.0.260903-beta",
+    "solid-js": "^1.9.5",
+    "vite": "^8.3.4",
+    "spotnote": "workspace:*"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "spotnote-examples-sveltekit3",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: SvelteKit 3 (Svelte 5) on Vite 8.",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^8.0.0",
+    "@sveltejs/kit": "^3.1.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte": "^5.57.1",
+    "vite": "^8.3.4"
+  }
+}

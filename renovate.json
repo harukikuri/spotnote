@@ -20,7 +20,11 @@
         "examples/svelte/svelte4/**",
         "examples/solid/solid19-vite5/**",
         "examples/astro/astro5/**",
-        "examples/astro/astro6/**"
+        "examples/astro/astro6/**",
+        "examples/meta/sveltekit2/**",
+        "examples/meta/nuxt3/**",
+        "examples/meta/react-router7/**",
+        "examples/meta/solidstart1/**"
       ],
       "matchUpdateTypes": ["major"],
       "enabled": false
@@ -29,6 +33,13 @@
       "description": "The newest Svelte stays on Vite 7 (Vite 8 has its React, Vue, Solid and Astro apps): a new Svelte major opens a PR, a new Vite major doesn't.",
       "matchFileNames": ["examples/svelte/svelte5/**"],
       "matchPackageNames": ["vite", "@sveltejs/vite-plugin-svelte"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "React Router 8 stays on Vite 7 (Vite 8 has its own apps): a new React Router major opens a PR, a new Vite major doesn't.",
+      "matchFileNames": ["examples/meta/react-router8/**"],
+      "matchPackageNames": ["vite"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     },

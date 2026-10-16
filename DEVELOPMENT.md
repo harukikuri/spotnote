@@ -79,12 +79,18 @@ spread over Vite 5 to 8. Each is a whole Vite (or Astro) app with its own
 | `svelte/svelte4`, `svelte5` | Svelte 4, 5 | 5, 7 |
 | `solid/solid19-vite5`, `solid19` | Solid 1.9 (vite-plugin-solid needs it) | 5, 8 |
 | `astro/astro5`, `astro6`, `astro7` | Astro 5, 6, 7 | 6, 7, 8 (Astro's own) |
+| `meta/sveltekit2`, `sveltekit3` | SvelteKit 2, 3 (Svelte 5) | 5, 8 |
+| `meta/nuxt3`, `nuxt4` | Nuxt 3, 4 (Vue 3.5) | 7, 8 (Nuxt's own) |
+| `meta/react-router7`, `react-router8` | React Router 7, 8, framework mode (React 19) | 5, 7 |
+| `meta/solidstart1`, `solidstart2` | SolidStart 1 (vinxi), 2 (Solid 1.9) | 6 (vinxi's own), 8 |
 
 The newest app of each framework is the one to edit (`react19`, `vue35`,
 `solid19`, `astro7`); `node examples/sync.mjs` copies it into the others, and CI
 checks they match. A file an app keeps for itself (React 17's `main.jsx`, the
 configs) is listed in `sync.mjs`. Svelte 4 and 5 are written differently: only
-their styles are shared.
+their styles are shared. The meta-framework apps get the newest app's page in a
+folder of their own (`app/demo`, `src/lib/demo`, `src/demo`), shown by their
+routes at `/` and `/elsewhere`.
 
 ### Use it in another Vite app
 

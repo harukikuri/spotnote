@@ -12,6 +12,7 @@ const REACT = { file: "pages/Home.jsx", title: ".hero h1", repeated: ".card h3",
 const VUE = { file: "pages/Home.vue", title: ".hero h1", repeated: ".card h3", count: 6 };
 const SOLID = { file: "App.jsx", title: "h1", repeated: "li", count: 3 };
 const ASTRO = { file: "src/components/Home.astro", title: ".hero h1", repeated: ".card h3", count: 3, astro: true };
+const SVELTE = { file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 6 };
 
 // Each app is examples/<dir>, the package spotnote-examples-<name>. Every major
 // of each framework, spread over Vite 5 to 8.
@@ -23,12 +24,35 @@ const ALL = [
   { name: "vue34", dir: "vue/vue34", ...VUE }, // Vite 7
   { name: "vue35", dir: "vue/vue35", ...VUE }, // Vite 8
   { name: "svelte4", dir: "svelte/svelte4", file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 3 }, // Vite 5
-  { name: "svelte5", dir: "svelte/svelte5", file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 6 }, // Vite 7
+  { name: "svelte5", dir: "svelte/svelte5", ...SVELTE }, // Vite 7
   { name: "solid19-vite5", dir: "solid/solid19-vite5", ...SOLID },
   { name: "solid19", dir: "solid/solid19", ...SOLID }, // Vite 8
   { name: "astro5", dir: "astro/astro5", ...ASTRO }, // Vite 6
   { name: "astro6", dir: "astro/astro6", ...ASTRO }, // Vite 7
   { name: "astro7", dir: "astro/astro7", ...ASTRO }, // Vite 8
+  // Meta-frameworks: the same pages (copied into a folder of their own by
+  // examples/sync.mjs), rendered on the server first. srcRoot: where the Vite
+  // root is in the app, when it isn't the app's folder (Nuxt's app/).
+  { name: "sveltekit2", dir: "meta/sveltekit2", ...SVELTE, file: "src/lib/demo/App.svelte" }, // Vite 5
+  { name: "sveltekit3", dir: "meta/sveltekit3", ...SVELTE, file: "src/lib/demo/App.svelte" }, // Vite 8
+  { name: "nuxt3", dir: "meta/nuxt3", ...VUE, srcRoot: "app", file: "demo/pages/Home.vue", dev: "nuxt dev" }, // Vite 7
+  { name: "nuxt4", dir: "meta/nuxt4", ...VUE, srcRoot: "app", file: "demo/pages/Home.vue", dev: "nuxt dev" }, // Vite 8
+  {
+    name: "react-router7",
+    dir: "meta/react-router7",
+    ...REACT,
+    file: "app/demo/pages/Home.jsx",
+    dev: "react-router dev",
+  }, // Vite 5
+  {
+    name: "react-router8",
+    dir: "meta/react-router8",
+    ...REACT,
+    file: "app/demo/pages/Home.jsx",
+    dev: "react-router dev",
+  }, // Vite 7
+  { name: "solidstart1", dir: "meta/solidstart1", ...SOLID, file: "src/demo/App.jsx", dev: "vinxi dev" }, // vinxi, Vite 6
+  { name: "solidstart2", dir: "meta/solidstart2", ...SOLID, file: "src/demo/App.jsx" }, // Vite 8
 ].map((app, i) => ({ ...app, port: 5201 + i }));
 // With an agent: one app is enough, the client is the same in every framework.
 const AGENT = { ...ALL.find((a) => a.name === "react19"), name: "agent", port: 5230, mcpPort: 4998 };
@@ -39,9 +63,13 @@ const withAgent = !only || only.includes("agent");
 
 // --ignore-lock: in the foreground, even where Astro would detect a coding agent
 // and start a background server that Playwright couldn't stop.
-const devServer = ({ name, port, astro }) =>
+const devServer = ({ name, port, astro, dev }) =>
   `pnpm --filter spotnote-examples-${name === "agent" ? "react19" : name} exec ` +
-  (astro ? `astro dev --port ${port} --ignore-lock` : `vite --port ${port} --strictPort`);
+  (astro
+    ? `astro dev --port ${port} --ignore-lock`
+    : dev
+      ? `${dev} --port ${port}`
+      : `vite --port ${port} --strictPort`);
 
 export default defineConfig({
   testDir: ".",

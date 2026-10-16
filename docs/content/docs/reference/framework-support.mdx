@@ -33,14 +33,23 @@ Two things change between versions and could break Spotnote: Vite's plugin API, 
 
 ## Meta-frameworks
 
-The frameworks above, inside these, were checked by hand on Vite 8 (the end-to-end tests run on plain Vite apps):
+The frameworks above also work inside these. They render pages on the server first, so the end-to-end tests also check that the browser's page matches the server's (no hydration warnings).
 
 | Framework | Status | Where to add `spotnote()` |
 | --- | --- | --- |
-| SvelteKit | Works (3.1) | `vite.config.js` |
-| Nuxt | Works (4.6) | `vite.plugins` in `nuxt.config.ts` |
-| React Router, framework mode | Works (8.4) | `vite.config.ts` |
-| SolidStart | Works (2.0) | `vite.config.ts` |
+| SvelteKit | Tested ✅ (SvelteKit 2, 3) | `vite.config.js` |
+| Nuxt | Tested ✅ (Nuxt 3, 4) | `vite.plugins` in `nuxt.config.ts` |
+| React Router, framework mode | Tested ✅ (React Router 7, 8) | `vite.config.ts` |
+| SolidStart | Tested ✅ (SolidStart 1, 2) | `vite.config.ts` (SolidStart 1: `vite.plugins` in `app.config.ts`) |
+
+Each major in wide use is tested, with the newest framework inside it, and spread over Vite 5 to 8 like the apps above. Where a meta-framework fixes its Vite, that's the one:
+
+| Meta-framework | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
+| --- | --- | --- | --- | --- |
+| SvelteKit | SvelteKit 2 | | | SvelteKit 3 |
+| Nuxt | | | Nuxt 3 | Nuxt 4 |
+| React Router | React Router 7 | | React Router 8 | |
+| SolidStart | | SolidStart 1 | | SolidStart 2 |
 
 Astro is tested end to end: see its row above, and [Astro](#astro) below.
 
