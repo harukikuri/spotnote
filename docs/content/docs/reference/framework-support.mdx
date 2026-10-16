@@ -3,24 +3,27 @@ title: Framework Support
 description: Which frameworks and file types Spotnote stamps, and how.
 ---
 
-| Framework | Status | Files | How the stamp is added |
-| --- | --- | --- | --- |
-| <Framework name="React" /> | Tested (React 17, 18, 19) | `.jsx`, `.tsx` | Babel JSX pass |
-| <Framework name="Solid" /> | Tested (Solid 1.9) | `.jsx`, `.tsx` | Same Babel JSX pass |
-| <Framework name="Vue" /> | Tested (Vue 3.2, 3.4, 3.5) | `.vue` | Your app's `vue/compiler-sfc` |
-| <Framework name="Svelte" /> | Tested (Svelte 4, 5) | `.svelte` | Your app's `svelte/compiler` |
-| <Framework name="Astro" /> | Tested (Astro 5, 6, 7) | `.astro` | Your app's Astro compiler |
-| <Framework name="Preact">Preact, other JSX</Framework> | Untested | `.jsx`, `.tsx` | Same Babel JSX pass |
-| <Framework name="Next.js" /> | Not supported | | Not Vite (Webpack / Turbopack) |
-
-Vite 5 or later. The end-to-end tests run every version above, each on one of Vite 5 to 8:
-
-| Vite | Apps tested on it |
+| Framework | Status |
 | --- | --- |
-| 5 | React 17, Vue 3.2, Svelte 4, Solid 1.9 |
-| 6 | React 18, Astro 5 |
-| 7 | Vue 3.4, Svelte 5, Astro 6 |
-| 8 | React 19, Vue 3.5, Solid 1.9, Astro 7 |
+| <Framework name="React" /> | Tested (React 17, 18, 19) |
+| <Framework name="Solid" /> | Tested (Solid 1.9) |
+| <Framework name="Vue" /> | Tested (Vue 3.2, 3.4, 3.5) |
+| <Framework name="Svelte" /> | Tested (Svelte 4, 5) |
+| <Framework name="Astro" /> | Tested (Astro 5, 6, 7) |
+| <Framework name="Preact">Preact, other JSX</Framework> | Untested |
+| <Framework name="Next.js" /> | Not supported (not Vite) |
+
+## Tested versions
+
+Vite 5 or later. The end-to-end tests run an example app for every version above, each on one of Vite 5 to 8:
+
+| Framework | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
+| --- | --- | --- | --- | --- |
+| <Framework name="React" /> | React 17 | React 18 | | React 19 |
+| <Framework name="Vue" /> | Vue 3.2 | | Vue 3.4 | Vue 3.5 |
+| <Framework name="Svelte" /> | Svelte 4 | | Svelte 5 | |
+| <Framework name="Solid" /> | Solid 1.9 | | | Solid 1.9 |
+| <Framework name="Astro" /> | | Astro 5 | Astro 6 | Astro 7 |
 
 ## Meta-frameworks
 
