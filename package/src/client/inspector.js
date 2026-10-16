@@ -280,7 +280,21 @@ function bindPointer(on) {
 // page, navigate away, and strand the panel on a vanished element.
 function refreshPointer() {
   bindPointer(active || !!panel);
-  document.body.style.cursor = active ? "crosshair" : "";
+  setCrosshair(active);
+}
+
+// The crosshair comes from a stylesheet of ours, not the body's style attribute:
+// changing the page's markup before a server-rendered app hydrates is a
+// mismatch (React warns about it, after a jump from another page's note).
+let crosshair;
+function setCrosshair(on) {
+  if (!crosshair) {
+    crosshair = new CSSStyleSheet();
+    crosshair.replaceSync("body { cursor: crosshair !important; }");
+  }
+  const sheets = document.adoptedStyleSheets;
+  if (on === sheets.includes(crosshair)) return;
+  document.adoptedStyleSheets = on ? [...sheets, crosshair] : sheets.filter((s) => s !== crosshair);
 }
 
 function syncActive() {
