@@ -1,8 +1,8 @@
 // A framework's logo and name, for tables and lists. Logos in their brand
 // colour; the darker ones get a lighter shade in dark mode so they stay
-// visible.
+// visible. Next.js's mark is black/white, so it follows the text colour.
 import type { IconType } from 'react-icons';
-import { SiAstro, SiNuxt, SiPreact, SiReact, SiReactrouter, SiSolid, SiSvelte, SiVuedotjs } from 'react-icons/si';
+import { SiAstro, SiNextdotjs, SiNuxt, SiPreact, SiReact, SiReactrouter, SiSolid, SiSvelte, SiVuedotjs } from 'react-icons/si';
 
 const icons: Record<string, { Icon: IconType; color?: string }> = {
   React: { Icon: SiReact, color: 'text-[#61DAFB]' },
@@ -11,6 +11,7 @@ const icons: Record<string, { Icon: IconType; color?: string }> = {
   Svelte: { Icon: SiSvelte, color: 'text-[#FF3E00]' },
   Astro: { Icon: SiAstro, color: 'text-[#BC52EE]' },
   Preact: { Icon: SiPreact, color: 'text-[#673AB8] dark:text-[#9A74E0]' },
+  'Next.js': { Icon: SiNextdotjs },
   SvelteKit: { Icon: SiSvelte, color: 'text-[#FF3E00]' },
   Nuxt: { Icon: SiNuxt, color: 'text-[#00DC82]' },
   'React Router': { Icon: SiReactrouter, color: 'text-[#CA4245]' },

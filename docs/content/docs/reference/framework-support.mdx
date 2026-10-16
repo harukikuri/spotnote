@@ -3,6 +3,8 @@ title: Framework Support
 description: Which frameworks and file types Spotnote stamps, and how.
 ---
 
+<div className="flex gap-2 not-prose"><a href="https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml?query=branch%3Amain"><img src="https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml/badge.svg?branch=main" alt="E2E tests on main" /></a> <a href="https://app.codecov.io/gh/harukikuri/spotnote"><img src="https://codecov.io/gh/harukikuri/spotnote/branch/main/graph/badge.svg" alt="Test coverage on main" /></a></div>
+
 | Framework | Status |
 | --- | --- |
 | <Framework name="React" /> | Tested ✅ (React 17, 18, 19) |
@@ -11,12 +13,11 @@ description: Which frameworks and file types Spotnote stamps, and how.
 | <Framework name="Svelte" /> | Tested ✅ (Svelte 4, 5) |
 | <Framework name="Astro" /> | Tested ✅ (Astro 5, 6, 7) |
 | <Framework name="Preact">Preact, other JSX</Framework> | Untested |
+| <Framework name="Next.js" /> | Not supported ❌ (not Vite) |
 
 ## Tested versions
 
-Vite 5 or later. Each major in wide use is tested, spread over Vite 5 to 8.
-
-<a href="https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml?query=branch%3Amain"><img src="https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml/badge.svg?branch=main" alt="E2E tests on main" /></a>
+Each major in wide use is tested.
 
 <Tabs items={['React', 'Vue', 'Svelte', 'Solid', 'Astro']} className="bg-transparent border-0 rounded-none [&>[role=tablist]]:px-0">
 <Tab value="React" className="px-0">
