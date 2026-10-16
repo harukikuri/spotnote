@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { CodeBlockTabsTrigger } from 'fumadocs-ui/components/codeblock';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import {
   SiNpm,
   SiPnpm,
@@ -61,6 +62,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Steps,
     Accordion,
     Accordions,
+    Tab,
+    Tabs,
     Diagram,
     Framework,
     LauncherIcon,
