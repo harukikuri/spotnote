@@ -3,6 +3,7 @@
   "description": "Updates for the example apps. CI runs the browser tests against each, so a release that breaks Spotnote shows up as a failing PR.",
   "extends": ["config:recommended"],
   "includePaths": ["examples/**"],
+  "ignorePaths": ["**/node_modules/**"],
   "schedule": ["before 6am on monday"],
   "packageRules": [
     {
