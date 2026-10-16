@@ -1,0 +1,19 @@
+{
+  "name": "spotnote-examples-react19",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: React 19 on Vite 8.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.4"
+  }
+}

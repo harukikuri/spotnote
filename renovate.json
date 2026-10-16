@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Updates for the example apps. CI runs the browser tests against each, so a release that breaks Spotnote shows up as a failing PR.",
+  "extends": ["config:recommended"],
+  "includePaths": ["examples/**"],
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "description": "Minor and patch updates of every example app: one PR a week.",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "example apps"
+    },
+    {
+      "description": "Apps that stay on an older major, of the framework or of Vite: no major updates.",
+      "matchFileNames": [
+        "examples/react/react17/**",
+        "examples/react/react18/**",
+        "examples/vue/vue32/**",
+        "examples/vue/vue34/**",
+        "examples/svelte/svelte4/**",
+        "examples/solid/solid19-vite5/**",
+        "examples/astro/astro5/**",
+        "examples/astro/astro6/**"
+      ],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "The newest Svelte stays on Vite 7 (Vite 8 has its React, Vue, Solid and Astro apps): a new Svelte major opens a PR, a new Vite major doesn't.",
+      "matchFileNames": ["examples/svelte/svelte5/**"],
+      "matchPackageNames": ["vite", "@sveltejs/vite-plugin-svelte"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "A new major on the newest app of a framework (React 20, Astro 8): the cue to keep this app on the old major as an app of its own, and move this one up (see the examples-new-framework skill).",
+      "matchUpdateTypes": ["major"],
+      "labels": ["new major"]
+    }
+  ]
+}

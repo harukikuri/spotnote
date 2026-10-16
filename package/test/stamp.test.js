@@ -1,12 +1,14 @@
 // Stamping through the plugin's own transform hook, as Vite calls it. Vue,
-// Svelte and Astro use the compilers installed in examples/, as an app's would be.
+// Svelte and Astro use the compilers installed in each example app, as an app's
+// would be: every version the end-to-end tests run on.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import spotnote from "../src/index.js";
 
-const root = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
+const examples = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
+const root = path.join(examples, "react/react19");
 
 async function stamp(rel, code, appRoot = root) {
   const [plugin] = spotnote();
@@ -46,29 +48,40 @@ test("JSX: a file that can't be parsed is passed on unstamped", async (t) => {
   assert.equal(await stamp("src/broken.jsx", "const a = <div>;\n"), undefined);
 });
 
-test("Vue: template elements get a stamp named after the file", async () => {
-  const out = await stamp("src/Hello.vue", "<template>\n  <p>hi <MyComp /></p>\n</template>\n");
-  assert.match(out, /<p data-spotnote="src\/Hello\.vue:2:3" data-spotnote-name="Hello">/);
-  assert.doesNotMatch(out, /<MyComp data-spotnote/);
-});
+for (const app of ["vue32", "vue34", "vue35"]) {
+  test(`Vue (${app}): template elements get a stamp named after the file`, async () => {
+    const out = await stamp(
+      "src/Hello.vue",
+      "<template>\n  <p>hi <MyComp /></p>\n</template>\n",
+      path.join(examples, "vue", app),
+    );
+    assert.match(out, /<p data-spotnote="src\/Hello\.vue:2:3" data-spotnote-name="Hello">/);
+    assert.doesNotMatch(out, /<MyComp data-spotnote/);
+  });
+}
 
-test("Svelte: markup elements are stamped, the script isn't", async () => {
-  const out = await stamp("src/Hi.svelte", "<script>let n = '<b>';</script>\n<h1>{n}</h1>\n<Child />\n");
-  assert.match(out, /<h1 data-spotnote="src\/Hi\.svelte:2:1" data-spotnote-name="Hi">/);
-  assert.match(out, /let n = '<b>';/);
-  assert.doesNotMatch(out, /<Child data-spotnote/);
-});
+for (const app of ["svelte4", "svelte5"]) {
+  const svelte = (rel, code) => stamp(rel, code, path.join(examples, "svelte", app));
 
-test("Svelte: a file that can't be parsed is left to the Svelte plugin", async () => {
-  assert.equal(await stamp("src/Broken.svelte", "<h1>{n</h1>\n"), undefined);
-});
+  test(`Svelte (${app}): markup elements are stamped, the script isn't`, async () => {
+    const out = await svelte("src/Hi.svelte", "<script>let n = '<b>';</script>\n<h1>{n}</h1>\n<Child />\n");
+    assert.match(out, /<h1 data-spotnote="src\/Hi\.svelte:2:1" data-spotnote-name="Hi">/);
+    assert.match(out, /let n = '<b>';/);
+    assert.doesNotMatch(out, /<Child data-spotnote/);
+  });
 
-// Astro 7 (@astrojs/compiler-rs) and Astro 6 (@astrojs/compiler) give different ASTs.
+  test(`Svelte (${app}): a file that can't be parsed is left to the Svelte plugin`, async () => {
+    assert.equal(await svelte("src/Broken.svelte", "<h1>{n</h1>\n"), undefined);
+  });
+}
+
+// Astro 7 (@astrojs/compiler-rs) and Astro 5 and 6 (@astrojs/compiler) give different ASTs.
 for (const [app, version] of [
-  ["astro", "Astro 7"],
+  ["astro7", "Astro 7"],
   ["astro6", "Astro 6"],
+  ["astro5", "Astro 5"],
 ]) {
-  const astro = (rel, code) => stamp(rel, code, path.join(root, app));
+  const astro = (rel, code) => stamp(rel, code, path.join(examples, "astro", app));
 
   test(`${version}: markup elements are stamped, components, <script>, <style> and <slot> aren't`, async () => {
     const out = await astro(

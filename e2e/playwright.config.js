@@ -1,37 +1,47 @@
 // End-to-end tests: every example app (../examples) in dev, driven in
-// Chromium. One project per framework, each with its own dev server and the
-// elements the tests pick in it (see `app` in spotnote.spec.js).
+// Chromium. One project per app (a framework at one version, on one Vite), each
+// with its own dev server and the elements the tests pick in it (see `app` in
+// spotnote.spec.js). E2E_APPS=react19,vue32 runs only those (CI: one per job,
+// .github/workflows/test.yml).
 import { defineConfig, devices } from "@playwright/test";
 
-// file: where `title` is written, relative to the app's Vite root.
-// repeated: one element rendered several times from one line, and how many.
-const APPS = [
-  { name: "react", port: 5201, file: "pages/Home.jsx", title: ".hero h1", repeated: ".card h3", count: 6 },
-  { name: "solid", port: 5202, file: "App.jsx", title: "h1", repeated: "li", count: 3 },
-  { name: "vue", port: 5203, file: "pages/Home.vue", title: ".hero h1", repeated: ".card h3", count: 6 },
-  { name: "svelte", port: 5204, file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 6 },
-  { name: "svelte4", port: 5205, file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 3 },
-  { name: "astro", port: 5207, file: "src/components/Home.astro", title: ".hero h1", repeated: ".card h3", count: 3 },
-  // Astro 6 (another compiler), on the Astro example's pages.
-  {
-    name: "astro6",
-    port: 5208,
-    file: "../astro/src/components/Home.astro",
-    title: ".hero h1",
-    repeated: ".card h3",
-    count: 3,
-  },
-];
-const AGENT = { ...APPS[0], name: "agent", port: 5206, mcpPort: 4998 };
+// What the tests pick, per framework. file: where `title` is written, relative
+// to the app's root. repeated: one element rendered several times from one
+// line, and how many.
+const REACT = { file: "pages/Home.jsx", title: ".hero h1", repeated: ".card h3", count: 6 };
+const VUE = { file: "pages/Home.vue", title: ".hero h1", repeated: ".card h3", count: 6 };
+const SOLID = { file: "App.jsx", title: "h1", repeated: "li", count: 3 };
+const ASTRO = { file: "src/components/Home.astro", title: ".hero h1", repeated: ".card h3", count: 3, astro: true };
+
+// Each app is examples/<dir>, the package spotnote-examples-<name>. Every major
+// of each framework, spread over Vite 5 to 8.
+const ALL = [
+  { name: "react17", dir: "react/react17", ...REACT }, // Vite 5
+  { name: "react18", dir: "react/react18", ...REACT }, // Vite 6
+  { name: "react19", dir: "react/react19", ...REACT }, // Vite 8
+  { name: "vue32", dir: "vue/vue32", ...VUE }, // Vite 5
+  { name: "vue34", dir: "vue/vue34", ...VUE }, // Vite 7
+  { name: "vue35", dir: "vue/vue35", ...VUE }, // Vite 8
+  { name: "svelte4", dir: "svelte/svelte4", file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 3 }, // Vite 5
+  { name: "svelte5", dir: "svelte/svelte5", file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 6 }, // Vite 7
+  { name: "solid19-vite5", dir: "solid/solid19-vite5", ...SOLID },
+  { name: "solid19", dir: "solid/solid19", ...SOLID }, // Vite 8
+  { name: "astro5", dir: "astro/astro5", ...ASTRO }, // Vite 6
+  { name: "astro6", dir: "astro/astro6", ...ASTRO }, // Vite 7
+  { name: "astro7", dir: "astro/astro7", ...ASTRO }, // Vite 8
+].map((app, i) => ({ ...app, port: 5201 + i }));
+// With an agent: one app is enough, the client is the same in every framework.
+const AGENT = { ...ALL.find((a) => a.name === "react19"), name: "agent", port: 5230, mcpPort: 4998 };
+
+const only = process.env.E2E_APPS?.split(",");
+const APPS = only ? ALL.filter((a) => only.includes(a.name)) : ALL;
+const withAgent = !only || only.includes("agent");
 
 // --ignore-lock: in the foreground, even where Astro would detect a coding agent
 // and start a background server that Playwright couldn't stop.
-const devServer = ({ name, port }) =>
-  name === "svelte4"
-    ? `pnpm --filter spotnote-examples-svelte4 exec vite --port ${port} --strictPort`
-    : name.startsWith("astro")
-      ? `pnpm --filter spotnote-examples-${name} exec astro dev --port ${port} --ignore-lock`
-      : `pnpm --filter spotnote-examples exec vite --port ${port} --strictPort`;
+const devServer = ({ name, port, astro }) =>
+  `pnpm --filter spotnote-examples-${name === "agent" ? "react19" : name} exec ` +
+  (astro ? `astro dev --port ${port} --ignore-lock` : `vite --port ${port} --strictPort`);
 
 export default defineConfig({
   testDir: ".",
@@ -49,12 +59,15 @@ export default defineConfig({
       testIgnore: "agent.spec.js",
       use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${app.port}`, app },
     })),
-    // With an agent: one app is enough, the client is the same in every framework.
-    {
-      name: "agent",
-      testMatch: "agent.spec.js",
-      use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${AGENT.port}`, app: AGENT },
-    },
+    ...(withAgent
+      ? [
+          {
+            name: "agent",
+            testMatch: "agent.spec.js",
+            use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${AGENT.port}`, app: AGENT },
+          },
+        ]
+      : []),
   ],
   webServer: [
     ...APPS.map((app) => ({
@@ -63,15 +76,19 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       // SPOTNOTE_PORT: one nothing listens on, so a spotnote-mcp running on this
       // machine can't connect and turn copying off.
-      env: { SPOTNOTE_FW: app.name, SPOTNOTE_PORT: "4999" },
+      env: { SPOTNOTE_PORT: "4999" },
     })),
-    {
-      command: devServer(AGENT),
-      url: `http://localhost:${AGENT.port}`,
-      reuseExistingServer: !process.env.CI,
-      // The spotnote-mcp that agent.spec.js starts; and "vim" as the editor, so
-      // opening a file says "no editor" instead of launching one.
-      env: { SPOTNOTE_FW: "react", SPOTNOTE_PORT: String(AGENT.mcpPort), LAUNCH_EDITOR: "vim" },
-    },
+    ...(withAgent
+      ? [
+          {
+            command: devServer(AGENT),
+            url: `http://localhost:${AGENT.port}`,
+            reuseExistingServer: !process.env.CI,
+            // The spotnote-mcp that agent.spec.js starts; and "vim" as the editor, so
+            // opening a file says "no editor" instead of launching one.
+            env: { SPOTNOTE_PORT: String(AGENT.mcpPort), LAUNCH_EDITOR: "vim" },
+          },
+        ]
+      : []),
   ],
 });

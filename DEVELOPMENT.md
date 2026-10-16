@@ -13,24 +13,24 @@ Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with five part
 
 ```bash
 pnpm install                                  # from the repo root — links the workspace
-pnpm dev                                      # React example (multi-page demo) + picker
-pnpm --filter spotnote-examples dev:solid     # Solid example
-pnpm --filter spotnote-examples dev:vue       # Vue example
-pnpm --filter spotnote-examples dev:svelte    # Svelte 5 example
-pnpm dev:svelte4                              # Svelte 4 example (own package)
-pnpm dev:astro                                # Astro example (own package)
-pnpm dev:astro6                               # the same pages on Astro 6
-pnpm --filter spotnote-examples build         # production build (picker excluded — apply:'serve')
+pnpm dev                                      # React 19 example (multi-page demo) + picker
+pnpm --filter spotnote-examples-vue35 dev     # any example app: spotnote-examples-<app> (see below)
+pnpm --filter "./examples/**" build           # production builds (picker excluded — apply:'serve')
+node examples/sync.mjs                        # after editing an example: copy it to its other versions
 pnpm test                                     # package + mcp tests (node:test, no extra deps)
 pnpm coverage                                 # the same tests, with a coverage report of the files they load (c8; HTML in coverage/)
 pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
+E2E_APPS=vue32,agent pnpm test:e2e            # only these apps (agent: the tests with spotnote-mcp)
 pnpm coverage:e2e                             # the browser tests, with a coverage report of package/src/client and mcp/src (HTML in e2e/coverage/)
 pnpm lint                                     # format + lint check (Biome, config in biome.json)
 pnpm format                                   # apply Biome's formatting and safe fixes
 ```
 
-CI runs on every push to main and every PR: `test.yml` (unit + E2E) and
-`ci.yml` (lint, docs build, example builds).
+CI runs on every push to main and every PR: `test.yml` (unit, and E2E with one
+job per example app, side by side) and `ci.yml` (lint, docs build, example
+builds, `sync.mjs --check`). Renovate updates the example apps weekly
+(`renovate.json`): a new framework or Vite major shows up as a PR, labelled
+"new major".
 
 Plugin layout (`package/`):
 
@@ -67,17 +67,24 @@ To try local MCP changes, point your agent at the source instead of npm:
 claude mcp add spotnote-dev -- node /absolute/path/to/spotnote/mcp/src/cli.js
 ```
 
-Examples layout (`examples/`):
+Examples layout (`examples/`): every major of each framework, as an app of its
+own (`examples/<framework>/<app>/`, the package `spotnote-examples-<app>`),
+spread over Vite 5 to 8. Each is a whole Vite (or Astro) app with its own
+`package.json` and config.
 
-- `<framework>/` — a demo app per framework (`react`, `solid`, `vue`, `svelte`)
-- `svelte4/` — a Svelte 4 app in its own package (Svelte 4 and 5 can't share
-  one `node_modules`), with its own `vite.config.js`
-- `astro/` — an Astro app in its own package (started by `astro dev`), with
-  its own `astro.config.mjs`
-- `astro6/` — the same pages (`srcDir: "../astro/src"`) on Astro 6, which has
-  another compiler
-- `vite.config.js` — boots the `SPOTNOTE_FW`-selected app with `spotnote()` +
-  the framework plugin; imports the plugin via the `spotnote` workspace link
+| App | Framework | Vite |
+| --- | --- | --- |
+| `react/react17`, `react18`, `react19` | React 17, 18, 19 | 5, 6, 8 |
+| `vue/vue32`, `vue34`, `vue35` | Vue 3.2, 3.4, 3.5 | 5, 7, 8 |
+| `svelte/svelte4`, `svelte5` | Svelte 4, 5 | 5, 7 |
+| `solid/solid19-vite5`, `solid19` | Solid 1.9 (vite-plugin-solid needs it) | 5, 8 |
+| `astro/astro5`, `astro6`, `astro7` | Astro 5, 6, 7 | 6, 7, 8 (Astro's own) |
+
+The newest app of each framework is the one to edit (`react19`, `vue35`,
+`solid19`, `astro7`); `node examples/sync.mjs` copies it into the others, and CI
+checks they match. A file an app keeps for itself (React 17's `main.jsx`, the
+configs) is listed in `sync.mjs`. Svelte 4 and 5 are written differently: only
+their styles are shared.
 
 ### Use it in another Vite app
 

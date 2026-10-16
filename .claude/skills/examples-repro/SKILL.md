@@ -13,9 +13,9 @@ can't tell the fix worked, or keep it working.
 
 Note what decides where it can happen:
 
-- **Framework and version**: React, Solid, Vue, Svelte 5, Svelte 4, Astro 7 or Astro 6 (each has an
-  app in `examples/<fw>/`). Another JSX framework (Preact, …)? Use React's app: the
-  same Babel pass stamps it.
+- **Framework and version**, and their Vite version: each major has an app,
+  `examples/<framework>/<app>/` (DEVELOPMENT.md, "Examples layout"). Another JSX
+  framework (Preact, …)? Use React's app: the same Babel pass stamps it.
 - **The markup**: what kind of element (a component's root, a `.map()` item, a
   slot, an SVG, a conditional), and in which file type.
 - **What they did**: clicked, Shift-clicked, edited the file (HMR), changed page,
@@ -28,8 +28,9 @@ before guessing.
 
 ## 2. Reproduce it by hand
 
-1. Start the app: `pnpm dev` (React), `pnpm --filter spotnote-examples dev:solid`
-   (`:vue`, `:svelte`), `pnpm dev:svelte4` or `pnpm dev:astro`.
+1. Start the app closest to theirs: `pnpm --filter spotnote-examples-<app> dev`
+   (`pnpm dev` is React 19). Edit the newest app of the framework, and copy it to
+   the others with `node examples/sync.mjs`.
 2. Does the example already have markup like theirs? Use it. If not, add the
    smallest piece that has the shape from the report to an existing page (a new
    element, a component). Keep the examples' look: placeholder bars (`<Bar>`), no
@@ -49,7 +50,7 @@ the prompt Spotnote copied: don't fix a bug you haven't seen.
 - If you added markup that other frameworks have too, add it to each app, and
   pick it through a field on `APPS` in `e2e/playwright.config.js` (like `title`, `repeated`).
 - Run it and check it fails for the reported reason, not a typo:
-  `pnpm --filter spotnote-e2e exec playwright test -g "<name>" --project <fw>`.
+  `E2E_APPS=<app> pnpm --filter spotnote-e2e exec playwright test -g "<name>"`.
 
 ## 4. Fix, then run everything
 

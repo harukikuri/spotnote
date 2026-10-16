@@ -13,8 +13,8 @@ await new Promise((r) => mcp.listen(0, "127.0.0.1", r));
 process.env.SPOTNOTE_PORT = String(mcp.address().port);
 const { default: spotnote } = await import("../src/index.js");
 
-const root = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
-const repo = path.resolve(root, "..");
+const repo = path.resolve(fileURLToPath(import.meta.url), "../../..");
+const root = path.join(repo, "examples/react/react19");
 
 function plugin(plugins = []) {
   const [p] = spotnote();
@@ -75,7 +75,7 @@ test("the browser's component files import the client, which boots the picker wi
   const p = plugin([{ name: "vite:react-babel" }]);
   const id = p.resolveId("virtual:spotnote-client");
   assert.equal(p.resolveId("other"), undefined);
-  assert.match(p.load(id), /initInspector\(\{"jsx":"react","root":".*examples"/);
+  assert.match(p.load(id), /initInspector\(\{"jsx":"react","root":".*react19"/);
   assert.equal(p.load("other"), undefined);
   assert.match(plugin([{ name: "solid" }]).load(id), /"jsx":"solid"/);
   assert.match(plugin([{ name: "vite:react-swc" }, { name: "solid" }]).load(id), /"jsx":null/); // can't tell

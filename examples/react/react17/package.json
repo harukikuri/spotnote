@@ -1,0 +1,19 @@
+{
+  "name": "spotnote-examples-react17",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: React 17 on Vite 5.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^5.4.11"
+  }
+}

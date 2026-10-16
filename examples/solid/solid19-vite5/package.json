@@ -1,0 +1,18 @@
+{
+  "name": "spotnote-examples-solid19-vite5",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: Solid 1.9 on Vite 5 (vite-plugin-solid's compiler needs Solid 1.9, so this one varies Vite).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "solid-js": "^1.9.3",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "vite-plugin-solid": "^2.11.14",
+    "vite": "^5.4.11"
+  }
+}

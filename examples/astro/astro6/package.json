@@ -1,0 +1,14 @@
+{
+  "name": "spotnote-examples-astro6",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: Astro 6.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build"
+  },
+  "dependencies": {
+    "astro": "^6.4.8",
+    "spotnote": "workspace:*"
+  }
+}

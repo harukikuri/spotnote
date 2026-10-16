@@ -394,11 +394,8 @@ test("Settings: not connected, the agent page shows how to connect", async ({ pa
 });
 
 test("saving the file keeps the open panel on its element", async ({ page, app }) => {
-  test.skip(
-    app.name.startsWith("astro"),
-    "Astro reloads the page when an .astro file is saved, like any server-rendered page",
-  );
-  const file = path.join(examples, app.name, app.file);
+  test.skip(!!app.astro, "Astro reloads the page when an .astro file is saved, like any server-rendered page");
+  const file = path.join(examples, app.dir, app.file);
   const source = readFileSync(file, "utf8");
   const logs = [];
   page.on("console", (m) => logs.push(m.text()));
@@ -409,10 +406,13 @@ test("saving the file keeps the open panel on its element", async ({ page, app }
   await input.fill("Not sent yet");
 
   try {
-    // A change below everything, so no element moves (Vue skips one outside its blocks).
+    // A change below everything, so no element moves. Vue skips one outside its
+    // blocks, and Svelte 5's plugin one that compiles the same (a blank line).
     const edited = file.endsWith(".vue")
       ? source.replace(/<\/template>(?![\s\S]*<\/template>)/, "<!-- edited -->\n</template>")
-      : `${source}\n`;
+      : file.endsWith(".svelte")
+        ? `${source}\n<i hidden></i>\n`
+        : `${source}\n`;
     writeFileSync(file, edited);
     await expect.poll(() => rebinds()).toBe(1);
   } finally {

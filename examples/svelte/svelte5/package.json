@@ -1,0 +1,18 @@
+{
+  "name": "spotnote-examples-svelte5",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: Svelte 5 on Vite 7.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "svelte": "^5.0.0",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
+    "vite": "^7.3.7"
+  }
+}

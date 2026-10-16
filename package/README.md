@@ -80,15 +80,15 @@ Then ask your agent: `Watch my Spotnote notes.`
 
 ## Frameworks
 
-Vite 5 or later.
+Vite 5 or later (tested on 5, 6, 7 and 8).
 
 | Framework | Status |
 | --- | --- |
-| React | Tested (React 18) |
+| React | Tested (React 17, 18, 19) |
 | Solid | Tested (Solid 1.9) |
-| Vue | Tested (Vue 3.5) |
-| Svelte | Tested (Svelte 4.2 and 5) |
-| Astro | Tested (Astro 6.4 and 7.4) |
+| Vue | Tested (Vue 3.2, 3.4, 3.5) |
+| Svelte | Tested (Svelte 4, 5) |
+| Astro | Tested (Astro 5, 6, 7) |
 | Preact, other JSX | Untested |
 | SvelteKit, Nuxt, React Router, SolidStart | Works (checked by hand) |
 | Next.js | Not supported (not Vite) |

@@ -36,7 +36,39 @@ jobs:
           flags: unit
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  # The browser tests, one job per example app (E2E_APPS), side by side: more
+  # apps don't make the run longer. The list matches ALL in e2e/playwright.config.js.
   e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          [react17, react18, react19, vue32, vue34, vue35, svelte4, svelte5, solid19-vite5, solid19, astro5, astro6, astro7]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version from packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter spotnote-e2e exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+        env:
+          E2E_APPS: ${{ matrix.app }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces-${{ matrix.app }}
+          path: e2e/test-results/
+
+  # With the agent, on React 19: and the coverage of the browser client and
+  # spotnote-mcp, from these runs (the client is the same in every app).
+  e2e-agent:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +82,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter spotnote-e2e exec playwright install --with-deps chromium
       - run: pnpm coverage:e2e # the browser tests, with a coverage report of the client in the log
+        env:
+          E2E_APPS: react19,agent
 
       - uses: codecov/codecov-action@v5
         with:
@@ -60,5 +94,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-traces
+          name: playwright-traces-agent
           path: e2e/test-results/

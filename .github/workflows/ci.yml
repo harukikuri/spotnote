@@ -49,11 +49,7 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
-      - name: Example builds
+      - name: Example apps
         run: |
-          for fw in react solid vue svelte; do
-            SPOTNOTE_FW=$fw pnpm --filter spotnote-examples build
-          done
-          pnpm --filter spotnote-examples-svelte4 exec vite build
-          pnpm --filter spotnote-examples-astro exec astro build
-          pnpm --filter spotnote-examples-astro6 exec astro build
+          node examples/sync.mjs --check # the copies of each framework's app are up to date
+          pnpm --filter "./examples/**" run build

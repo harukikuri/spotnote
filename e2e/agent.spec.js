@@ -114,7 +114,7 @@ test("an editor picked in Settings opens the agent's file links through its URL"
   await page.locator(".sn-panel .sn-msg-agent button.sn-file", { hasText: `${app.file}:5` }).click();
   await expect
     .poll(() => page.evaluate(() => window.opened))
-    .toEqual([`cursor://file${path.join(repo, "examples/react", app.file)}:5`]);
+    .toEqual([`cursor://file${path.join(repo, "examples", app.dir, app.file)}:5`]);
 });
 
 test("file links: a bare name is found among the page's stamps; a link that opens clears its warning", async ({

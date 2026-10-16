@@ -1,10 +1,7 @@
 packages:
   - package
   - mcp
-  - examples
-  - examples/svelte4
-  - examples/astro
-  - examples/astro6
+  - examples/*/*
   - docs
   - e2e
 onlyBuiltDependencies:

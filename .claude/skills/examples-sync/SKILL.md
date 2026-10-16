@@ -6,11 +6,26 @@ description: After changing an example app's markup (examples/), update what dep
 # Keep things in step with the examples
 
 The example apps are the E2E fixtures and the docs' screenshot set. Their markup
-is read in three other places.
+is read in four other places.
+
+## 0. The other versions of the app
+
+Each framework has an app per version (DEVELOPMENT.md, "Examples layout"). Edit
+the newest (`react19`, `vue35`, `solid19`, `astro7`), then copy it into the
+others:
+
+```bash
+node examples/sync.mjs
+```
+
+Svelte 4 and 5 are written differently: a change to one goes into the other by
+hand. A file one version needs to keep different (React 17's `main.jsx`) is
+listed as its own in `sync.mjs`.
 
 ## 1. The E2E app table
 
-`e2e/playwright.config.js` → `APPS`: per framework, what the tests pick.
+`e2e/playwright.config.js` → `ALL` (and the shapes above it): per app, what the
+tests pick.
 
 | Field | Means | Check after a change |
 | --- | --- | --- |
@@ -38,11 +53,9 @@ is read in three other places.
 ## 4. Check
 
 ```bash
+node examples/sync.mjs --check                       # the copies match
 pnpm test:e2e                                        # every app
-for fw in react solid vue svelte; do SPOTNOTE_FW=$fw pnpm --filter spotnote-examples build; done
-pnpm --filter spotnote-examples-svelte4 exec vite build
-pnpm --filter spotnote-examples-astro exec astro build
-pnpm --filter spotnote-examples-astro6 exec astro build
+pnpm --filter "./examples/**" build                  # every app builds
 ```
 
 CI runs the same builds (`.github/workflows/ci.yml`). Also open the changed app

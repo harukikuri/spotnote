@@ -47,22 +47,28 @@ const RESOLVED = "\0" + VIRTUAL;
 
 const warnedParse = new Set(); // files we couldn't parse (warn once each)
 
+// The compilers below come from the app's own dependencies, so the plugin keeps
+// none of its own. Each is loaded lazily, once per app root (a test run stamps
+// apps on different versions), and is null when the app doesn't have it: that
+// file type then just isn't stamped.
+function perRoot(load) {
+  const cache = new Map(); // root -> Promise
+  return (root) => {
+    if (!cache.has(root))
+      cache.set(
+        root,
+        load(root).catch(() => null),
+      );
+    return cache.get(root);
+  };
+}
+const appImport = async (root, pkg) =>
+  import(pathToFileURL(createRequire(path.join(root, "index.js")).resolve(pkg)).href);
+
 // Vue SFCs aren't JSX, so Babel can't reach them. Instead we parse the SFC with
 // the app's own `vue/compiler-sfc` and splice `data-spotnote` onto each native
-// template element. Resolved lazily from the project so the plugin keeps no Vue
-// dependency of its own (undefined = not tried yet, null = unavailable).
-let vueParse;
-async function getVueParse(root) {
-  if (vueParse !== undefined) return vueParse;
-  try {
-    const projectRequire = createRequire(path.join(root, "index.js"));
-    const sfcUrl = pathToFileURL(projectRequire.resolve("vue/compiler-sfc"));
-    ({ parse: vueParse } = await import(sfcUrl.href));
-  } catch {
-    vueParse = null; // no Vue in this project — silently skip .vue stamping
-  }
-  return vueParse;
-}
+// template element.
+const getVueParse = perRoot(async (root) => (await appImport(root, "vue/compiler-sfc")).parse);
 
 // Walk the template AST and stamp every native host element (tagType 0). Element
 // `loc.start.offset` is absolute in the SFC source, so we splice back-to-front
@@ -98,23 +104,13 @@ function stampVueTemplate(code, file, root, parse) {
 }
 
 // Svelte, like Vue, isn't JSX — parse with the app's own `svelte/compiler` and
-// splice `data-spotnote` onto native markup elements. Resolved lazily from the
-// project (undefined = not tried yet, null = unavailable).
-let svelteParse;
-async function getSvelteParse(root) {
-  if (svelteParse !== undefined) return svelteParse;
-  try {
-    const projectRequire = createRequire(path.join(root, "index.js"));
-    const url = pathToFileURL(projectRequire.resolve("svelte/compiler"));
-    const m = await import(url.href);
-    // svelte/compiler is CJS — importing the file by path exposes `parse` on the
-    // interop default, not as a named export.
-    svelteParse = m.parse || m.default?.parse || null;
-  } catch {
-    svelteParse = null; // no Svelte in this project — silently skip .svelte stamping
-  }
-  return svelteParse;
-}
+// splice `data-spotnote` onto native markup elements.
+const getSvelteParse = perRoot(async (root) => {
+  const m = await appImport(root, "svelte/compiler");
+  // svelte/compiler is CJS — importing the file by path exposes `parse` on the
+  // interop default, not as a named export.
+  return m.parse || m.default?.parse || null;
+});
 
 // Offset → { line, column }, both 1-based like the JSX/Vue stamps.
 function offsetToLineCol(code, offset) {
@@ -186,29 +182,19 @@ function stampSvelte(code, file, root, parse) {
 // depend on it directly) and splice `data-spotnote` onto native elements in the
 // markup. Astro 7 has `@astrojs/compiler-rs`, Astro 5 and 6 `@astrojs/compiler`:
 // each gives its own AST, so each gets a reader that lists the elements as
-// { tag, start, stamped } (start: the offset of its "<" in the code). Resolved
-// lazily, per app root (a test run stamps apps with either compiler).
-const astroReaders = new Map(); // root -> Promise<reader | null>
-function getAstroElements(root) {
-  if (!astroReaders.has(root)) astroReaders.set(root, loadAstroReader(root));
-  return astroReaders.get(root);
-}
-async function loadAstroReader(root) {
-  try {
-    const astroPkg = createRequire(path.join(root, "index.js")).resolve("astro/package.json");
-    const astroRequire = createRequire(astroPkg);
-    const load = async (pkg) => (await import(pathToFileURL(astroRequire.resolve(pkg)).href)).parse;
-    // The compiler this Astro declares: another one may be installed next to it.
-    if (require(astroPkg).dependencies?.["@astrojs/compiler-rs"]) {
-      const parse = await load("@astrojs/compiler-rs");
-      return async (code) => rsElements(parse(code).ast);
-    }
-    const parse = await load("@astrojs/compiler");
-    return async (code) => goElements(code, (await parse(code, { position: true })).ast);
-  } catch {
-    return null; // no Astro in this project — skip .astro stamping
+// { tag, start, stamped } (start: the offset of its "<" in the code).
+const getAstroElements = perRoot(async (root) => {
+  const astroPkg = createRequire(path.join(root, "index.js")).resolve("astro/package.json");
+  const astroRequire = createRequire(astroPkg);
+  const load = async (pkg) => (await import(pathToFileURL(astroRequire.resolve(pkg)).href)).parse;
+  // The compiler this Astro declares: another one may be installed next to it.
+  if (require(astroPkg).dependencies?.["@astrojs/compiler-rs"]) {
+    const parse = await load("@astrojs/compiler-rs");
+    return async (code) => rsElements(parse(code).ast);
   }
-}
+  const parse = await load("@astrojs/compiler");
+  return async (code) => goElements(code, (await parse(code, { position: true })).ast);
+});
 
 // Astro 7: elements are JSXElements (in the markup and inside {expressions}
 // alike), with UTF-16 offsets, like JavaScript strings.

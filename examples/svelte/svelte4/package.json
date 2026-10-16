@@ -1,0 +1,18 @@
+{
+  "name": "spotnote-examples-svelte4",
+  "private": true,
+  "type": "module",
+  "description": "Spotnote demo app: Svelte 4 on Vite 5 (Svelte 4 has its own parser AST).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "svelte": "^4.2.20",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "vite": "^5.4.11"
+  }
+}

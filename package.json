@@ -2,15 +2,12 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "dev": "pnpm --filter spotnote-examples run dev",
+    "dev": "pnpm --filter spotnote-examples-react19 run dev",
     "build": "pnpm -r --if-present run build",
     "test": "pnpm -r --if-present run test",
     "coverage": "c8 node --test \"package/test/*.test.js\" \"mcp/test/*.test.js\"",
     "test:e2e": "pnpm --filter spotnote-e2e run test:e2e",
     "coverage:e2e": "pnpm --filter spotnote-e2e run coverage",
-    "dev:svelte4": "pnpm --filter spotnote-examples-svelte4 run dev",
-    "dev:astro": "pnpm --filter spotnote-examples-astro run dev",
-    "dev:astro6": "pnpm --filter spotnote-examples-astro6 run dev",
     "lint": "biome check .",
     "format": "biome check --write ."
   },
