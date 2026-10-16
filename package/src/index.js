@@ -133,16 +133,16 @@ function offsetToLineCol(code, offset) {
 
 // Generic tree walk over the parsed markup (we don't care about node kinds
 // except native elements).
-function walkSvelte(node, visit) {
+function walkAst(node, visit) {
   if (!node || typeof node !== "object") return;
   if (Array.isArray(node)) {
-    for (const n of node) walkSvelte(n, visit);
+    for (const n of node) walkAst(n, visit);
     return;
   }
   if (typeof node.type === "string") visit(node);
   for (const key in node) {
     if (key === "parent") continue;
-    walkSvelte(node[key], visit);
+    walkAst(node[key], visit);
   }
 }
 
@@ -166,7 +166,7 @@ function stampSvelte(code, file, root, parse) {
   const isTag = ast.fragment
     ? (n) => n.type === "RegularElement"
     : (n) => n.type === "Element" && !n.name.includes(":");
-  walkSvelte(markup, (node) => {
+  walkAst(markup, (node) => {
     if (!node.name || !isTag(node)) return;
     if (typeof node.start !== "number") return;
     const already = (node.attributes || []).some((a) => a && a.name === "data-spotnote");
@@ -179,6 +179,54 @@ function stampSvelte(code, file, root, parse) {
     touched = true;
   });
   if (!touched) return;
+  return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
+}
+
+// Astro, too: parse with the compiler of the app's own `astro` (Astro 7's
+// `@astrojs/compiler-rs`; the app may not depend on it directly) and splice
+// `data-spotnote` onto native elements in the markup. Resolved lazily
+// (undefined = not tried yet, null = unavailable).
+let astroParse;
+async function getAstroParse(root) {
+  if (astroParse !== undefined) return astroParse;
+  try {
+    const astroRequire = createRequire(createRequire(path.join(root, "index.js")).resolve("astro/package.json"));
+    ({ parse: astroParse } = await import(pathToFileURL(astroRequire.resolve("@astrojs/compiler-rs")).href));
+  } catch {
+    astroParse = null; // no Astro 7 in this project — skip .astro stamping
+  }
+  return astroParse;
+}
+
+// Not stamped: <script> and <style>, which Astro would stop bundling once they
+// have an attribute, and <slot>, which isn't an element in the page.
+const ASTRO_SKIP = new Set(["script", "style", "slot"]);
+
+function stampAstro(code, file, root, parse) {
+  let ast;
+  try {
+    ({ ast } = parse(code));
+  } catch {
+    return; // let Astro report the real parse error
+  }
+  const rel = path.relative(root, file).replace(/\\/g, "/") || file;
+  const name = path.basename(file, path.extname(file));
+  const s = new MagicString(code);
+  // An element is a JSXElement (in the markup and inside {expressions} alike); a
+  // native tag has a lowercase JSXIdentifier name. Components are capitalized or
+  // member names (<Foo.Bar>). Offsets are UTF-16, like JavaScript strings.
+  walkAst(ast?.body, (node) => {
+    if (node.type !== "JSXOpeningElement" || node.name?.type !== "JSXIdentifier") return;
+    const tag = node.name.name;
+    if (tag[0] !== tag[0].toLowerCase() || ASTRO_SKIP.has(tag)) return;
+    if (node.attributes.some((a) => a.name?.name === "data-spotnote")) return;
+    const { line, column } = offsetToLineCol(code, node.start);
+    s.appendLeft(node.name.end, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
+  });
+  // Astro pages send no other JavaScript to the browser unless they hydrate a
+  // component, so each .astro file brings the picker in a script of its own
+  // (Astro bundles it, and loads it once per page). At the end: no line moves.
+  s.append('\n<script>import "virtual:spotnote-client";</script>\n');
   return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
 }
 
@@ -339,6 +387,13 @@ export default function spotnote() {
           const parse = await getSvelteParse(root);
           if (!parse) return;
           return stampSvelte(code, file, root, parse);
+        }
+
+        // Raw .astro import only — skip the ?astro&type= sub-requests.
+        if (file.endsWith(".astro") && !id.includes("?")) {
+          const parse = await getAstroParse(root);
+          if (!parse) return;
+          return stampAstro(code, file, root, parse);
         }
       },
     },

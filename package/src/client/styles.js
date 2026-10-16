@@ -49,6 +49,7 @@ const THEMES = {
     "fw-solid": "#76b3e1",
     "fw-vue": "#42b883",
     "fw-svelte": "#ff3e00",
+    "fw-astro": "#bc52ee",
     "fw-jsx": "#a1a1aa",
     // code in the agent's messages (GitHub's dark palette)
     "tk-tag": "#7ee787",
@@ -89,6 +90,7 @@ const THEMES = {
     "fw-solid": "#2c4f7c",
     "fw-vue": "#2f9768",
     "fw-svelte": "#e63900",
+    "fw-astro": "#9a2fd0",
     "fw-jsx": "#71717a",
     // code in the agent's messages (GitHub's light palette)
     "tk-tag": "#116329",

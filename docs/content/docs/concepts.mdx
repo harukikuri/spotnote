@@ -28,6 +28,7 @@ How the stamp is added depends on the file type:
 - **`.jsx` / `.tsx`**: a Babel pass over the JSX. It doesn't depend on React, so Solid and other JSX frameworks get the same stamps.
 - **`.vue`**: the template is parsed with your app's own `vue/compiler-sfc`.
 - **`.svelte`**: the markup is parsed with your app's own `svelte/compiler`.
+- **`.astro`**: the markup is parsed with your app's own Astro compiler.
 
 The stamping runs before your framework's compiler, wherever `spotnote()` sits in `plugins`. Files in `node_modules` are never stamped.
 
@@ -36,7 +37,7 @@ Alongside the location, `data-spotnote-name` records the **owning component**. T
 | File | Value |
 | --- | --- |
 | `.jsx` / `.tsx` | The nearest enclosing function whose name starts with a capital letter (`function TodoList`, `const TodoList = () =>`, also through `memo()` / `forwardRef()`). Omitted when there is none. |
-| `.vue` / `.svelte` | The file name without its extension. |
+| `.vue` / `.svelte` / `.astro` | The file name without its extension. |
 
 ## The client
 

@@ -85,11 +85,9 @@ export default defineNuxtConfig({
 
 ```js tab="Astro" title="astro.config.mjs"
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 import spotnote from 'spotnote'; // [!code highlight]
 
 export default defineConfig({
-  integrations: [react()],
   vite: { plugins: [spotnote()] }, // [!code highlight]
 });
 ```

@@ -55,3 +55,4 @@ jobs:
             SPOTNOTE_FW=$fw pnpm --filter spotnote-examples build
           done
           pnpm --filter spotnote-examples-svelte4 exec vite build
+          pnpm --filter spotnote-examples-astro exec astro build

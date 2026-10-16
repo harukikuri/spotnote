@@ -13,7 +13,7 @@ can't tell the fix worked, or keep it working.
 
 Note what decides where it can happen:
 
-- **Framework and version**: React, Solid, Vue, Svelte 5 or Svelte 4 (each has an
+- **Framework and version**: React, Solid, Vue, Svelte 5, Svelte 4 or Astro (each has an
   app in `examples/<fw>/`). Another JSX framework (Preact, …)? Use React's app: the
   same Babel pass stamps it.
 - **The markup**: what kind of element (a component's root, a `.map()` item, a
@@ -29,7 +29,7 @@ before guessing.
 ## 2. Reproduce it by hand
 
 1. Start the app: `pnpm dev` (React), `pnpm --filter spotnote-examples dev:solid`
-   (`:vue`, `:svelte`), or `pnpm dev:svelte4`.
+   (`:vue`, `:svelte`), `pnpm dev:svelte4` or `pnpm dev:astro`.
 2. Does the example already have markup like theirs? Use it. If not, add the
    smallest piece that has the shape from the report to an existing page (a new
    element, a component). Keep the examples' look: placeholder bars (`<Bar>`), no

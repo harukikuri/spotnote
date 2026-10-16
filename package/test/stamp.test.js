@@ -1,5 +1,5 @@
-// Stamping through the plugin's own transform hook, as Vite calls it. Vue and
-// Svelte use the compilers installed in examples/, as an app's would be.
+// Stamping through the plugin's own transform hook, as Vite calls it. Vue,
+// Svelte and Astro use the compilers installed in examples/, as an app's would be.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
@@ -8,11 +8,11 @@ import spotnote from "../src/index.js";
 
 const root = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
 
-async function stamp(rel, code) {
+async function stamp(rel, code, appRoot = root) {
   const [plugin] = spotnote();
-  plugin.configResolved({ root, plugins: [] });
+  plugin.configResolved({ root: appRoot, plugins: [] });
   await plugin.buildStart();
-  return (await plugin.transform.handler(code, path.join(root, rel)))?.code;
+  return (await plugin.transform.handler(code, path.join(appRoot, rel)))?.code;
 }
 
 test("JSX: host elements get file:line:column (1-based) and their component", async () => {
@@ -61,4 +61,22 @@ test("Svelte: markup elements are stamped, the script isn't", async () => {
 
 test("Svelte: a file that can't be parsed is left to the Svelte plugin", async () => {
   assert.equal(await stamp("src/Broken.svelte", "<h1>{n</h1>\n"), undefined);
+});
+
+const astro = (rel, code) => stamp(rel, code, path.join(root, "astro"));
+
+test("Astro: markup elements are stamped, components, <script>, <style> and <slot> aren't", async () => {
+  const out = await astro(
+    "src/Hi.astro",
+    '---\nconst t = "日本語";\n---\n<h1>{t}</h1>\n<Child />\n<ul>{[1].map(() => <li>x</li>)}</ul>\n<slot />\n<script>let n = 1;</script>\n<style>h1 {}</style>\n',
+  );
+  assert.match(out, /<h1 data-spotnote="src\/Hi\.astro:4:1" data-spotnote-name="Hi">/);
+  assert.match(out, /<li data-spotnote="src\/Hi\.astro:6:20" data-spotnote-name="Hi">/);
+  assert.doesNotMatch(out, /<(Child|slot|script|style) data-spotnote/);
+});
+
+test("Astro: every file brings the picker in a script, below its own lines", async () => {
+  const out = await astro("src/Hi.astro", "<p>hi</p>\n");
+  assert.equal(out.split("\n")[0], '<p data-spotnote="src/Hi.astro:1:1" data-spotnote-name="Hi">hi</p>');
+  assert.match(out, /<script>import "virtual:spotnote-client";<\/script>\n$/);
 });

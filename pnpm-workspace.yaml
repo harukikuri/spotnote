@@ -3,6 +3,7 @@ packages:
   - mcp
   - examples
   - examples/svelte4
+  - examples/astro
   - docs
   - e2e
 onlyBuiltDependencies:

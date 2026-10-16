@@ -14,7 +14,7 @@ Never change the app's own code: nothing is imported in it.
 1. Look for `vite.config.ts`, `.js`, `.mjs`, `.mts` or `.cjs`. In a monorepo there can be several: if more than one app has one, ask which app to set up. Nuxt and Astro have none: their Vite plugins go under `vite.plugins` in `nuxt.config.ts` / `astro.config.mjs`.
 2. No Vite config? Stop and tell the user Spotnote needs Vite. If there's a `next.config.*`, say that Next.js isn't supported (it doesn't use Vite).
 3. Check the app's Vite version (its `package.json`, or `node_modules/vite/package.json`). Spotnote needs Vite 5 or later.
-4. Note the framework from the config's plugins: React (`@vitejs/plugin-react` or `-swc`), Solid (`vite-plugin-solid`), Vue (`@vitejs/plugin-vue`) or Svelte (`@sveltejs/vite-plugin-svelte`). Others, such as Preact, are untested but use the same JSX stamping.
+4. Note the framework from the config's plugins: React (`@vitejs/plugin-react` or `-swc`), Solid (`vite-plugin-solid`), Vue (`@vitejs/plugin-vue`) Svelte (`@sveltejs/vite-plugin-svelte`) or Astro (`astro.config.*`). Others, such as Preact, are untested but use the same JSX stamping.
 
 ## 2. Install the package
 

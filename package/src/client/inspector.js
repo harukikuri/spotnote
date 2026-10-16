@@ -360,11 +360,12 @@ function onClick(e) {
   openPanel(el); // sets the selection + highlight for every open path
 }
 
-// The framework mark for a source file: .vue/.svelte by extension; .jsx/.tsx by
+// The framework mark for a source file: .vue/.svelte/.astro by extension; .jsx/.tsx by
 // what the plugin found in the Vite config ("jsx" when it couldn't tell).
 function fileKind(file) {
   if (file.endsWith(".vue")) return "vue";
   if (file.endsWith(".svelte")) return "svelte";
+  if (file.endsWith(".astro")) return "astro";
   return jsxFramework || "jsx";
 }
 

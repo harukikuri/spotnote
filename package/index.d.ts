@@ -5,7 +5,7 @@ import type { Plugin } from "vite";
  *
  * Stamps `data-spotnote="file:line:column"` onto host elements (JSX via a Babel
  * pass, `.vue` templates via `vue/compiler-sfc`, `.svelte` markup via
- * `svelte/compiler`) and auto-injects the browser
+ * `svelte/compiler`, `.astro` markup via Astro's compiler) and auto-injects the browser
  * picker client. It runs only on the dev server, so production builds and
  * Vitest runs are untouched.
  *

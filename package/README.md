@@ -88,15 +88,15 @@ Vite 5 or later.
 | Solid | Tested (Solid 1.9) |
 | Vue | Tested (Vue 3.5) |
 | Svelte | Tested (Svelte 4.2 and 5) |
+| Astro | Tested (Astro 7.4) |
 | Preact, other JSX | Untested |
 | SvelteKit, Nuxt, React Router, SolidStart | Works (checked by hand) |
-| Astro | Partly: components in islands, not `.astro` markup |
 | Next.js | Not supported (not Vite) |
 
 ## How it works
 
 While Vite compiles your code, the plugin stamps every host element written in
-your `.jsx`, `.tsx`, `.vue` and `.svelte` files with its source location:
+your `.jsx`, `.tsx`, `.vue`, `.svelte` and `.astro` files with its source location:
 
 ```html
 <button data-spotnote="components/ProductCard.jsx:12:5" data-spotnote-name="ProductCard">

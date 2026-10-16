@@ -18,6 +18,7 @@ pnpm --filter spotnote-examples dev:solid     # Solid example
 pnpm --filter spotnote-examples dev:vue       # Vue example
 pnpm --filter spotnote-examples dev:svelte    # Svelte 5 example
 pnpm dev:svelte4                              # Svelte 4 example (own package)
+pnpm dev:astro                                # Astro example (own package)
 pnpm --filter spotnote-examples build         # production build (picker excluded — apply:'serve')
 pnpm test                                     # package + mcp tests (node:test, no extra deps)
 pnpm coverage                                 # the same tests, with a coverage report of the files they load (c8; HTML in coverage/)
@@ -70,6 +71,8 @@ Examples layout (`examples/`):
 - `<framework>/` — a demo app per framework (`react`, `solid`, `vue`, `svelte`)
 - `svelte4/` — a Svelte 4 app in its own package (Svelte 4 and 5 can't share
   one `node_modules`), with its own `vite.config.js`
+- `astro/` — an Astro app in its own package (started by `astro dev`), with
+  its own `astro.config.mjs`
 - `vite.config.js` — boots the `SPOTNOTE_FW`-selected app with `spotnote()` +
   the framework plugin; imports the plugin via the `spotnote` workspace link
 

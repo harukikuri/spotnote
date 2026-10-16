@@ -11,7 +11,7 @@ Try these in order:
 
 1. **Use your dev server.** Spotnote runs only in `vite dev`, not in a build or `vite preview`.
 2. **Check the browser console** for errors loading `virtual:spotnote-client`.
-3. **Open a page that renders one of your components.** The launcher loads with the first `.jsx`, `.tsx`, `.vue` or `.svelte` file the browser runs. In Astro, that means a page with a hydrated island (`client:load`, …).
+3. **Open a page that renders one of your components.** The launcher loads with the first `.jsx`, `.tsx`, `.vue`, `.svelte` or `.astro` file of yours on the page.
 
 ### Why does hovering highlight nothing?
 
@@ -19,7 +19,7 @@ Try these in order:
 
 1. **Turn on selection mode.** Open the launcher. It should be yellow <LauncherIcon state="open" />, not grey <LauncherIcon state="paused" /> (paused). Or hold `Alt` / `⌥ Option`.
 2. **Look at the terminal for `[spotnote] skipped …`.** That file couldn't be parsed, so its elements aren't stamped. See [Warnings](/reference/plugin-api#warnings).
-3. **Check the file type.** Only `.jsx`, `.tsx`, `.vue` and `.svelte` files are stamped. In dev tools, look for a `data-spotnote` attribute on the element.
+3. **Check the file type.** Only `.jsx`, `.tsx`, `.vue`, `.svelte` and `.astro` files are stamped. In dev tools, look for a `data-spotnote` attribute on the element.
 
 ## Notes
 

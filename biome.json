@@ -77,7 +77,7 @@
       }
     },
     {
-      "includes": ["**/*.vue", "**/*.svelte"],
+      "includes": ["**/*.vue", "**/*.svelte", "**/*.astro"],
       "linter": {
         "rules": {
           "correctness": {

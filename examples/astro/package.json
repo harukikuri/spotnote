@@ -1,0 +1,14 @@
+{
+  "name": "spotnote-examples-astro",
+  "private": true,
+  "type": "module",
+  "description": "Astro demo app for the local spotnote plugin (.astro files have their own compiler).",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build"
+  },
+  "dependencies": {
+    "astro": "^7.4.0",
+    "spotnote": "workspace:*"
+  }
+}
