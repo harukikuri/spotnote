@@ -1,11 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "Updates for the example apps. CI runs the browser tests against each, so a release that breaks Spotnote shows up as a failing PR.",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", ":semanticCommitTypeAll(chore)"],
   "includePaths": ["examples/**"],
   "ignorePaths": ["**/node_modules/**"],
   "schedule": ["before 6am on monday"],
-  "semanticCommitType": "chore",
   "packageRules": [
     {
       "description": "Minor and patch updates of every example app: one PR a week.",
