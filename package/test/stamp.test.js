@@ -63,20 +63,31 @@ test("Svelte: a file that can't be parsed is left to the Svelte plugin", async (
   assert.equal(await stamp("src/Broken.svelte", "<h1>{n</h1>\n"), undefined);
 });
 
-const astro = (rel, code) => stamp(rel, code, path.join(root, "astro"));
+// Astro 7 (@astrojs/compiler-rs) and Astro 6 (@astrojs/compiler) give different ASTs.
+for (const [app, version] of [
+  ["astro", "Astro 7"],
+  ["astro6", "Astro 6"],
+]) {
+  const astro = (rel, code) => stamp(rel, code, path.join(root, app));
 
-test("Astro: markup elements are stamped, components, <script>, <style> and <slot> aren't", async () => {
-  const out = await astro(
-    "src/Hi.astro",
-    '---\nconst t = "日本語";\n---\n<h1>{t}</h1>\n<Child />\n<ul>{[1].map(() => <li>x</li>)}</ul>\n<slot />\n<script>let n = 1;</script>\n<style>h1 {}</style>\n',
-  );
-  assert.match(out, /<h1 data-spotnote="src\/Hi\.astro:4:1" data-spotnote-name="Hi">/);
-  assert.match(out, /<li data-spotnote="src\/Hi\.astro:6:20" data-spotnote-name="Hi">/);
-  assert.doesNotMatch(out, /<(Child|slot|script|style) data-spotnote/);
-});
+  test(`${version}: markup elements are stamped, components, <script>, <style> and <slot> aren't`, async () => {
+    const out = await astro(
+      "src/Hi.astro",
+      '---\nconst t = "日本語";\n---\n<p>日本語</p><h1>{t}</h1>\n<Child />\n<ul>{[1].map(() => <li>x</li>)}</ul>\n<slot />\n<script>let n = 1;</script>\n<style>h1 {}</style>\n',
+    );
+    assert.match(out, /<h1 data-spotnote="src\/Hi\.astro:4:11" data-spotnote-name="Hi">/); // after multibyte text
+    assert.match(out, /<li data-spotnote="src\/Hi\.astro:6:20" data-spotnote-name="Hi">/);
+    assert.doesNotMatch(out, /<(Child|slot|script|style) data-spotnote/);
+  });
 
-test("Astro: every file brings the picker in a script, below its own lines", async () => {
-  const out = await astro("src/Hi.astro", "<p>hi</p>\n");
-  assert.equal(out.split("\n")[0], '<p data-spotnote="src/Hi.astro:1:1" data-spotnote-name="Hi">hi</p>');
-  assert.match(out, /<script>import "virtual:spotnote-client";<\/script>\n$/);
-});
+  test(`${version}: every file brings the picker in a script, below its own lines`, async () => {
+    const out = await astro("src/Hi.astro", "<p>hi</p>\n");
+    assert.equal(out.split("\n")[0], '<p data-spotnote="src/Hi.astro:1:1" data-spotnote-name="Hi">hi</p>');
+    assert.match(out, /<script>import "virtual:spotnote-client";<\/script>\n$/);
+  });
+
+  test(`${version}: a whole page is stamped`, async () => {
+    const out = await astro("src/pages/index.astro", "<html>\n  <body><p>hi</p></body>\n</html>\n");
+    assert.match(out, /<p data-spotnote="src\/pages\/index\.astro:2:9" data-spotnote-name="index">/);
+  });
+}

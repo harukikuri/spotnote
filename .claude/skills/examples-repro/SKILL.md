@@ -13,7 +13,7 @@ can't tell the fix worked, or keep it working.
 
 Note what decides where it can happen:
 
-- **Framework and version**: React, Solid, Vue, Svelte 5, Svelte 4 or Astro (each has an
+- **Framework and version**: React, Solid, Vue, Svelte 5, Svelte 4, Astro 7 or Astro 6 (each has an
   app in `examples/<fw>/`). Another JSX framework (Preact, …)? Use React's app: the
   same Babel pass stamps it.
 - **The markup**: what kind of element (a component's root, a `.map()` item, a

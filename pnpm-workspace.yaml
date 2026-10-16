@@ -4,6 +4,7 @@ packages:
   - examples
   - examples/svelte4
   - examples/astro
+  - examples/astro6
   - docs
   - e2e
 onlyBuiltDependencies:

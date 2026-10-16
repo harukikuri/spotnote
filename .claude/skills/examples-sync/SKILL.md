@@ -42,6 +42,7 @@ pnpm test:e2e                                        # every app
 for fw in react solid vue svelte; do SPOTNOTE_FW=$fw pnpm --filter spotnote-examples build; done
 pnpm --filter spotnote-examples-svelte4 exec vite build
 pnpm --filter spotnote-examples-astro exec astro build
+pnpm --filter spotnote-examples-astro6 exec astro build
 ```
 
 CI runs the same builds (`.github/workflows/ci.yml`). Also open the changed app

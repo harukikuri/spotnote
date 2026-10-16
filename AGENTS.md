@@ -15,7 +15,7 @@ pnpm test:e2e    # browser tests, every example app (Playwright)
 
 Run all three for any change under `package/` or `mcp/`. A UI change gets an E2E
 test in `e2e/spotnote.spec.js` (or `e2e/agent.spec.js` when the agent is in it).
-The E2E tests run in six apps (React, Solid, Vue, Svelte 5, Svelte 4, Astro): pick
+The E2E tests run in seven apps (React, Solid, Vue, Svelte 5, Svelte 4, Astro 7, Astro 6): pick
 elements through `app.title` / `app.repeated`, not one app's markup.
 
 ## Conventions

@@ -12,6 +12,15 @@ const APPS = [
   { name: "svelte", port: 5204, file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 6 },
   { name: "svelte4", port: 5205, file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 3 },
   { name: "astro", port: 5207, file: "src/components/Home.astro", title: ".hero h1", repeated: ".card h3", count: 3 },
+  // Astro 6 (another compiler), on the Astro example's pages.
+  {
+    name: "astro6",
+    port: 5208,
+    file: "../astro/src/components/Home.astro",
+    title: ".hero h1",
+    repeated: ".card h3",
+    count: 3,
+  },
 ];
 const AGENT = { ...APPS[0], name: "agent", port: 5206, mcpPort: 4998 };
 
@@ -20,8 +29,8 @@ const AGENT = { ...APPS[0], name: "agent", port: 5206, mcpPort: 4998 };
 const devServer = ({ name, port }) =>
   name === "svelte4"
     ? `pnpm --filter spotnote-examples-svelte4 exec vite --port ${port} --strictPort`
-    : name === "astro"
-      ? `pnpm --filter spotnote-examples-astro exec astro dev --port ${port} --ignore-lock`
+    : name.startsWith("astro")
+      ? `pnpm --filter spotnote-examples-${name} exec astro dev --port ${port} --ignore-lock`
       : `pnpm --filter spotnote-examples exec vite --port ${port} --strictPort`;
 
 export default defineConfig({

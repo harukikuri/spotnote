@@ -56,3 +56,4 @@ jobs:
           done
           pnpm --filter spotnote-examples-svelte4 exec vite build
           pnpm --filter spotnote-examples-astro exec astro build
+          pnpm --filter spotnote-examples-astro6 exec astro build

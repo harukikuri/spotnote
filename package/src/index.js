@@ -182,47 +182,83 @@ function stampSvelte(code, file, root, parse) {
   return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
 }
 
-// Astro, too: parse with the compiler of the app's own `astro` (Astro 7's
-// `@astrojs/compiler-rs`; the app may not depend on it directly) and splice
-// `data-spotnote` onto native elements in the markup. Resolved lazily
-// (undefined = not tried yet, null = unavailable).
-let astroParse;
-async function getAstroParse(root) {
-  if (astroParse !== undefined) return astroParse;
+// Astro, too: parse with the compiler of the app's own `astro` (the app may not
+// depend on it directly) and splice `data-spotnote` onto native elements in the
+// markup. Astro 7 has `@astrojs/compiler-rs`, Astro 5 and 6 `@astrojs/compiler`:
+// each gives its own AST, so each gets a reader that lists the elements as
+// { tag, start, stamped } (start: the offset of its "<" in the code). Resolved
+// lazily, per app root (a test run stamps apps with either compiler).
+const astroReaders = new Map(); // root -> Promise<reader | null>
+function getAstroElements(root) {
+  if (!astroReaders.has(root)) astroReaders.set(root, loadAstroReader(root));
+  return astroReaders.get(root);
+}
+async function loadAstroReader(root) {
   try {
-    const astroRequire = createRequire(createRequire(path.join(root, "index.js")).resolve("astro/package.json"));
-    ({ parse: astroParse } = await import(pathToFileURL(astroRequire.resolve("@astrojs/compiler-rs")).href));
+    const astroPkg = createRequire(path.join(root, "index.js")).resolve("astro/package.json");
+    const astroRequire = createRequire(astroPkg);
+    const load = async (pkg) => (await import(pathToFileURL(astroRequire.resolve(pkg)).href)).parse;
+    // The compiler this Astro declares: another one may be installed next to it.
+    if (require(astroPkg).dependencies?.["@astrojs/compiler-rs"]) {
+      const parse = await load("@astrojs/compiler-rs");
+      return async (code) => rsElements(parse(code).ast);
+    }
+    const parse = await load("@astrojs/compiler");
+    return async (code) => goElements(code, (await parse(code, { position: true })).ast);
   } catch {
-    astroParse = null; // no Astro 7 in this project — skip .astro stamping
+    return null; // no Astro in this project — skip .astro stamping
   }
-  return astroParse;
+}
+
+// Astro 7: elements are JSXElements (in the markup and inside {expressions}
+// alike), with UTF-16 offsets, like JavaScript strings.
+function rsElements(ast) {
+  const found = [];
+  walkAst(ast?.body, (node) => {
+    if (node.type !== "JSXOpeningElement" || node.name?.type !== "JSXIdentifier") return;
+    const stamped = node.attributes.some((a) => a.name?.name === "data-spotnote");
+    found.push({ tag: node.name.name, start: node.start, stamped });
+  });
+  return found;
+}
+
+// Astro 5 and 6: native tags are "element" or "custom-element" nodes (components
+// are "component"). Their offsets count UTF-8 bytes, so the start comes from the
+// line and column, which count characters. <html> comes without a position: it
+// isn't stamped.
+function goElements(code, ast) {
+  const lineStarts = [0];
+  for (let i = 0; i < code.length; i++) if (code[i] === "\n") lineStarts.push(i + 1);
+  const found = [];
+  walkAst(ast, (node) => {
+    if ((node.type !== "element" && node.type !== "custom-element") || !node.position) return;
+    const { line, column } = node.position.start;
+    const stamped = node.attributes.some((a) => a.name === "data-spotnote");
+    found.push({ tag: node.name, start: lineStarts[line - 1] + column - 1, stamped });
+  });
+  return found;
 }
 
 // Not stamped: <script> and <style>, which Astro would stop bundling once they
 // have an attribute, and <slot>, which isn't an element in the page.
 const ASTRO_SKIP = new Set(["script", "style", "slot"]);
 
-function stampAstro(code, file, root, parse) {
-  let ast;
+async function stampAstro(code, file, root, elementsOf) {
+  let elements;
   try {
-    ({ ast } = parse(code));
+    elements = await elementsOf(code);
   } catch {
     return; // let Astro report the real parse error
   }
   const rel = path.relative(root, file).replace(/\\/g, "/") || file;
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
-  // An element is a JSXElement (in the markup and inside {expressions} alike); a
-  // native tag has a lowercase JSXIdentifier name. Components are capitalized or
-  // member names (<Foo.Bar>). Offsets are UTF-16, like JavaScript strings.
-  walkAst(ast?.body, (node) => {
-    if (node.type !== "JSXOpeningElement" || node.name?.type !== "JSXIdentifier") return;
-    const tag = node.name.name;
-    if (tag[0] !== tag[0].toLowerCase() || ASTRO_SKIP.has(tag)) return;
-    if (node.attributes.some((a) => a.name?.name === "data-spotnote")) return;
-    const { line, column } = offsetToLineCol(code, node.start);
-    s.appendLeft(node.name.end, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
-  });
+  // A native tag is lowercase; components are capitalized or member names (<Foo.Bar>).
+  for (const { tag, start, stamped } of elements) {
+    if (stamped || tag[0] !== tag[0].toLowerCase() || ASTRO_SKIP.has(tag)) continue;
+    const { line, column } = offsetToLineCol(code, start);
+    s.appendLeft(start + 1 + tag.length, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
+  }
   // Astro pages send no other JavaScript to the browser unless they hydrate a
   // component, so each .astro file brings the picker in a script of its own
   // (Astro bundles it, and loads it once per page). At the end: no line moves.
@@ -391,9 +427,9 @@ export default function spotnote() {
 
         // Raw .astro import only — skip the ?astro&type= sub-requests.
         if (file.endsWith(".astro") && !id.includes("?")) {
-          const parse = await getAstroParse(root);
-          if (!parse) return;
-          return stampAstro(code, file, root, parse);
+          const elementsOf = await getAstroElements(root);
+          if (!elementsOf) return;
+          return stampAstro(code, file, root, elementsOf);
         }
       },
     },

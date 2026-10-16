@@ -88,7 +88,7 @@ Vite 5 or later.
 | Solid | Tested (Solid 1.9) |
 | Vue | Tested (Vue 3.5) |
 | Svelte | Tested (Svelte 4.2 and 5) |
-| Astro | Tested (Astro 7.4) |
+| Astro | Tested (Astro 6.4 and 7.4) |
 | Preact, other JSX | Untested |
 | SvelteKit, Nuxt, React Router, SolidStart | Works (checked by hand) |
 | Next.js | Not supported (not Vite) |

@@ -394,7 +394,10 @@ test("Settings: not connected, the agent page shows how to connect", async ({ pa
 });
 
 test("saving the file keeps the open panel on its element", async ({ page, app }) => {
-  test.skip(app.name === "astro", "Astro reloads the page when an .astro file is saved, like any server-rendered page");
+  test.skip(
+    app.name.startsWith("astro"),
+    "Astro reloads the page when an .astro file is saved, like any server-rendered page",
+  );
   const file = path.join(examples, app.name, app.file);
   const source = readFileSync(file, "utf8");
   const logs = [];

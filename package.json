@@ -10,6 +10,7 @@
     "coverage:e2e": "pnpm --filter spotnote-e2e run coverage",
     "dev:svelte4": "pnpm --filter spotnote-examples-svelte4 run dev",
     "dev:astro": "pnpm --filter spotnote-examples-astro run dev",
+    "dev:astro6": "pnpm --filter spotnote-examples-astro6 run dev",
     "lint": "biome check .",
     "format": "biome check --write ."
   },
