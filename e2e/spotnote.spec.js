@@ -398,6 +398,15 @@ test("Settings: not connected, the agent page shows how to connect", async ({ pa
   await expect(settings.locator(".snl-title")).toHaveText("Settings");
 });
 
+test("a press on the page closes the open menu, and does nothing else", async ({ page, app }) => {
+  await openSettings(page);
+  await clickEdge(page.locator(app.title).first());
+  await expect(page.locator(".snl-item").nth(2)).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".sn-panel")).toHaveCount(0); // the click didn't pick it
+  await clickEdge(page.locator(app.title).first());
+  await expect(page.locator(".sn-panel")).toBeVisible();
+});
+
 test("saving the file keeps the open panel on its element", async ({ page, app }) => {
   test.skip(!!app.astro, "Astro reloads the page when an .astro file is saved, like any server-rendered page");
   const file = path.join(examples, app.dir, app.srcRoot ?? "", app.file);

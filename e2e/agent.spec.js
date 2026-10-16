@@ -83,6 +83,10 @@ test("a note goes to the agent, and its question and its answer come back", asyn
   await expect(said.locator(".sn-file-hint").last()).toHaveAttribute("aria-label", /Couldn't find this file/);
   await said.locator("button.sn-file", { hasText: `${app.file}:5` }).click();
   await expect(said.locator(".sn-file-hint").first()).toHaveAttribute("aria-label", /No editor is running/);
+  await said.locator(".sn-file-hint").first().hover(); // the reason, on hover
+  await expect(page.locator(".sn-tip")).toHaveText(/No editor is running/);
+  await page.mouse.move(0, 0);
+  await expect(page.locator(".sn-tip")).toHaveCount(0);
 
   // You answer in the panel; it reaches the agent, which makes the change.
   await page.locator(".sn-panel [data-spotnote-input]").fill("Twice as big");

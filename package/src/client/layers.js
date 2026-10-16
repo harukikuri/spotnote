@@ -52,9 +52,6 @@ export function createLayer({ close, lightDismiss = false }) {
       layer.el.style.zIndex = "";
       restack();
     },
-    get open() {
-      return stack.includes(layer);
-    },
   };
   return layer;
 }
