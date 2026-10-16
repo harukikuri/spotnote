@@ -2,7 +2,17 @@
 // colour; the darker ones get a lighter shade in dark mode so they stay
 // visible. Next.js's mark is black/white, so it follows the text colour.
 import type { IconType } from 'react-icons';
-import { SiAstro, SiNextdotjs, SiNuxt, SiPreact, SiReact, SiReactrouter, SiSolid, SiSvelte, SiVuedotjs } from 'react-icons/si';
+import {
+  SiAstro,
+  SiNextdotjs,
+  SiNuxt,
+  SiPreact,
+  SiReact,
+  SiReactrouter,
+  SiSolid,
+  SiSvelte,
+  SiVuedotjs,
+} from 'react-icons/si';
 
 const icons: Record<string, { Icon: IconType; color?: string }> = {
   React: { Icon: SiReact, color: 'text-[#61DAFB]' },
