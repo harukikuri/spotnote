@@ -17,7 +17,7 @@ const root = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
 const repo = path.resolve(root, "..");
 
 function plugin(plugins = []) {
-  const p = spotnote();
+  const [p] = spotnote();
   p.configResolved({ root, plugins });
   return p;
 }
@@ -62,10 +62,17 @@ async function withEditor(editor, fn) {
   }
 }
 
-test("the page gets a script that boots the picker with the app's framework", () => {
+test("the browser's component files import the client, which boots the picker with the app's framework", () => {
+  const [, client] = spotnote();
+  const transform = (id, ssr) => client.transform("code", id, { ssr })?.code;
+  for (const file of ["App.jsx", "App.tsx", "App.vue", "App.svelte"])
+    assert.equal(transform(`/app/src/${file}`), 'code\nimport "virtual:spotnote-client";');
+  assert.equal(transform("/app/src/App.svelte", true), undefined); // the server's copy
+  assert.equal(transform("/app/src/App.vue?vue&type=style&index=0&lang.css"), undefined);
+  assert.equal(transform("/app/src/util.js"), undefined);
+  assert.equal(transform("/app/node_modules/lib/Button.jsx"), undefined);
+
   const p = plugin([{ name: "vite:react-babel" }]);
-  const [tag] = p.transformIndexHtml();
-  assert.equal(tag.attrs.src, "/@id/virtual:spotnote-client");
   const id = p.resolveId("virtual:spotnote-client");
   assert.equal(p.resolveId("other"), undefined);
   assert.match(p.load(id), /initInspector\(\{"jsx":"react","root":".*examples"/);
@@ -75,7 +82,7 @@ test("the page gets a script that boots the picker with the app's framework", ()
 });
 
 test("runs on the dev server only: not in builds, nor under Vitest", () => {
-  const { apply } = spotnote();
+  const [{ apply }] = spotnote();
   assert.equal(apply({}, { command: "serve" }), true);
   assert.equal(apply({}, { command: "build" }), false);
   process.env.VITEST = "true";

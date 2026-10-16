@@ -89,6 +89,8 @@ Vite 5 or later.
 | Vue | Tested (Vue 3.5) |
 | Svelte | Tested (Svelte 4.2 and 5) |
 | Preact, other JSX | Untested |
+| SvelteKit, Nuxt, React Router, SolidStart | Works (checked by hand) |
+| Astro | Partly: components in islands, not `.astro` markup |
 | Next.js | Not supported (not Vite) |
 
 ## How it works

@@ -11,7 +11,7 @@ Try these in order:
 
 1. **Use your dev server.** Spotnote runs only in `vite dev`, not in a build or `vite preview`.
 2. **Check the browser console** for errors loading `virtual:spotnote-client`.
-3. **Check your HTML goes through Vite.** The client is added through Vite's `transformIndexHtml` hook. HTML served some other way never loads it.
+3. **Open a page that renders one of your components.** The launcher loads with the first `.jsx`, `.tsx`, `.vue` or `.svelte` file the browser runs. In Astro, that means a page with a hydrated island (`client:load`, …).
 
 ### Why does hovering highlight nothing?
 

@@ -14,6 +14,20 @@ description: Which frameworks and file types Spotnote stamps, and how.
 
 Tested with Vite 5.
 
+## Meta-frameworks
+
+The frameworks above, inside these, were checked by hand on Vite 8 (the end-to-end tests run on plain Vite apps):
+
+| Framework | Status | Where to add `spotnote()` |
+| --- | --- | --- |
+| SvelteKit | Works (3.1) | `vite.config.js` |
+| Nuxt | Works (4.6) | `vite.plugins` in `nuxt.config.ts` |
+| React Router, framework mode | Works (8.4) | `vite.config.ts` |
+| SolidStart | Works (2.0) | `vite.config.ts` |
+| Astro | Partly (7.4) | `vite.plugins` in `astro.config.mjs` |
+
+In Astro, only components written in React, Vue, Svelte or Solid are stamped, not the markup of `.astro` files. The launcher needs a page with at least one hydrated island (`client:load`, …): on a page without one, no Spotnote code reaches the browser.
+
 ## Per framework
 
 ### JSX (React, Solid, …)

@@ -9,7 +9,7 @@ import spotnote from "../src/index.js";
 const root = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
 
 async function stamp(rel, code) {
-  const plugin = spotnote();
+  const [plugin] = spotnote();
   plugin.configResolved({ root, plugins: [] });
   await plugin.buildStart();
   return (await plugin.transform.handler(code, path.join(root, rel)))?.code;

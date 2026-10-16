@@ -199,16 +199,18 @@ function repoRoot(dir) {
   }
 }
 
+// Dev only: production builds are untouched. Not under Vitest either, which
+// runs a dev server too: stamps would change tests' DOM and snapshots, and
+// the spotnote-mcp check would keep the test run from exiting.
+const apply = (_, { command }) => command === "serve" && !process.env.VITEST;
+
 export default function spotnote() {
   let transformSync;
   let root = process.cwd();
   let jsx = null;
-  return {
+  const main = {
     name: "spotnote",
-    // Dev only: production builds are untouched. Not under Vitest either, which
-    // runs a dev server too: stamps would change tests' DOM and snapshots, and
-    // the spotnote-mcp check would keep the test run from exiting.
-    apply: (_, { command }) => command === "serve" && !process.env.VITEST,
+    apply,
     enforce: "pre", // stamp before the framework compiler processes the JSX
 
     configResolved(config) {
@@ -340,10 +342,21 @@ export default function spotnote() {
         }
       },
     },
+  };
 
-    // Inject the client so the app doesn't have to import it.
-    transformIndexHtml() {
-      return [{ tag: "script", attrs: { type: "module", src: `/@id/${VIRTUAL}` }, injectTo: "body" }];
+  // Boot the picker from the browser's copy of every component file (.jsx, .tsx,
+  // .vue, .svelte), so the app doesn't have to import it. Not from index.html: SvelteKit, Nuxt
+  // and other SSR frameworks don't serve one. Runs after the framework compiler,
+  // when even a .vue or .svelte file is JavaScript. The import goes at the end
+  // (imports are hoisted), so no line moves and the source map stays as it is.
+  const client = {
+    name: "spotnote:client",
+    apply,
+    enforce: "post",
+    transform(code, id, options) {
+      if (options?.ssr || id.includes("node_modules") || !/\.(jsx|tsx|vue|svelte)$/.test(id)) return;
+      return { code: `${code}\nimport ${JSON.stringify(VIRTUAL)};`, map: null };
     },
   };
+  return [main, client];
 }

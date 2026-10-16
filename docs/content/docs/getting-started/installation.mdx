@@ -75,6 +75,27 @@ export default defineConfig({
 });
 ```
 
+```ts tab="Nuxt" title="nuxt.config.ts"
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineNuxtConfig({
+  vite: { plugins: [spotnote()] }, // [!code highlight]
+});
+```
+
+```js tab="Astro" title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+import spotnote from 'spotnote'; // [!code highlight]
+
+export default defineConfig({
+  integrations: [react()],
+  vite: { plugins: [spotnote()] }, // [!code highlight]
+});
+```
+
+SvelteKit, React Router and SolidStart have a `vite.config` of their own: add it there, as above. See [Meta-frameworks](/reference/framework-support#meta-frameworks).
+
 </Step>
 </Steps>
 
