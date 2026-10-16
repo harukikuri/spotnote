@@ -11,11 +11,17 @@ description: Which frameworks and file types Spotnote stamps, and how.
 | <Framework name="Svelte" /> | Tested (Svelte 4, 5) |
 | <Framework name="Astro" /> | Tested (Astro 5, 6, 7) |
 | <Framework name="Preact">Preact, other JSX</Framework> | Untested |
-| <Framework name="Next.js" /> | Not supported (not Vite) |
 
 ## Tested versions
 
-Vite 5 or later. The end-to-end tests run an example app for every version above, each on one of Vite 5 to 8:
+Vite 5 or later. The end-to-end tests run an example app for each cell below.
+
+Two things change between versions and could break Spotnote: Vite's plugin API, and the compilers Spotnote reads your files with (Vue, Svelte, Astro). So the apps cover every major of each framework, and every Vite from 5 to 8, without testing every pair:
+
+- **Old with old, new with new.** An app on an older framework usually runs an older Vite too, so the oldest versions run on Vite 5 and the newest on Vite 8.
+- **The versions in between fill the gaps.** React 18 runs on Vite 6, Vue 3.4 and Svelte 5 on Vite 7, so each Vite runs at least two frameworks.
+- **Solid 1.9 twice.** Its Vite plugin needs Solid 1.9, so Solid is tested on the oldest and the newest Vite instead.
+- **Astro picks its own Vite.** Each Astro major comes with one.
 
 | Framework | Vite 5 | Vite 6 | Vite 7 | Vite 8 |
 | --- | --- | --- | --- | --- |
