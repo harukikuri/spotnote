@@ -5,6 +5,7 @@
   "includePaths": ["examples/**"],
   "ignorePaths": ["**/node_modules/**"],
   "schedule": ["before 6am on monday"],
+  "semanticCommitType": "chore",
   "packageRules": [
     {
       "description": "Minor and patch updates of every example app: one PR a week.",
