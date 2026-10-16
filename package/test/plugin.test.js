@@ -74,6 +74,18 @@ test("the page gets a script that boots the picker with the app's framework", ()
   assert.match(plugin([{ name: "vite:react-swc" }, { name: "solid" }]).load(id), /"jsx":null/); // can't tell
 });
 
+test("runs on the dev server only: not in builds, nor under Vitest", () => {
+  const { apply } = spotnote();
+  assert.equal(apply({}, { command: "serve" }), true);
+  assert.equal(apply({}, { command: "build" }), false);
+  process.env.VITEST = "true";
+  try {
+    assert.equal(apply({}, { command: "serve" }), false);
+  } finally {
+    delete process.env.VITEST;
+  }
+});
+
 test("pages hear whether spotnote-mcp is up, and can ask", async () => {
   for (let i = 0; i < 50 && !server.sent.length; i++) await new Promise((r) => setTimeout(r, 10));
   assert.deepEqual(server.sent, [["spotnote:mcp", { up: true }]]);

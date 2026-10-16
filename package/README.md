@@ -26,7 +26,7 @@ export default defineConfig({
 ```
 
 Nothing to import in your app code. Spotnote runs only in `vite dev`; `vite build`
-doesn't include it.
+and Vitest don't include it.
 
 ## Use
 

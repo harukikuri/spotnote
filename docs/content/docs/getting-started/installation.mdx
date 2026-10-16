@@ -80,8 +80,8 @@ export default defineConfig({
 
 **Done.** You don't import anything in your app code.
 
-<Callout type="info" title="Production builds are untouched">
-  The plugin only runs during `vite dev`. `vite build` doesn't include it.
+<Callout type="info" title="Production builds and tests are untouched">
+  The plugin only runs during `vite dev`. `vite build` doesn't include it, and neither do Vitest runs, so your tests' DOM and snapshots stay the same.
 </Callout>
 
 ## Next

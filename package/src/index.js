@@ -205,7 +205,10 @@ export default function spotnote() {
   let jsx = null;
   return {
     name: "spotnote",
-    apply: "serve", // dev only — production builds are untouched
+    // Dev only: production builds are untouched. Not under Vitest either, which
+    // runs a dev server too: stamps would change tests' DOM and snapshots, and
+    // the spotnote-mcp check would keep the test run from exiting.
+    apply: (_, { command }) => command === "serve" && !process.env.VITEST,
     enforce: "pre", // stamp before the framework compiler processes the JSX
 
     configResolved(config) {
