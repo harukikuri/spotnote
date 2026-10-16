@@ -915,6 +915,9 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   refreshPointer();
   setTimeout(() => {
     if (mode === "working") return panel?.focus();
+    // Already in the input (clicked, or typing straight away): keep their caret
+    // and selection rather than move it.
+    if (input.getRootNode().activeElement === input) return;
     input.focus();
     // With a prefilled note, drop the caret at the END so editing continues
     // naturally (browsers otherwise place it at the start).
