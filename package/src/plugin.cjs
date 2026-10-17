@@ -1,8 +1,9 @@
-// Babel plugin: stamp `data-spotnote="file:line:column"` onto host (lowercase) JSX
-// elements at compile time. Framework of record is React here, but the exact
+// Babel plugin: stamp `data-spotnote="file:line:column"` onto DOM JSX elements
+// (HTML, SVG and custom elements) at compile time. Framework of record is React here, but the exact
 // same visitor works for any JSX (Solid, Preact, Next) — only the registration
 // point differs.
 const path = require("node:path");
+const DOM_TAGS = require("./dom-tags.cjs");
 
 // Derive a function's name: `function Foo(){}`, `const Foo = () =>`, or a wrapped
 // `const Foo = memo(() => {})` / `forwardRef(...)`.
@@ -45,6 +46,10 @@ module.exports = ({ types: t }) => ({
         state.file.metadata.spotnoteUses.push([name.name, loc.start.line, loc.start.column + 1]);
         return;
       }
+
+      // Only DOM elements: another renderer's lowercase tag (React Three
+      // Fiber's <mesh>) isn't one, and a stamp would break it.
+      if (!DOM_TAGS.has(name.name) && !name.name.includes("-")) return;
 
       // Don't double-stamp.
       const already = nodePath.node.attributes.some(

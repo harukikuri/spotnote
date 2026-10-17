@@ -50,6 +50,19 @@ test("JSX: components and member tags aren't stamped", async () => {
   assert.doesNotMatch(out, /data-spotnote/);
 });
 
+test("JSX: only HTML, SVG and custom elements are stamped, not other renderers' tags", async () => {
+  const out = await stamp(
+    "src/Scene.jsx",
+    "const Scene = () => <div>\n  <svg><linearGradient /></svg>\n  <my-el />\n  <mesh><boxGeometry /></mesh>\n</div>;\n",
+  );
+  assert.match(out, /<div data-spotnote="src\/Scene\.jsx:1:21"/);
+  assert.match(out, /<svg data-spotnote=/);
+  assert.match(out, /<linearGradient data-spotnote=/);
+  assert.match(out, /<my-el data-spotnote=/);
+  // React Three Fiber's three.js objects: a stamp would break them (issue #2).
+  assert.match(out, /<mesh><boxGeometry \/><\/mesh>/);
+});
+
 test("JSX: where each component is used goes to the page", async () => {
   assert.deepEqual(await uses("src/App.jsx", "const App = () => <div>\n  <Card />\n</div>;\n"), [["Card", 2, 3]]);
 });
