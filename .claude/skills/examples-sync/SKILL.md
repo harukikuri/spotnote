@@ -11,7 +11,7 @@ is read in four other places.
 ## 0. The other versions of the app
 
 Each framework has an app per version (DEVELOPMENT.md, "Examples layout"). Edit
-the newest (`react19`, `vue35`, `solid19`, `astro7`), then copy it into the
+the newest (`react19`, `vue3_5`, `solid1_9`, `astro7`), then copy it into the
 others:
 
 ```bash

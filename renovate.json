@@ -16,10 +16,10 @@
       "matchFileNames": [
         "examples/react/react17/**",
         "examples/react/react18/**",
-        "examples/vue/vue32/**",
-        "examples/vue/vue34/**",
+        "examples/vue/vue3_2/**",
+        "examples/vue/vue3_4/**",
         "examples/svelte/svelte4/**",
-        "examples/solid/solid19-vite5/**",
+        "examples/solid/solid1_9-vite5/**",
         "examples/astro/astro5/**",
         "examples/astro/astro6/**",
         "examples/meta/sveltekit2/**",

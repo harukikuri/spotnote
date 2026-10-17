@@ -1,7 +1,7 @@
 // End-to-end tests: every example app (../examples) in dev, driven in
 // Chromium. One project per app (a framework at one version, on one Vite), each
 // with its own dev server and the elements the tests pick in it (see `app` in
-// spotnote.spec.js). E2E_APPS=react19,vue32 runs only those (CI: one per job,
+// spotnote.spec.js). E2E_APPS=react19,vue3_2 runs only those (CI: one per job,
 // .github/workflows/test.yml).
 import { defineConfig, devices } from "@playwright/test";
 
@@ -20,13 +20,13 @@ const ALL = [
   { name: "react17", dir: "react/react17", ...REACT }, // Vite 5
   { name: "react18", dir: "react/react18", ...REACT }, // Vite 6
   { name: "react19", dir: "react/react19", ...REACT }, // Vite 8
-  { name: "vue32", dir: "vue/vue32", ...VUE }, // Vite 5
-  { name: "vue34", dir: "vue/vue34", ...VUE }, // Vite 7
-  { name: "vue35", dir: "vue/vue35", ...VUE }, // Vite 8
+  { name: "vue3_2", dir: "vue/vue3_2", ...VUE }, // Vite 5
+  { name: "vue3_4", dir: "vue/vue3_4", ...VUE }, // Vite 7
+  { name: "vue3_5", dir: "vue/vue3_5", ...VUE }, // Vite 8
   { name: "svelte4", dir: "svelte/svelte4", file: "App.svelte", title: ".hero h1", repeated: ".card h3", count: 3 }, // Vite 5
   { name: "svelte5", dir: "svelte/svelte5", ...SVELTE }, // Vite 7
-  { name: "solid19-vite5", dir: "solid/solid19-vite5", ...SOLID },
-  { name: "solid19", dir: "solid/solid19", ...SOLID }, // Vite 8
+  { name: "solid1_9-vite5", dir: "solid/solid1_9-vite5", ...SOLID },
+  { name: "solid1_9", dir: "solid/solid1_9", ...SOLID }, // Vite 8
   { name: "astro5", dir: "astro/astro5", ...ASTRO }, // Vite 6
   { name: "astro6", dir: "astro/astro6", ...ASTRO }, // Vite 7
   { name: "astro7", dir: "astro/astro7", ...ASTRO }, // Vite 8

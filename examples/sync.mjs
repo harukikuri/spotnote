@@ -14,8 +14,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 // just these files and folders; into: where they go in the copy.
 const FAMILIES = [
   { from: "react/react19", to: ["react/react17", "react/react18"], own: ["main.jsx"] },
-  { from: "vue/vue35", to: ["vue/vue32", "vue/vue34"] },
-  { from: "solid/solid19", to: ["solid/solid19-vite5"] },
+  { from: "vue/vue3_5", to: ["vue/vue3_2", "vue/vue3_4"] },
+  { from: "solid/solid1_9", to: ["solid/solid1_9-vite5"] },
   { from: "astro/astro7", to: ["astro/astro5", "astro/astro6"] },
   // Svelte 4 and 5 are written differently: only the styles are shared.
   { from: "svelte/svelte5", to: ["svelte/svelte4"], only: ["styles.css"] },
@@ -27,7 +27,7 @@ const FAMILIES = [
     into: "app/demo",
   },
   {
-    from: "vue/vue35",
+    from: "vue/vue3_5",
     to: ["meta/nuxt3", "meta/nuxt4"],
     only: ["pages", "components", "router.js", "styles.css"],
     into: "app/demo",
@@ -38,7 +38,7 @@ const FAMILIES = [
     only: ["App.svelte", "components", "styles.css"],
     into: "src/lib/demo",
   },
-  { from: "solid/solid19", to: ["meta/solidstart1", "meta/solidstart2"], only: ["App.jsx"], into: "src/demo" },
+  { from: "solid/solid1_9", to: ["meta/solidstart1", "meta/solidstart2"], only: ["App.jsx"], into: "src/demo" },
 ];
 const ALWAYS_OWN = new Set(["package.json", "vite.config.js", "astro.config.mjs", "node_modules", "dist", ".astro"]);
 

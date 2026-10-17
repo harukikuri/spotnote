@@ -1,5 +1,5 @@
 {
-  "name": "spotnote-examples-solid19-vite5",
+  "name": "spotnote-examples-solid1_9-vite5",
   "private": true,
   "type": "module",
   "description": "Spotnote demo app: Solid 1.9 on Vite 5 (vite-plugin-solid's compiler needs Solid 1.9, so this one varies Vite).",

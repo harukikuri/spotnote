@@ -104,7 +104,7 @@ test("JSX: a file that can't be parsed is passed on unstamped", async (t) => {
   assert.equal(await stamp("src/broken.jsx", "const a = <div>;\n"), undefined);
 });
 
-for (const app of ["vue32", "vue34", "vue35"]) {
+for (const app of ["vue3_2", "vue3_4", "vue3_5"]) {
   test(`Vue (${app}): template elements get a stamp named after the file`, async () => {
     const out = await stamp(
       "src/Hello.vue",

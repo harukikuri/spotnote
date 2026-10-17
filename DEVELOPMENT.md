@@ -14,13 +14,13 @@ Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with five part
 ```bash
 pnpm install                                  # from the repo root — links the workspace
 pnpm dev                                      # React 19 example (multi-page demo) + picker
-pnpm --filter spotnote-examples-vue35 dev     # any example app: spotnote-examples-<app> (see below)
+pnpm --filter spotnote-examples-vue3_5 dev     # any example app: spotnote-examples-<app> (see below)
 pnpm --filter "./examples/**" build           # production builds (picker excluded — apply:'serve')
 node examples/sync.mjs                        # after editing an example: copy it to its other versions
 pnpm test                                     # package + mcp tests (node:test, no extra deps)
 pnpm coverage                                 # the same tests, with a coverage report of the files they load (c8; HTML in coverage/)
 pnpm test:e2e                                 # browser tests in e2e/ (Playwright; first: pnpm --filter spotnote-e2e exec playwright install chromium)
-E2E_APPS=vue32,agent pnpm test:e2e            # only these apps (agent: the tests with spotnote-mcp)
+E2E_APPS=vue3_2,agent pnpm test:e2e            # only these apps (agent: the tests with spotnote-mcp)
 pnpm coverage:e2e                             # the browser tests, with a coverage report of package/src/client and mcp/src (HTML in e2e/coverage/)
 pnpm lint                                     # format + lint check (Biome, config in biome.json)
 pnpm format                                   # apply Biome's formatting and safe fixes
@@ -75,17 +75,17 @@ spread over Vite 5 to 8. Each is a whole Vite (or Astro) app with its own
 | App | Framework | Vite |
 | --- | --- | --- |
 | `react/react17`, `react18`, `react19` | React 17, 18, 19 | 5, 6, 8 |
-| `vue/vue32`, `vue34`, `vue35` | Vue 3.2, 3.4, 3.5 | 5, 7, 8 |
+| `vue/vue3_2`, `vue3_4`, `vue3_5` | Vue 3.2, 3.4, 3.5 | 5, 7, 8 |
 | `svelte/svelte4`, `svelte5` | Svelte 4, 5 | 5, 7 |
-| `solid/solid19-vite5`, `solid19` | Solid 1.9 (vite-plugin-solid needs it) | 5, 8 |
+| `solid/solid1_9-vite5`, `solid1_9` | Solid 1.9 (vite-plugin-solid needs it) | 5, 8 |
 | `astro/astro5`, `astro6`, `astro7` | Astro 5, 6, 7 | 6, 7, 8 (Astro's own) |
 | `meta/sveltekit2`, `sveltekit3` | SvelteKit 2, 3 (Svelte 5) | 5, 8 |
 | `meta/nuxt3`, `nuxt4` | Nuxt 3, 4 (Vue 3.5) | 7, 8 (Nuxt's own) |
 | `meta/react-router7`, `react-router8` | React Router 7, 8, framework mode (React 19) | 5, 7 |
 | `meta/solidstart1`, `solidstart2` | SolidStart 1 (vinxi), 2 (Solid 1.9) | 6 (vinxi's own), 8 |
 
-The newest app of each framework is the one to edit (`react19`, `vue35`,
-`solid19`, `astro7`); `node examples/sync.mjs` copies it into the others, and CI
+The newest app of each framework is the one to edit (`react19`, `vue3_5`,
+`solid1_9`, `astro7`); `node examples/sync.mjs` copies it into the others, and CI
 checks they match. A file an app keeps for itself (React 17's `main.jsx`, the
 configs) is listed in `sync.mjs`. Svelte 4 and 5 are written differently: only
 their styles are shared. The meta-framework apps get the newest app's page in a

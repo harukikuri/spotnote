@@ -28,13 +28,13 @@ jobs:
           - react17
           - react18
           - react19
-          - vue32
-          - vue34
-          - vue35
+          - vue3_2
+          - vue3_4
+          - vue3_5
           - svelte4
           - svelte5
-          - solid19-vite5
-          - solid19
+          - solid1_9-vite5
+          - solid1_9
           - astro5
           - astro6
           - astro7
