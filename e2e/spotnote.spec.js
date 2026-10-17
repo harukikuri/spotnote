@@ -174,6 +174,17 @@ test("the launcher comes back when the app rebuilds the page, with its notes", a
   await expect(page.locator(".sn-pin")).toHaveCount(1);
 });
 
+test("an element of a shared component names the line that uses it here", async ({ page, app }) => {
+  // The title's placeholder bar is written in the Bar component, and the title
+  // uses <Bar> in app.file: changing it there changes only this one.
+  await openLauncher(page);
+  await writeNote(page, page.locator(`${app.title} > span`).first(), "Only this bar");
+  const used = (await clipboard(page)).match(/^- used at: (.+):(\d+) \(<Bar> in \w+\)$/m);
+  expect(used?.[1]).toBe(app.file);
+  const source = readFileSync(path.join(examples, app.dir, app.srcRoot ?? "", app.file), "utf8");
+  expect(source.split("\n")[used[2] - 1]).toContain("<Bar");
+});
+
 test("Shift-click puts one note on several elements, each with the same pin", async ({ page, app }) => {
   await openLauncher(page);
   await clickEdge(page.locator(app.title).first());

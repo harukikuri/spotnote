@@ -73,7 +73,7 @@ const getVueParse = perRoot(async (root) => (await appImport(root, "vue/compiler
 // Walk the template AST and stamp every native host element (tagType 0). Element
 // `loc.start.offset` is absolute in the SFC source, so we splice back-to-front
 // (offsets stay valid) and only insert within a line (line numbers preserved).
-function stampVueTemplate(code, file, root, parse) {
+function stampVueTemplate(code, file, root, parse, used) {
   const { descriptor, errors } = parse(code, { filename: file });
   if (errors.length || !descriptor.template || !descriptor.template.ast) return;
   const rel = path.relative(root, file) || file;
@@ -84,6 +84,9 @@ function stampVueTemplate(code, file, root, parse) {
   const visit = (node) => {
     if (!node) return;
     // NodeTypes.ELEMENT === 1, ElementTypes.ELEMENT === 0 (a real DOM tag).
+    // ElementTypes.COMPONENT === 1: where a component is used (see plugin.cjs).
+    if (node.type === 1 && node.tagType === 1 && node.loc)
+      used.push([node.tag, node.loc.start.line, node.loc.start.column]);
     if (node.type === 1 && node.tagType === 0 && node.tag && node.loc) {
       const already = (node.props || []).some((p) => p.type === 6 && p.name === "data-spotnote");
       if (!already) {
@@ -142,7 +145,7 @@ function walkAst(node, visit) {
   }
 }
 
-function stampSvelte(code, file, root, parse) {
+function stampSvelte(code, file, root, parse, used) {
   let ast;
   try {
     ast = parse(code, { filename: file, modern: true });
@@ -163,6 +166,10 @@ function stampSvelte(code, file, root, parse) {
     ? (n) => n.type === "RegularElement"
     : (n) => n.type === "Element" && !n.name.includes(":");
   walkAst(markup, (node) => {
+    if ((node.type === "Component" || node.type === "InlineComponent") && typeof node.start === "number") {
+      const { line, column } = offsetToLineCol(code, node.start);
+      used.push([node.name, line, column]); // where a component is used (see plugin.cjs)
+    }
     if (!node.name || !isTag(node)) return;
     if (typeof node.start !== "number") return;
     const already = (node.attributes || []).some((a) => a && a.name === "data-spotnote");
@@ -217,7 +224,7 @@ function goElements(code, ast) {
   for (let i = 0; i < code.length; i++) if (code[i] === "\n") lineStarts.push(i + 1);
   const found = [];
   walkAst(ast, (node) => {
-    if ((node.type !== "element" && node.type !== "custom-element") || !node.position) return;
+    if (!["element", "custom-element", "component"].includes(node.type) || !node.position) return;
     const { line, column } = node.position.start;
     const stamped = node.attributes.some((a) => a.name === "data-spotnote");
     found.push({ tag: node.name, start: lineStarts[line - 1] + column - 1, stamped });
@@ -229,7 +236,7 @@ function goElements(code, ast) {
 // have an attribute, and <slot>, which isn't an element in the page.
 const ASTRO_SKIP = new Set(["script", "style", "slot"]);
 
-async function stampAstro(code, file, root, elementsOf) {
+async function stampAstro(code, file, root, elementsOf, used) {
   let elements;
   try {
     elements = await elementsOf(code);
@@ -241,16 +248,22 @@ async function stampAstro(code, file, root, elementsOf) {
   const s = new MagicString(code);
   // A native tag is lowercase; components are capitalized or member names (<Foo.Bar>).
   for (const { tag, start, stamped } of elements) {
-    if (stamped || tag[0] !== tag[0].toLowerCase() || ASTRO_SKIP.has(tag)) continue;
     const { line, column } = offsetToLineCol(code, start);
+    if (tag[0] !== tag[0].toLowerCase()) used.push([tag, line, column]); // where a component is used
+    if (stamped || tag[0] !== tag[0].toLowerCase() || ASTRO_SKIP.has(tag)) continue;
     s.appendLeft(start + 1 + tag.length, ` data-spotnote="${rel}:${line}:${column}" data-spotnote-name="${name}"`);
   }
   // Astro pages send no other JavaScript to the browser unless they hydrate a
   // component, so each .astro file brings the picker in a script of its own
   // (Astro bundles it, and loads it once per page). At the end: no line moves.
-  s.append('\n<script>import "virtual:spotnote-client";</script>\n');
+  s.append(`\n<script>import "virtual:spotnote-client";${usesScript(rel, used)}</script>\n`);
   return { code: s.toString(), map: s.generateMap({ source: file, hires: true }) };
 }
+
+// Hands the page where each component is used in a file: [name, line, column]
+// for every <Component> in it, which the prompt reads (client/prompt.js).
+const usesScript = (rel, used) =>
+  `\n(globalThis.__spotnoteUses ??= {})[${JSON.stringify(rel)}] = ${JSON.stringify(used)};`;
 
 // Which framework compiles .jsx/.tsx here, from the plugins in the config —
 // the extension alone can't tell React from Solid. null = none or both.
@@ -278,6 +291,7 @@ export default function spotnote() {
   let transformSync;
   let root = process.cwd();
   let jsx = null;
+  const uses = new Map(); // file -> where components are used in it, for the client plugin below
   const main = {
     name: "spotnote",
     apply,
@@ -393,6 +407,7 @@ export default function spotnote() {
             return;
           }
           if (!res || res.code == null) return;
+          uses.set(file, res.metadata.spotnoteUses ?? []);
           return { code: res.code, map: res.map };
         }
 
@@ -401,21 +416,25 @@ export default function spotnote() {
         if (file.endsWith(".vue") && !id.includes("?")) {
           const parse = await getVueParse(root);
           if (!parse) return;
-          return stampVueTemplate(code, file, root, parse);
+          const used = [];
+          uses.set(file, used);
+          return stampVueTemplate(code, file, root, parse, used);
         }
 
         // Raw .svelte import only — skip the ?svelte&type= sub-requests.
         if (file.endsWith(".svelte") && !id.includes("?")) {
           const parse = await getSvelteParse(root);
           if (!parse) return;
-          return stampSvelte(code, file, root, parse);
+          const used = [];
+          uses.set(file, used);
+          return stampSvelte(code, file, root, parse, used);
         }
 
         // Raw .astro import only — skip the ?astro&type= sub-requests.
         if (file.endsWith(".astro") && !id.includes("?")) {
           const elementsOf = await getAstroElements(root);
           if (!elementsOf) return;
-          return stampAstro(code, file, root, elementsOf);
+          return stampAstro(code, file, root, elementsOf, []);
         }
       },
     },
@@ -432,7 +451,9 @@ export default function spotnote() {
     enforce: "post",
     transform(code, id, options) {
       if (options?.ssr || id.includes("node_modules") || !/\.(jsx|tsx|vue|svelte)$/.test(id)) return;
-      return { code: `${code}\nimport ${JSON.stringify(VIRTUAL)};`, map: null };
+      const rel = path.relative(root, id).replace(/\\/g, "/");
+      const used = uses.has(id) ? usesScript(rel, uses.get(id)) : "";
+      return { code: `${code}\nimport ${JSON.stringify(VIRTUAL)};${used}`, map: null };
     },
   };
   return [main, client];

@@ -65,7 +65,30 @@ test("buildPrompt on several elements: one numbered target section each", () => 
   assert.match(prompt, /^## Request\nMatch these\n\n## Target 1 of 2\n- file: components\/Card\.jsx\n/);
   assert.match(
     prompt,
-    /\n\n## Target 2 of 2\n- file: pages\/Products\.jsx\n- line: 20, column: 9\n- element: <button>/,
+    /\n\n## Target 2 of 2\n- file: pages\/Products\.jsx\n- line: 20, column: 9\n- rendered inside: App\.jsx:3:5 \(App\)\n- element: <button>/,
   );
   assert.equal(prompt.match(/## Current computed styles/g).length, 2);
+});
+
+test("buildPrompt names the line that uses a component here, from the uses the plugin lists", () => {
+  globalThis.__spotnoteUses = {
+    "pages/Products.jsx": [
+      ["Card", 12, 11],
+      ["Card", 30, 5],
+      ["Header", 2, 1],
+    ],
+  };
+  try {
+    // The first <Card> after the owner's element (line 10) that contains it.
+    assert.match(
+      buildPrompt(pick(), "x"),
+      /\n- line: 4, column: 9\n- used at: pages\/Products\.jsx:12 \(<Card> in Products\)\n/,
+    );
+  } finally {
+    delete globalThis.__spotnoteUses;
+  }
+});
+
+test("buildPrompt without the line that uses it: the nearest other owner's element", () => {
+  assert.match(buildPrompt(pick(), "x"), /\n- rendered inside: pages\/Products\.jsx:10:7 \(Products\)\n/);
 });

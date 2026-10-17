@@ -46,6 +46,32 @@ function sourcePath(el) {
   return up.reverse(); // outer → inner
 }
 
+// Where the component that writes `el` is used on this page: a component used
+// in several places (a shared one) changes everywhere when its own file does,
+// and only here when the line that uses it does. The plugin lists every
+// <Component> in each file (globalThis.__spotnoteUses); the line is the one in
+// the nearest owner up the page that uses this component by name, right after
+// that owner's element. Without one (an import under another name, say), the
+// nearest other owner's element: close to it, but not the line.
+function usedAt(el) {
+  const name = el.getAttribute("data-spotnote-name");
+  if (!name) return null;
+  const same = (tag) => tag.toLowerCase().replace(/-/g, "") === name.toLowerCase(); // <bar-chart> is BarChart in Vue
+  let inside = null;
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const loc = node.getAttribute("data-spotnote");
+    const owner = node.getAttribute("data-spotnote-name");
+    if (!loc || !owner || owner === name || node.hasAttribute("data-spotnote-ui")) continue;
+    const { file, line } = parseLoc(loc);
+    inside ??= `- rendered inside: ${loc} (${owner})`;
+    const lines = (globalThis.__spotnoteUses?.[file] ?? []).filter(([tag]) => same(tag)).map((u) => u[1]);
+    if (!lines.length) continue;
+    const at = lines.filter((l) => l >= line).sort((a, b) => a - b)[0] ?? lines[lines.length - 1];
+    return `- used at: ${file}:${at} (<${name}> in ${owner})`;
+  }
+  return inside;
+}
+
 // `target`: one element, or several for a note on more than one (each gets its
 // own "## Target i of n" section, in the order they were picked). `raw` is the
 // node actually clicked on the first.
@@ -92,6 +118,7 @@ function targetSection(el, heading, raw) {
     heading,
     `- file: ${l.file}`,
     `- line: ${l.line}, column: ${l.column}`,
+    usedAt(el),
     `- element: <${tag}${id}${cls}>`,
     text ? `- text: "${text}"` : null,
     occ.total > 1

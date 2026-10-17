@@ -17,6 +17,18 @@ async function stamp(rel, code, appRoot = root) {
   return (await plugin.transform.handler(code, path.join(appRoot, rel)))?.code;
 }
 
+// Where components are used in a file, as the browser's copy of it hands them
+// to the page (after the framework compiler).
+async function uses(rel, code, appRoot = root) {
+  const [main, client] = spotnote();
+  main.configResolved({ root: appRoot, plugins: [] });
+  await main.buildStart();
+  const id = path.join(appRoot, rel);
+  await main.transform.handler(code, id);
+  const out = client.transform("", id, {})?.code ?? "";
+  return JSON.parse(out.match(/\] = (.*);$/m)?.[1] ?? "null");
+}
+
 test("JSX: host elements get file:line:column (1-based) and their component", async () => {
   const out = await stamp("src/Card.jsx", "function Card() {\n  return <div>\n    <span>hi</span>\n  </div>;\n}\n");
   assert.match(out, /<div data-spotnote="src\/Card\.jsx:2:10" data-spotnote-name="Card">/);
@@ -26,6 +38,10 @@ test("JSX: host elements get file:line:column (1-based) and their component", as
 test("JSX: components and member tags aren't stamped", async () => {
   const out = await stamp("src/App.jsx", "const App = () => <><Card /><motion.div /></>;\n");
   assert.doesNotMatch(out, /data-spotnote/);
+});
+
+test("JSX: where each component is used goes to the page", async () => {
+  assert.deepEqual(await uses("src/App.jsx", "const App = () => <div>\n  <Card />\n</div>;\n"), [["Card", 2, 3]]);
 });
 
 test("JSX: the owner is found through memo() and past callbacks", async () => {
@@ -57,6 +73,12 @@ for (const app of ["vue32", "vue34", "vue35"]) {
     );
     assert.match(out, /<p data-spotnote="src\/Hello\.vue:2:3" data-spotnote-name="Hello">/);
     assert.doesNotMatch(out, /<MyComp data-spotnote/);
+    const used = await uses(
+      "src/Hello.vue",
+      "<template>\n  <p>hi <MyComp /></p>\n</template>\n",
+      path.join(examples, "vue", app),
+    );
+    assert.deepEqual(used, [["MyComp", 2, 9]]);
   });
 }
 
@@ -68,6 +90,8 @@ for (const app of ["svelte4", "svelte5"]) {
     assert.match(out, /<h1 data-spotnote="src\/Hi\.svelte:2:1" data-spotnote-name="Hi">/);
     assert.match(out, /let n = '<b>';/);
     assert.doesNotMatch(out, /<Child data-spotnote/);
+    const used = await uses("src/Hi.svelte", "<h1>hi</h1>\n<Child />\n", path.join(examples, "svelte", app));
+    assert.deepEqual(used, [["Child", 2, 1]]);
   });
 
   test(`Svelte (${app}): a file that can't be parsed is left to the Svelte plugin`, async () => {
@@ -96,7 +120,9 @@ for (const [app, version] of [
   test(`${version}: every file brings the picker in a script, below its own lines`, async () => {
     const out = await astro("src/Hi.astro", "<p>hi</p>\n");
     assert.equal(out.split("\n")[0], '<p data-spotnote="src/Hi.astro:1:1" data-spotnote-name="Hi">hi</p>');
-    assert.match(out, /<script>import "virtual:spotnote-client";<\/script>\n$/);
+    assert.match(out, /<script>import "virtual:spotnote-client";\n.*\["src\/Hi\.astro"\] = \[\];<\/script>\n$/);
+    const used = await astro("src/Hi.astro", "<p>hi</p>\n<Child />\n");
+    assert.match(used, /\["src\/Hi\.astro"\] = \[\["Child",2,1\]\];<\/script>\n$/); // where components are used
   });
 
   test(`${version}: a whole page is stamped`, async () => {

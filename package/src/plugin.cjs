@@ -32,14 +32,19 @@ module.exports = ({ types: t }) => ({
     JSXOpeningElement(nodePath, state) {
       const name = nodePath.node.name;
 
-      // Only intrinsic/host elements (<div>), never components (<Foo>) —
-      // a component may not forward the attribute to a real DOM node.
       if (name.type !== "JSXIdentifier") return;
-      if (name.name[0] !== name.name[0].toLowerCase()) return;
-
       const loc = nodePath.node.loc;
       const filename = state.filename;
       if (!loc || !filename) return;
+
+      // A component (<Foo>) isn't stamped: it may not forward the attribute to
+      // a real DOM node. Where it's used is kept instead (the plugin hands it to
+      // the page), so a prompt can name the line that renders it.
+      if (name.name[0] !== name.name[0].toLowerCase()) {
+        state.file.metadata.spotnoteUses ??= [];
+        state.file.metadata.spotnoteUses.push([name.name, loc.start.line, loc.start.column + 1]);
+        return;
+      }
 
       // Don't double-stamp.
       const already = nodePath.node.attributes.some(
