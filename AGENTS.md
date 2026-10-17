@@ -33,4 +33,4 @@ SolidStart, two majors each): pick elements through `app.title` /
   commit, and its screenshot in `docs/public/` if it shows the change.
 - Commits: `feat:`, `fix:`, `perf:`, `docs:`, `test:`, `ci:`, `chore:`,
   `release:`. The release notes are made from `feat:`, `fix:` and `perf:`, so
-  write those for users. No AI attribution in commits or PRs.
+  write those for users.
