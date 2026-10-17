@@ -1,12 +1,16 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/spotnote-logo-dark.svg">
-  <img src="docs/public/brand/spotnote-logo-light.svg" alt="Spotnote" width="180">
-</picture>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/spotnote-logo-dark.svg">
+    <img src="docs/public/brand/spotnote-logo-light.svg" alt="Spotnote" width="180">
+  </picture>
+</p>
 
 <br>
 
-[![npm version](https://img.shields.io/npm/v/spotnote)](https://www.npmjs.com/package/spotnote)
-[![E2E tests](https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml/badge.svg?branch=main)](https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml?query=branch%3Amain)
+<p align="center">
+  <a href="https://www.npmjs.com/package/spotnote"><img src="https://img.shields.io/npm/v/spotnote" alt="npm version"></a>
+  <a href="https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml?query=branch%3Amain"><img src="https://github.com/harukikuri/spotnote/actions/workflows/e2e.yml/badge.svg?branch=main" alt="E2E tests"></a>
+</p>
 
 **[Spotnote](https://spotnote-weld.vercel.app)** is a Vite plugin for UI feedback to coding agents. Click any element in your running app, write what should change, and hand your agent its exact file, line and column.
 
@@ -29,7 +33,6 @@ https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
 ## Requirements
 
 - Vite 5 or later
-- React, Vue, Svelte, Solid or Astro, or SvelteKit, Nuxt, React Router or SolidStart ([tested versions](https://spotnote-weld.vercel.app/reference/framework-support))
 
 ## Install
 
