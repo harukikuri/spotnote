@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import spotnote from "../src/index.js";
 
 const repo = path.resolve(fileURLToPath(import.meta.url), "../../..");
@@ -119,6 +120,15 @@ for (const app of ["vue32", "vue34", "vue35"]) {
     );
     assert.deepEqual(used, [["MyComp", 2, 9]]);
   });
+
+  test(`Vue (${app}): a file that can't be parsed is skipped, with a warning`, async (t) => {
+    const warn = t.mock.method(console, "warn", () => {});
+    assert.equal(
+      await stamp("src/Broken.vue", "<template><div></template>\n", path.join(examples, "vue", app)),
+      undefined,
+    );
+    assert.match(warn.mock.calls[0].arguments[0], /\[spotnote\] skipped src\/Broken\.vue/);
+  });
 }
 
 for (const app of ["svelte4", "svelte5"]) {
@@ -133,8 +143,24 @@ for (const app of ["svelte4", "svelte5"]) {
     assert.deepEqual(used, [["Child", 2, 1]]);
   });
 
-  test(`Svelte (${app}): a file that can't be parsed is left to the Svelte plugin`, async () => {
+  test(`Svelte (${app}): a file that can't be parsed is skipped, with a warning`, async (t) => {
+    const warn = t.mock.method(console, "warn", () => {});
     assert.equal(await svelte("src/Broken.svelte", "<h1>{n</h1>\n"), undefined);
+    assert.match(warn.mock.calls[0].arguments[0], /\[spotnote\] skipped src\/Broken\.svelte/);
+  });
+
+  test(`Svelte (${app}): TypeScript and SCSS in <script> and <style> don't stop the stamping`, async () => {
+    const code =
+      '<script lang="ts">let n: number = 1;</script>\n<h1>{n}</h1>\n<style lang="scss">h1 { &:hover { color: red; } }</style>\n';
+    const out = await svelte("src/Ts.svelte", code);
+    assert.match(out, /<h1 data-spotnote="src\/Ts\.svelte:2:1" data-spotnote-name="Ts">/);
+    assert.match(out, /let n: number = 1;/); // the script itself is left as it was
+  });
+
+  test(`Svelte (${app}): braces in the path stay text, not an expression`, async () => {
+    const out = await svelte("src/{x}/B.svelte", "<h1>hi</h1>\n");
+    const { compile } = createRequire(path.join(examples, "svelte", app, "index.js"))("svelte/compiler");
+    assert.match(compile(out, { filename: "B.svelte" }).js.code, /src\/\{x\}\/B\.svelte:1:1/);
   });
 }
 

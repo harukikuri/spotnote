@@ -61,4 +61,4 @@ plugins: [spotnote(), svelte()] // same result
 [spotnote] skipped pages/Editor.tsx — couldn't parse it, so its elements won't be pickable.
 ```
 
-Printed once per file when the JSX pass can't parse a file. The file is passed on to your framework's compiler unchanged, so your app still works; only that file's elements can't be picked directly.
+Printed once per file that Spotnote can't parse, whatever its type (`.jsx`, `.tsx`, `.vue`, `.svelte` or `.astro`). The file is passed on to your framework's compiler unchanged, so your app still works; only that file's elements can't be picked directly.

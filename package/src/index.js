@@ -47,6 +47,17 @@ const RESOLVED = "\0" + VIRTUAL;
 
 const warnedParse = new Set(); // files we couldn't parse (warn once each)
 
+// A file we couldn't parse goes to the framework's own compiler unstamped,
+// which reports a real syntax error itself: say once why its elements can't
+// be picked.
+function skipped(file, root) {
+  if (warnedParse.has(file)) return;
+  warnedParse.add(file);
+  console.warn(
+    `[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`,
+  );
+}
+
 // The compilers below come from the app's own dependencies, so the plugin keeps
 // none of its own. Each is loaded lazily, once per app root (a test run stamps
 // apps on different versions), and is null when the app doesn't have it: that
@@ -75,7 +86,8 @@ const getVueParse = perRoot(async (root) => (await appImport(root, "vue/compiler
 // (offsets stay valid) and only insert within a line (line numbers preserved).
 function stampVueTemplate(code, file, base, parse, used) {
   const { descriptor, errors } = parse(code, { filename: file });
-  if (errors.length || !descriptor.template || !descriptor.template.ast) return;
+  if (errors.length) throw errors[0];
+  if (!descriptor.template?.ast) return;
   const rel = path.relative(base, file).replace(/\\/g, "/") || file;
   // The SFC's component name ≈ its filename (Vue/devtools convention).
   const name = path.basename(file, path.extname(file));
@@ -146,14 +158,19 @@ function walkAst(node, visit) {
 }
 
 function stampSvelte(code, file, base, parse, used) {
-  let ast;
-  try {
-    ast = parse(code, { filename: file, modern: true });
-  } catch {
-    return; // let vite-plugin-svelte report the real parse error
-  }
-  const rel = path.relative(base, file).replace(/\\/g, "/") || file;
-  const name = path.basename(file, path.extname(file));
+  // Svelte 4 reads <script> as JavaScript and <style> as CSS, so TypeScript or
+  // SCSS there makes it throw. Only the markup is walked: parse a copy with
+  // their contents blanked (same length and lines), and splice into the code.
+  const markupOnly = code.replace(
+    /(<(script|style)\b[^>]*>)([\s\S]*?)(<\/\2>)/g,
+    (_, open, _tag, body, close) => open + body.replace(/[^\n]/g, " ") + close,
+  );
+  const ast = parse(markupOnly, { filename: file, modern: true });
+  // Braces in an attribute value are an expression in Svelte: write them as
+  // character references, so a path like src/{x}/ stays text.
+  const text = (v) => v.replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
+  const rel = text(path.relative(base, file).replace(/\\/g, "/") || file);
+  const name = text(path.basename(file, path.extname(file)));
   const s = new MagicString(code);
   let touched = false;
   // The markup root: `fragment` in Svelte 5's modern AST, `html` in Svelte 4's
@@ -237,12 +254,7 @@ function goElements(code, ast) {
 const ASTRO_SKIP = new Set(["script", "style", "slot"]);
 
 async function stampAstro(code, file, base, elementsOf, used) {
-  let elements;
-  try {
-    elements = await elementsOf(code);
-  } catch {
-    return; // let Astro report the real parse error
-  }
+  const elements = await elementsOf(code);
   const rel = path.relative(base, file).replace(/\\/g, "/") || file;
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
@@ -407,15 +419,7 @@ export default function spotnote({ exclude, port } = {}) {
               sourceMaps: true,
             });
           } catch {
-            // Couldn't parse (syntax our config doesn't enable) — hand the file to
-            // the framework's own compiler unstamped instead of erroring.
-            if (!warnedParse.has(file)) {
-              warnedParse.add(file);
-              console.warn(
-                `[spotnote] skipped ${path.relative(root, file)} — couldn't parse it, so its elements won't be pickable.`,
-              );
-            }
-            return;
+            return skipped(file, root); // syntax our config doesn't enable
           }
           if (!res || res.code == null) return;
           uses.set(file, res.metadata.spotnoteUses ?? []);
@@ -429,7 +433,11 @@ export default function spotnote({ exclude, port } = {}) {
           if (!parse) return;
           const used = [];
           uses.set(file, used);
-          return stampVueTemplate(code, file, top, parse, used);
+          try {
+            return stampVueTemplate(code, file, top, parse, used);
+          } catch {
+            return skipped(file, root);
+          }
         }
 
         // Raw .svelte import only — skip the ?svelte&type= sub-requests.
@@ -438,14 +446,22 @@ export default function spotnote({ exclude, port } = {}) {
           if (!parse) return;
           const used = [];
           uses.set(file, used);
-          return stampSvelte(code, file, top, parse, used);
+          try {
+            return stampSvelte(code, file, top, parse, used);
+          } catch {
+            return skipped(file, root);
+          }
         }
 
         // Raw .astro import only — skip the ?astro&type= sub-requests.
         if (file.endsWith(".astro") && !id.includes("?")) {
           const elementsOf = await getAstroElements(root);
           if (!elementsOf) return;
-          return stampAstro(code, file, top, elementsOf, []);
+          try {
+            return await stampAstro(code, file, top, elementsOf, []);
+          } catch {
+            return skipped(file, root);
+          }
         }
       },
     },

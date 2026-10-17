@@ -138,6 +138,6 @@ Astro is [tested end to end](https://github.com/harukikuri/spotnote/tree/main/e2
 
 ### Svelte
 
-- Markup elements in `.svelte` files are stamped, with Svelte 4 and Svelte 5 alike.
+- Markup elements in `.svelte` files are stamped, with Svelte 4 and Svelte 5 alike, whatever the language of their `<script>` and `<style>` (TypeScript, SCSS).
 - Components and `<slot>` aren't. Markup you pass into a slot is stamped in the file where you wrote it.
 - `<svelte:element this={…}>` isn't, because its tag is decided at runtime.
