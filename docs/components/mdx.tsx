@@ -21,6 +21,7 @@ import {
 } from 'react-icons/si';
 // OpenAI's mark isn't in Simple Icons.
 import { RiOpenaiFill } from 'react-icons/ri';
+import { Badge } from './badge';
 import { Diagram } from './diagram';
 import { Framework } from './framework';
 import { LauncherIcon } from './launcher-icon';
@@ -64,6 +65,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Accordions,
     Tab,
     Tabs,
+    Badge,
     Diagram,
     Framework,
     LauncherIcon,
