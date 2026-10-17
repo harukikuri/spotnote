@@ -24,6 +24,13 @@ Try these in order:
 3. **Check the file type.** Only `.jsx`, `.tsx`, `.vue`, `.svelte` and `.astro` files are stamped. In dev tools, look for a `data-spotnote` attribute on the element.
 
 </Accordion>
+<Accordion title="Does Spotnote slow down my dev server?" id="does-spotnote-slow-down-my-dev-server">
+
+Only the first page load after the dev server starts, by under a second. In [Plane](https://github.com/makeplane/plane), a React Router app with 1,400 `.tsx` files, that load took 5.6 s instead of 4.8 s, almost all of it parsing the page's JSX files to stamp them. Reloads after it took the same time, 1.7 s.
+
+Production builds don't include Spotnote at all.
+
+</Accordion>
 </Accordions>
 
 ## Notes
