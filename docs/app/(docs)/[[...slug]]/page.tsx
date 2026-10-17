@@ -14,8 +14,9 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
 
   return (
     // No previous/next cards under the page (guides end with their own Next
-    // link); our footer closes the page instead.
-    <DocsPage toc={page.data.toc} footer={{ enabled: false }}>
+    // link); our footer closes the page instead. Less room above the title than
+    // Fumadocs gives (md:pt-8 xl:pt-14).
+    <DocsPage toc={page.data.toc} footer={{ enabled: false }} className="md:pt-6 xl:pt-10">
       {page.data.headline && (
         // Styled like the breadcrumb other pages show above their title.
         <p className="text-sm font-medium text-fd-primary">{page.data.title}</p>
