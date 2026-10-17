@@ -44,10 +44,10 @@ There's nothing else to run. The agent starts the server, and the launcher in yo
 
 <Callout type="info" title="Port 4848 taken?">
 
-Set `SPOTNOTE_PORT` to the same free port in two places:
+Set the same free port in two places:
 
 - **Your agent:** add `-e SPOTNOTE_PORT=4900` to the Claude Code command, or `"env": { "SPOTNOTE_PORT": "4900" }` next to `"args"` in a JSON config.
-- **Your dev server:** `SPOTNOTE_PORT=4900 pnpm dev`
+- **Your dev server:** `spotnote({ port: 4900 })` in your Vite config (see [`port`](/reference/plugin-api#port)), or `SPOTNOTE_PORT=4900 pnpm dev`.
 
 </Callout>
 

@@ -81,6 +81,24 @@ test("the browser's component files import the client, which boots the picker wi
   assert.match(plugin([{ name: "vite:react-swc" }, { name: "solid" }]).load(id), /"jsx":null/); // can't tell
 });
 
+test("port: the page and the spotnote-mcp check use the port option over SPOTNOTE_PORT", async () => {
+  const other = http.createServer((_, res) => res.end(JSON.stringify({ spotnote: 1 })));
+  await new Promise((r) => other.listen(0, "127.0.0.1", r));
+  const port = other.address().port;
+  const [p] = spotnote({ port });
+  p.configResolved({ root, plugins: [] });
+  const s = devServer();
+  try {
+    assert.match(p.load(p.resolveId("virtual:spotnote-client")), new RegExp(`"port":${port}`));
+    p.configureServer(s);
+    for (let i = 0; i < 50 && !s.sent.length; i++) await new Promise((r) => setTimeout(r, 10));
+    assert.deepEqual(s.sent, [["spotnote:mcp", { up: true }]]); // heard from the server on that port
+  } finally {
+    s.closers.forEach((fn) => fn());
+    other.close();
+  }
+});
+
 test("runs on the dev server only: not in builds, nor under Vitest", () => {
   const [{ apply }] = spotnote();
   assert.equal(apply({}, { command: "serve" }), true);

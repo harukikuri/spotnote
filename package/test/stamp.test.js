@@ -63,6 +63,22 @@ test("JSX: only HTML, SVG and custom elements are stamped, not other renderers' 
   assert.match(out, /<mesh><boxGeometry \/><\/mesh>/);
 });
 
+test("exclude: matching files, from the Vite root, are left unstamped", async () => {
+  const [main, client] = spotnote({ exclude: ["src/scene/**", /Legacy\.vue$/] });
+  main.configResolved({ root, plugins: [] });
+  await main.buildStart();
+  const run = async (rel, code) => {
+    const id = path.join(root, rel);
+    const out = await main.transform.handler(code, id);
+    return { out: out?.code, client: client.transform("", id, {})?.code ?? "" };
+  };
+  const scene = await run("src/scene/Box.jsx", "const Box = () => <line><Inner /></line>;\n");
+  assert.equal(scene.out, undefined);
+  assert.doesNotMatch(scene.client, /__spotnoteUses/); // nor its components' uses
+  assert.equal((await run("src/Legacy.vue", "<template><p>hi</p></template>\n")).out, undefined);
+  assert.match((await run("src/App.jsx", "const App = () => <div />;\n")).out, /data-spotnote=/);
+});
+
 test("JSX: where each component is used goes to the page", async () => {
   assert.deepEqual(await uses("src/App.jsx", "const App = () => <div>\n  <Card />\n</div>;\n"), [["Card", 2, 3]]);
 });

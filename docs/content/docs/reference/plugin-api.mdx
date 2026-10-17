@@ -6,12 +6,15 @@ description: The spotnote() Vite plugin.
 ## `spotnote()`
 
 ```ts
-import type { Plugin } from 'vite';
+import type { FilterPattern, Plugin } from 'vite';
 
-export default function spotnote(): Plugin;
+export default function spotnote(options?: {
+  exclude?: FilterPattern;
+  port?: number;
+}): Plugin[];
 ```
 
-The package's only export. Call it with no arguments and add the result to `plugins`:
+The package's only export. Call it and add the result to `plugins`:
 
 ```ts title="vite.config.ts"
 import spotnote from 'spotnote';
@@ -21,7 +24,31 @@ export default defineConfig({
 });
 ```
 
-It has **no options**.
+Every option is optional: most apps need none.
+
+## Options
+
+### `exclude`
+
+Files not to stamp: globs relative to the Vite root, or regular expressions matched against the file's absolute path. One pattern or an array.
+
+```ts title="vite.config.ts"
+spotnote({ exclude: ['src/scene/**', /\.stories\.tsx$/] })
+```
+
+Their elements can't be picked directly: a click picks the nearest stamped element around them. Files in `node_modules` are never stamped.
+
+Use it for a file whose lowercase JSX isn't the DOM but has a DOM tag's name: React Three Fiber's `<line>`, `<path>` or `<audio>` are three.js objects, and a stamp breaks them. Its other tags, such as `<mesh>`, aren't stamped anyway (see [Framework Support](/reference/framework-support)).
+
+### `port`
+
+The port of [spotnote-mcp](/guides/mcp), when 4848 is taken. Without it, the plugin reads `SPOTNOTE_PORT`, then uses 4848.
+
+```ts title="vite.config.ts"
+spotnote({ port: 4900 })
+```
+
+Your agent starts spotnote-mcp, so give it the same port there: `SPOTNOTE_PORT=4900` in its environment.
 
 ## Plugin order
 

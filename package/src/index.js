@@ -10,6 +10,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { existsSync, statSync } from "node:fs";
 import MagicString from "magic-string";
+import { createFilter } from "vite";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
@@ -42,7 +43,6 @@ const babelVisitor = require("./plugin.cjs"); // the JSX-stamping Babel plugin
 const clientEntry = fileURLToPath(new URL("./client/inspector.js", import.meta.url));
 
 const VIRTUAL = "virtual:spotnote-client";
-const MCP_PORT = Number(process.env.SPOTNOTE_PORT) || 4848; // spotnote-mcp's port (see mcp/)
 const RESOLVED = "\0" + VIRTUAL;
 
 const warnedParse = new Set(); // files we couldn't parse (warn once each)
@@ -287,7 +287,13 @@ function repoRoot(dir) {
 // the spotnote-mcp check would keep the test run from exiting.
 const apply = (_, { command }) => command === "serve" && !process.env.VITEST;
 
-export default function spotnote() {
+// Options:
+//   exclude: files not to stamp (globs from the Vite root, or RegExps), such as
+//            a scene whose <line> is React Three Fiber's, not SVG's
+//   port:    spotnote-mcp's port, instead of SPOTNOTE_PORT or 4848 (see mcp/)
+export default function spotnote({ exclude, port } = {}) {
+  const mcpPort = port ?? (Number(process.env.SPOTNOTE_PORT) || 4848);
+  let stamps = () => true; // whether a file is stamped: everything but `exclude`
   let transformSync;
   let root = process.cwd();
   let top = root; // the repository's root: stamped paths are relative to it
@@ -303,6 +309,7 @@ export default function spotnote() {
       // Agents work from the repository's root, so paths in prompts start
       // there too (apps/web/src/App.jsx in a monorepo, not src/App.jsx).
       top = repoRoot(root);
+      stamps = createFilter(null, exclude, { resolve: root });
       jsx = jsxFramework(config.plugins);
     },
     // Tell pages whether spotnote-mcp is running, so they connect to it only
@@ -310,7 +317,7 @@ export default function spotnote() {
     configureServer(server) {
       let up = false;
       const check = async () => {
-        const now = await fetch(`http://127.0.0.1:${MCP_PORT}/health`)
+        const now = await fetch(`http://127.0.0.1:${mcpPort}/health`)
           .then((r) => r.json())
           .then(
             (j) => j.spotnote === 1,
@@ -369,7 +376,7 @@ export default function spotnote() {
     },
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root, port: MCP_PORT, about: ABOUT })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root, port: mcpPort, about: ABOUT })});`;
       }
     },
 
@@ -381,6 +388,7 @@ export default function spotnote() {
       async handler(code, id) {
         if (id.includes("node_modules")) return;
         const file = id.split("?")[0];
+        if (!stamps(file)) return;
 
         if (/\.(jsx|tsx)$/.test(file)) {
           let res;
