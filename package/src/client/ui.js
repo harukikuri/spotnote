@@ -33,6 +33,11 @@ export function uiRoot() {
   style.textContent = CSS;
   shadow.append(style);
   document.documentElement.append(host);
+  // After a hydration error in the app, React renders the whole document again
+  // and drops the host: put it back, with everything still in it.
+  new MutationObserver(() => {
+    if (!host.isConnected) document.documentElement.append(host);
+  }).observe(document.documentElement, { childList: true });
   return shadow;
 }
 

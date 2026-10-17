@@ -163,6 +163,17 @@ test("a note whose element is gone is marked, and can still be copied or deleted
   await expect(notes.locator(".snl-del")).toHaveCount(0); // nothing left to delete
 });
 
+test("the launcher comes back when the app rebuilds the page, with its notes", async ({ page, app }) => {
+  await openLauncher(page);
+  await writeNote(page, page.locator(app.title).first(), "Kept through a rebuild");
+  // What React does after a hydration error in the app: it renders the whole
+  // document again and drops what it didn't render, Spotnote's host among them.
+  await page.evaluate(() => document.querySelector("spotnote-root").remove());
+
+  await expect(page.locator(".snl-core")).toBeVisible();
+  await expect(page.locator(".sn-pin")).toHaveCount(1);
+});
+
 test("Shift-click puts one note on several elements, each with the same pin", async ({ page, app }) => {
   await openLauncher(page);
   await clickEdge(page.locator(app.title).first());
