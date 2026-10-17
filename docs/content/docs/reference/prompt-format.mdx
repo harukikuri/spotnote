@@ -43,7 +43,7 @@ Under `## Target`, one line per item:
 
 | Line | Content | When |
 | --- | --- | --- |
-| `file` | Path of the source file, relative to the Vite root. | Always |
+| `file` | Path of the source file, relative to your repository's root (see [stamps](/concepts)). | Always |
 | `line`, `column` | Position of the element's opening tag. Both count from 1, as in your editor. | Always |
 | `used at` | The line that uses the element's component here (`<Card>` in `pages/Products.jsx`), when the element is written inside a component. A component used in several places changes everywhere when its own file does, and only here when this line does. | When the element's component is used from another component |
 | `rendered inside` | Instead of `used at`, when that line can't be found (the component is imported under another name): the nearest element of the component around it. Close to the line, not on it. | When `used at` can't be found |

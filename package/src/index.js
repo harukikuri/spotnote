@@ -73,10 +73,10 @@ const getVueParse = perRoot(async (root) => (await appImport(root, "vue/compiler
 // Walk the template AST and stamp every native host element (tagType 0). Element
 // `loc.start.offset` is absolute in the SFC source, so we splice back-to-front
 // (offsets stay valid) and only insert within a line (line numbers preserved).
-function stampVueTemplate(code, file, root, parse, used) {
+function stampVueTemplate(code, file, base, parse, used) {
   const { descriptor, errors } = parse(code, { filename: file });
   if (errors.length || !descriptor.template || !descriptor.template.ast) return;
-  const rel = path.relative(root, file) || file;
+  const rel = path.relative(base, file).replace(/\\/g, "/") || file;
   // The SFC's component name ≈ its filename (Vue/devtools convention).
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
@@ -145,14 +145,14 @@ function walkAst(node, visit) {
   }
 }
 
-function stampSvelte(code, file, root, parse, used) {
+function stampSvelte(code, file, base, parse, used) {
   let ast;
   try {
     ast = parse(code, { filename: file, modern: true });
   } catch {
     return; // let vite-plugin-svelte report the real parse error
   }
-  const rel = path.relative(root, file).replace(/\\/g, "/") || file;
+  const rel = path.relative(base, file).replace(/\\/g, "/") || file;
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
   let touched = false;
@@ -236,14 +236,14 @@ function goElements(code, ast) {
 // have an attribute, and <slot>, which isn't an element in the page.
 const ASTRO_SKIP = new Set(["script", "style", "slot"]);
 
-async function stampAstro(code, file, root, elementsOf, used) {
+async function stampAstro(code, file, base, elementsOf, used) {
   let elements;
   try {
     elements = await elementsOf(code);
   } catch {
     return; // let Astro report the real parse error
   }
-  const rel = path.relative(root, file).replace(/\\/g, "/") || file;
+  const rel = path.relative(base, file).replace(/\\/g, "/") || file;
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
   // A native tag is lowercase; components are capitalized or member names (<Foo.Bar>).
@@ -290,6 +290,7 @@ const apply = (_, { command }) => command === "serve" && !process.env.VITEST;
 export default function spotnote() {
   let transformSync;
   let root = process.cwd();
+  let top = root; // the repository's root: stamped paths are relative to it
   let jsx = null;
   const uses = new Map(); // file -> where components are used in it, for the client plugin below
   const main = {
@@ -298,7 +299,10 @@ export default function spotnote() {
     enforce: "pre", // stamp before the framework compiler processes the JSX
 
     configResolved(config) {
-      root = config.root; // so stamped paths are relative to the app root
+      root = config.root;
+      // Agents work from the repository's root, so paths in prompts start
+      // there too (apps/web/src/App.jsx in a monorepo, not src/App.jsx).
+      top = repoRoot(root);
       jsx = jsxFramework(config.plugins);
     },
     // Tell pages whether spotnote-mcp is running, so they connect to it only
@@ -328,7 +332,6 @@ export default function spotnote() {
       // → 200 { file, editor? } · 200 { file, scheme } (the running editor's CLI
       //   isn't installed: the page opens scheme://file/…) · 404 { error: "missing" }
       //   · 409 { error: "no-editor" }
-      const top = repoRoot(root);
       server.middlewares.use("/__spotnote/open", (req, res) => {
         const q = new URL(req.url, "http://x").searchParams;
         const reply = (status, body) => {
@@ -384,7 +387,7 @@ export default function spotnote() {
           try {
             res = transformSync(code, {
               filename: file,
-              root,
+              root: top, // what stamped paths are relative to (plugin.cjs)
               plugins: [babelVisitor],
               // Parse permissively so common app syntax (decorators, import
               // attributes, `using`) doesn't trip our standalone pass.
@@ -418,7 +421,7 @@ export default function spotnote() {
           if (!parse) return;
           const used = [];
           uses.set(file, used);
-          return stampVueTemplate(code, file, root, parse, used);
+          return stampVueTemplate(code, file, top, parse, used);
         }
 
         // Raw .svelte import only — skip the ?svelte&type= sub-requests.
@@ -427,14 +430,14 @@ export default function spotnote() {
           if (!parse) return;
           const used = [];
           uses.set(file, used);
-          return stampSvelte(code, file, root, parse, used);
+          return stampSvelte(code, file, top, parse, used);
         }
 
         // Raw .astro import only — skip the ?astro&type= sub-requests.
         if (file.endsWith(".astro") && !id.includes("?")) {
           const elementsOf = await getAstroElements(root);
           if (!elementsOf) return;
-          return stampAstro(code, file, root, elementsOf, []);
+          return stampAstro(code, file, top, elementsOf, []);
         }
       },
     },
@@ -451,7 +454,7 @@ export default function spotnote() {
     enforce: "post",
     transform(code, id, options) {
       if (options?.ssr || id.includes("node_modules") || !/\.(jsx|tsx|vue|svelte)$/.test(id)) return;
-      const rel = path.relative(root, id).replace(/\\/g, "/");
+      const rel = path.relative(top, id).replace(/\\/g, "/");
       const used = uses.has(id) ? usesScript(rel, uses.get(id)) : "";
       return { code: `${code}\nimport ${JSON.stringify(VIRTUAL)};${used}`, map: null };
     },

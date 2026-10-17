@@ -6,7 +6,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // What the tests pick, per framework. file: where `title` is written, relative
-// to the app's root. repeated: one element rendered several times from one
+// to the Vite root (below, it becomes the path from the repository's root). repeated: one element rendered several times from one
 // line, and how many.
 const REACT = { file: "pages/Home.jsx", title: ".hero h1", repeated: ".card h3", count: 6 };
 const VUE = { file: "pages/Home.vue", title: ".hero h1", repeated: ".card h3", count: 6 };
@@ -53,7 +53,12 @@ const ALL = [
   }, // Vite 7
   { name: "solidstart1", dir: "meta/solidstart1", ...SOLID, file: "src/demo/App.jsx", dev: "vinxi dev" }, // vinxi, Vite 6
   { name: "solidstart2", dir: "meta/solidstart2", ...SOLID, file: "src/demo/App.jsx" }, // Vite 8
-].map((app, i) => ({ ...app, port: 5201 + i }));
+].map((app, i) => ({
+  ...app,
+  // As prompts give it: from the repository's root.
+  file: ["examples", app.dir, app.srcRoot, app.file].filter(Boolean).join("/"),
+  port: 5201 + i,
+}));
 // With an agent: one app is enough, the client is the same in every framework.
 const AGENT = { ...ALL.find((a) => a.name === "react19"), name: "agent", port: 5230, mcpPort: 4998 };
 

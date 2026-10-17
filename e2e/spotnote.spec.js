@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, basename, clickEdge, openLauncher, shiftClick, writeNote } from "./fixtures.js";
 
-const examples = path.resolve(fileURLToPath(import.meta.url), "../../examples");
+const repo = path.resolve(fileURLToPath(import.meta.url), "../..");
 
 const clipboard = (page) => page.evaluate(() => navigator.clipboard.readText());
 
@@ -181,7 +181,7 @@ test("an element of a shared component names the line that uses it here", async 
   await writeNote(page, page.locator(`${app.title} > span`).first(), "Only this bar");
   const used = (await clipboard(page)).match(/^- used at: (.+):(\d+) \(<Bar> in \w+\)$/m);
   expect(used?.[1]).toBe(app.file);
-  const source = readFileSync(path.join(examples, app.dir, app.srcRoot ?? "", app.file), "utf8");
+  const source = readFileSync(path.join(repo, app.file), "utf8");
   expect(source.split("\n")[used[2] - 1]).toContain("<Bar");
 });
 
@@ -431,7 +431,7 @@ test("a press on the page closes the open menu, and does nothing else", async ({
 
 test("saving the file keeps the open panel on its element", async ({ page, app }) => {
   test.skip(!!app.astro, "Astro reloads the page when an .astro file is saved, like any server-rendered page");
-  const file = path.join(examples, app.dir, app.srcRoot ?? "", app.file);
+  const file = path.join(repo, app.file);
   const source = readFileSync(file, "utf8");
   const logs = [];
   page.on("console", (m) => logs.push(m.text()));

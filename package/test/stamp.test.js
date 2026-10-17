@@ -7,15 +7,24 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import spotnote from "../src/index.js";
 
-const examples = path.resolve(fileURLToPath(import.meta.url), "../../../examples");
+const repo = path.resolve(fileURLToPath(import.meta.url), "../../..");
+const examples = path.join(repo, "examples");
 const root = path.join(examples, "react/react19");
 
-async function stamp(rel, code, appRoot = root) {
+// Stamped paths start at the repository's root (examples/react/react19/src/…):
+// the tests below leave out the app's part, which the first one checks.
+async function stamp(rel, code, appRoot = root, keepApp = false) {
   const [plugin] = spotnote();
   plugin.configResolved({ root: appRoot, plugins: [] });
   await plugin.buildStart();
-  return (await plugin.transform.handler(code, path.join(appRoot, rel)))?.code;
+  const out = (await plugin.transform.handler(code, path.join(appRoot, rel)))?.code;
+  return keepApp ? out : out?.replaceAll(`${path.relative(repo, appRoot)}/`, "");
 }
+
+test("paths start at the repository's root, where agents work", async () => {
+  const out = await stamp("src/Card.jsx", "const Card = () => <div />;\n", root, true);
+  assert.match(out, /<div data-spotnote="examples\/react\/react19\/src\/Card\.jsx:1:20"/);
+});
 
 // Where components are used in a file, as the browser's copy of it hands them
 // to the page (after the framework compiler).
@@ -26,6 +35,7 @@ async function uses(rel, code, appRoot = root) {
   const id = path.join(appRoot, rel);
   await main.transform.handler(code, id);
   const out = client.transform("", id, {})?.code ?? "";
+  assert.match(out, new RegExp(`\\["${path.relative(repo, id)}"\\]`)); // keyed by its path from the repository's root
   return JSON.parse(out.match(/\] = (.*);$/m)?.[1] ?? "null");
 }
 

@@ -7,7 +7,7 @@ description: How Spotnote stamps source locations at dev time and reads them bac
 
 <Diagram name="stamps" width={844} height={476} alt="Line 12 of components/ProductCard.jsx goes through vite dev, where Spotnote stamps it before your framework compiles it, and reaches the browser with the stamp components/ProductCard.jsx:12:5." />
 
-A **stamp** is a `data-spotnote` attribute holding the element's source location, relative to your Vite root:
+A **stamp** is a `data-spotnote` attribute holding the element's source location, relative to your repository's root:
 
 ```html
 <button data-spotnote="components/ProductCard.jsx:12:5" data-spotnote-name="ProductCard">
@@ -15,7 +15,7 @@ A **stamp** is a `data-spotnote` attribute holding the element's source location
 
 The location is `path:line:column`:
 
-- `path` is relative to the Vite root, with `/` separators.
+- `path` is relative to the root of the Git repository around your Vite root, with `/` separators: where your agent works from. In a monorepo, it starts with your app's folder (`apps/web/src/App.jsx`). Outside a Git repository, it's relative to the Vite root.
 - `line` and `column` both count from 1, as in your editor.
 - The position is the start of the opening tag (`<`).
 
