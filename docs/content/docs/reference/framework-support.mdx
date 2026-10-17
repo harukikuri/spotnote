@@ -119,7 +119,7 @@ Astro is [tested end to end](https://github.com/harukikuri/spotnote/tree/main/e2
 ### JSX (React, Solid, …)
 
 - Only `.jsx` and `.tsx` files are stamped. JSX written in `.js` or `.ts` files isn't.
-- HTML and SVG tags (`<div>`, `<svg>`) and custom elements (`<my-el>`) are stamped. Capitalized ones (`<Card>`) are components and aren't, and neither are other lowercase tags, such as React Three Fiber's `<mesh>`: they aren't DOM elements. Those that share a DOM tag's name (its `<line>`) are stamped: leave their files out with [`exclude`](/reference/plugin-api#exclude).
+- HTML and SVG tags (`<div>`, `<svg>`) and custom elements (`<my-el>`) are stamped. Capitalized ones (`<Card>`) are components and aren't, and neither are other lowercase tags, such as React Three Fiber's `<mesh>`: they aren't DOM elements. Those that share a DOM tag's name (its `<line>`) are stamped.
 - Member and namespaced tags (`<motion.div>`, `<svg:rect>`) aren't stamped.
 
 ### Vue

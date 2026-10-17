@@ -24,8 +24,6 @@ export default defineConfig({
 });
 ```
 
-Every option is optional: most apps need none.
-
 ## Options
 
 ### `exclude`
@@ -37,8 +35,6 @@ spotnote({ exclude: ['src/scene/**', /\.stories\.tsx$/] })
 ```
 
 Their elements can't be picked directly: a click picks the nearest stamped element around them. Files in `node_modules` are never stamped.
-
-Use it for a file whose lowercase JSX isn't the DOM but has a DOM tag's name: React Three Fiber's `<line>`, `<path>` or `<audio>` are three.js objects, and a stamp breaks them. Its other tags, such as `<mesh>`, aren't stamped anyway (see [Framework Support](/reference/framework-support)).
 
 ### `port`
 
