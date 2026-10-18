@@ -21,6 +21,8 @@
 
 https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
 
+_With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
+
 
 
 ## Features
