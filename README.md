@@ -16,13 +16,6 @@
 
 **[Spotnote](https://spotnote-weld.vercel.app)** is a Vite plugin for UI feedback to coding agents. Click any element in your running app, write what should change, and hand your agent its exact file, line and column.
 
-<!-- Demo: drop docs/public/demo.mp4 into this file in GitHub's editor, and replace this comment with the URL it gives. -->
-
-
-https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
-
-_With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
-
 
 
 ## Features
@@ -95,7 +88,13 @@ Skip the copy and paste: your agent picks up notes as you write them.
 claude mcp add --scope user spotnote -- npx -y spotnote-mcp
 ```
 
-Then ask your agent: `Watch my Spotnote notes.` Codex, Cursor and Gemini CLI: see the [MCP guide](https://spotnote-weld.vercel.app/guides/mcp).
+Then ask your agent: `Watch my Spotnote notes.` Codex, Cursor and Gemini CLI.
+
+<br />
+
+https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
+
+_With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
 
 ## Docs
 
