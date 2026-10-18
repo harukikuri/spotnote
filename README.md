@@ -29,7 +29,6 @@ _With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a butt
 
 - **No more guessing.** The prompt names the file, line and column where the element is written, so your agent doesn't search for it.
 - **Any Vite framework.** React, Vue, Svelte, Solid, Astro, and so on.
-- **Stay in the browser.** With MCP, your agent picks up your notes automatically.
 - **Zero imports.** Nothing to import in your app code.
 - **Production stays clean.** Spotnote runs only in `vite dev`.
 - **Everything is local.** No account, no cloud.
