@@ -57,6 +57,37 @@ export default defineConfig({
 
 Start your dev server and click the launcher in the bottom-left corner. Click an element, type what should change and press `Enter`. The prompt is on your clipboard: paste it into Claude Code, Cursor, Codex or any chat.
 
+## Output
+
+The prompt Spotnote copies for a note, ready to paste into your agent:
+
+````markdown
+## Request
+Make the padding bigger
+
+## Target
+- file: components/ProductCard.jsx
+- line: 7, column: 5
+- used at: pages/Products.jsx:68 (<ProductCard> in Products)
+- element: <div class="product">
+- text: "shoes Aero Runner $120"
+- instance: 1 of 12 rendered from this line (by DOM order) — target the one matching the text above
+
+## Source path (outer → inner)
+App > Products > ProductCard
+
+## Current computed styles
+  padding: 16px
+  margin: 0px
+  color: rgb(26, 26, 26)
+  background: rgba(0, 0, 0, 0)
+  font-size: 16px
+  font-weight: 400
+  border-radius: 12px
+````
+
+Every field is explained in [Prompt Format](https://spotnote-weld.vercel.app/reference/prompt-format).
+
 ## MCP
 
 Skip the copy and paste: your agent picks up notes as you write them.

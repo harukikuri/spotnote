@@ -10,23 +10,24 @@ description: Every field of the prompt Spotnote copies, and when it appears.
 Make the padding bigger
 
 ## Target
-- file: pages/Products.jsx
-- line: 47, column: 11
-- element: <button class="chip chip-active">
-- text: "all"
-- instance: 1 of 4 rendered from this line (by DOM order) — target the one matching the text above
+- file: components/ProductCard.jsx
+- line: 7, column: 5
+- used at: pages/Products.jsx:68 (<ProductCard> in Products)
+- element: <div class="product">
+- text: "shoes Aero Runner $120"
+- instance: 1 of 12 rendered from this line (by DOM order) — target the one matching the text above
 
 ## Source path (outer → inner)
-App > Products
+App > Products > ProductCard
 
 ## Current computed styles
-  padding: 6px 12px
+  padding: 16px
   margin: 0px
-  color: rgb(255, 255, 255)
-  background: rgb(17, 17, 17)
-  font-size: 13px
+  color: rgb(26, 26, 26)
+  background: rgba(0, 0, 0, 0)
+  font-size: 16px
   font-weight: 400
-  border-radius: 999px
+  border-radius: 12px
 ````
 
 A note on [several elements](/guides/picking-elements#pick-several-elements) repeats everything after the request for each one, numbered: `## Target 1 of 2`, then its source path and styles, then `## Target 2 of 2`, and so on.

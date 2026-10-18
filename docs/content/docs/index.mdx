@@ -18,6 +18,37 @@ description: Click any element in your running app and hand your agent its exact
 - **Production stays clean.** Spotnote runs only in `vite dev`.
 - **Everything is local.** No account, no cloud.
 
+## Output
+
+The prompt Spotnote copies for a note, ready to paste into your agent:
+
+````markdown
+## Request
+Make the padding bigger
+
+## Target
+- file: components/ProductCard.jsx
+- line: 7, column: 5
+- used at: pages/Products.jsx:68 (<ProductCard> in Products)
+- element: <div class="product">
+- text: "shoes Aero Runner $120"
+- instance: 1 of 12 rendered from this line (by DOM order) — target the one matching the text above
+
+## Source path (outer → inner)
+App > Products > ProductCard
+
+## Current computed styles
+  padding: 16px
+  margin: 0px
+  color: rgb(26, 26, 26)
+  background: rgba(0, 0, 0, 0)
+  font-size: 16px
+  font-weight: 400
+  border-radius: 12px
+````
+
+Every field is explained in [Prompt Format](/reference/prompt-format).
+
 ## Works with
 
 React, Solid, Vue, Svelte and Astro, on Vite 5 or later. Also inside SvelteKit, Nuxt, React Router and SolidStart. See [Framework support](/reference/framework-support).
