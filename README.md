@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
 
 ## Features
 
-- **The exact spot.** The prompt names the file, line and column where the element is written.
+- **No more guessing.** The prompt names the file, line and column where the element is written, so your agent doesn't search for it.
 - **Any Vite framework.** React, Vue, Svelte, Solid, Astro, and so on.
 - **Stay in the browser.** With MCP, your agent picks up your notes automatically.
 - **Zero imports.** Nothing to import in your app code.
