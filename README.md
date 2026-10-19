@@ -84,7 +84,7 @@ App > Products > ProductCard
 
 Every field is explained in [Prompt Format](https://spotnote-weld.vercel.app/reference/prompt-format).
 
-## MCP
+## MCP (local agent)
 
 Skip the copy and paste: your agent picks up notes as you write them.
 
