@@ -1,8 +1,23 @@
 {
+  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "spotnote",
   "version": "0.3.2",
   "type": "module",
   "description": "Click a UI element in your Vite dev server, write a note, and copy an AI-agent-ready prompt with the exact source location.",
+  "keywords": [
+    "vite-plugin",
+    "vite",
+    "ai",
+    "coding-agent",
+    "mcp",
+    "claude-code",
+    "react",
+    "vue",
+    "svelte",
+    "solid",
+    "astro",
+    "devtools"
+  ],
   "license": "MIT",
   "homepage": "https://spotnote-weld.vercel.app",
   "repository": {
@@ -30,6 +45,22 @@
   },
   "peerDependencies": {
     "vite": ">=5"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "vite": {
+      "type": "compatible",
+      "versions": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",
+      "note": "Runs on the dev server (and in builds with the build option); tested end to end on Vite 5 to 8"
+    },
+    "rollup": {
+      "type": "incompatible",
+      "reason": "Needs Vite's dev server and its transform pipeline."
+    },
+    "rolldown": {
+      "type": "incompatible",
+      "reason": "Needs Vite's dev server and its transform pipeline."
+    }
   },
   "dependencies": {
     "@babel/core": "^7.26.0",
