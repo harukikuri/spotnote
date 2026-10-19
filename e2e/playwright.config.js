@@ -19,7 +19,7 @@ const SVELTE = { file: "App.svelte", title: ".hero h1", repeated: ".card h3", co
 const ALL = [
   { name: "react17", dir: "react/react17", ...REACT }, // Vite 5
   { name: "react18", dir: "react/react18", ...REACT }, // Vite 6
-  { name: "react19", dir: "react/react19", ...REACT }, // Vite 8
+  { name: "react19", dir: "react/react19", ...REACT, webhookPort: 4996 }, // Vite 8; sends notes to a webhook
   { name: "vue3_2", dir: "vue/vue3_2", ...VUE }, // Vite 5
   { name: "vue3_4", dir: "vue/vue3_4", ...VUE }, // Vite 7
   { name: "vue3_5", dir: "vue/vue3_5", ...VUE }, // Vite 8
@@ -60,7 +60,13 @@ const ALL = [
   port: 5201 + i,
 }));
 // With an agent: one app is enough, the client is the same in every framework.
-const AGENT = { ...ALL.find((a) => a.name === "react19"), name: "agent", port: 5230, mcpPort: 4998 };
+const AGENT = {
+  ...ALL.find((a) => a.name === "react19"),
+  name: "agent",
+  port: 5230,
+  mcpPort: 4998,
+  webhookPort: undefined,
+};
 // A staging build (the `build` option), served by `vite preview`: again one app.
 const STAGING = { ...ALL.find((a) => a.name === "react19"), name: "staging", port: 5231, webhookPort: 4997 };
 
@@ -121,7 +127,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       // SPOTNOTE_PORT: one nothing listens on, so a spotnote-mcp running on this
       // machine can't connect and turn copying off.
-      env: { SPOTNOTE_PORT: "4999" },
+      env: {
+        SPOTNOTE_PORT: "4999",
+        // The app's `webhook` (its vite.config.js), where spotnote.spec.js listens.
+        ...(app.webhookPort && { SPOTNOTE_WEBHOOK: `http://127.0.0.1:${app.webhookPort}/notes` }),
+      },
     })),
     ...(withAgent
       ? [

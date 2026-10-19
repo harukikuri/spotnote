@@ -2,8 +2,7 @@
 // instead of the dev server: the picker is there, prompts name the commit, and
 // notes go to the webhook.
 import { execSync } from "node:child_process";
-import http from "node:http";
-import { test, expect, clickEdge, openLauncher } from "./fixtures.js";
+import { test, expect, clickEdge, openLauncher, webhookReceiver } from "./fixtures.js";
 
 const clipboard = (page) => page.evaluate(() => navigator.clipboard.readText());
 
@@ -22,16 +21,7 @@ test("a note in a staging build copies a prompt with the commit it's built from"
 });
 
 test("each note sent goes to the webhook: added, then rewritten", async ({ page, app }) => {
-  const got = [];
-  const server = http.createServer((req, res) => {
-    let body = "";
-    req.on("data", (c) => (body += c));
-    req.on("end", () => {
-      got.push({ method: req.method, url: req.url, type: req.headers["content-type"], body: JSON.parse(body) });
-      res.end();
-    });
-  });
-  await new Promise((r) => server.listen(app.webhookPort, "127.0.0.1", r));
+  const { got, close } = await webhookReceiver(app.webhookPort);
   try {
     await page.goto("/");
     await openLauncher(page);
@@ -57,6 +47,6 @@ test("each note sent goes to the webhook: added, then rewritten", async ({ page,
       note: { key: added.body.note.key, text: "Make the title smaller" },
     });
   } finally {
-    server.close();
+    close();
   }
 });

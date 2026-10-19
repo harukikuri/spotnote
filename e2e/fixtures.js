@@ -1,6 +1,7 @@
 // What every spec shares: the `test` with its fixtures, and the steps tests
 // take in the page. Spotnote's UI lives in an open shadow root, which
 // Playwright's CSS locators reach into.
+import http from "node:http";
 import { test as base, expect } from "@playwright/test";
 import { coverage } from "./coverage.js";
 
@@ -58,4 +59,20 @@ export async function writeNote(page, target, text) {
   await panel.locator("[data-spotnote-input]").fill(text);
   await page.keyboard.press("Enter");
   await expect(panel).toHaveCount(0);
+}
+
+// A webhook to send notes to (the plugin's `webhook` option): what it got, each
+// { method, url, type, body } with the body parsed, and a way to stop it.
+export async function webhookReceiver(port) {
+  const got = [];
+  const server = http.createServer((req, res) => {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      got.push({ method: req.method, url: req.url, type: req.headers["content-type"], body: JSON.parse(body) });
+      res.end();
+    });
+  });
+  await new Promise((r) => server.listen(port, "127.0.0.1", r));
+  return { got, close: () => server.close() };
 }

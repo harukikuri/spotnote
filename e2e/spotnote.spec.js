@@ -4,7 +4,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test, expect, basename, clickEdge, openLauncher, shiftClick, writeNote } from "./fixtures.js";
+import { test, expect, basename, clickEdge, openLauncher, shiftClick, webhookReceiver, writeNote } from "./fixtures.js";
 
 const repo = path.resolve(fileURLToPath(import.meta.url), "../..");
 
@@ -43,6 +43,20 @@ test("after a note is copied, the launcher shows its ✓ alone, then its × agai
   expect(await opacity(".snl-check")).toBe("1");
   await expect(core).not.toHaveClass(/snl-done/); // after 1.2 s
   await expect.poll(() => opacity(".snl-plus")).toBe("1");
+});
+
+test("on the dev server, a note sent goes to the webhook, with no commit", async ({ page, app }) => {
+  test.skip(!app.webhookPort, "only the apps with a webhook set");
+  const { got, close } = await webhookReceiver(app.webhookPort);
+  try {
+    await openLauncher(page);
+    await writeNote(page, page.locator(app.title).first(), "Make the title bigger");
+    await expect.poll(() => got.length).toBe(1);
+    expect(got[0].body).toMatchObject({ event: "note.add", note: { text: "Make the title bigger", commit: null } });
+    expect(got[0].body.note.targets[0]).toMatchObject({ file: app.file, instance: 1 });
+  } finally {
+    close();
+  }
 });
 
 test("a repeated element is named by its instance", async ({ page, app }) => {
