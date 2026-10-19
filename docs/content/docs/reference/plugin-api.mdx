@@ -11,6 +11,7 @@ import type { FilterPattern, Plugin } from 'vite';
 export default function spotnote(options?: {
   exclude?: FilterPattern;
   port?: number;
+  build?: string[];
 }): Plugin[];
 ```
 
@@ -45,6 +46,18 @@ spotnote({ port: 4900 })
 ```
 
 Your agent starts spotnote-mcp, so give it the same port there: `SPOTNOTE_PORT=4900` in its environment.
+
+### `build`
+
+[Modes](https://vite.dev/guide/env-and-mode#modes) to also run in `vite build` for, such as a staging or preview deploy. Empty by default: builds don't include Spotnote.
+
+```ts title="vite.config.ts"
+spotnote({ build: ['staging', 'preview'] })
+```
+
+`vite build --mode staging` then includes it, and `vite build` (mode `production`) still doesn't. Never list your production mode.
+
+Prompts then name the commit the build is made from. See [Staging Builds](/guides/staging).
 
 ## Plugin order
 

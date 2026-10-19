@@ -61,10 +61,13 @@ const ALL = [
 }));
 // With an agent: one app is enough, the client is the same in every framework.
 const AGENT = { ...ALL.find((a) => a.name === "react19"), name: "agent", port: 5230, mcpPort: 4998 };
+// A staging build (the `build` option), served by `vite preview`: again one app.
+const STAGING = { ...ALL.find((a) => a.name === "react19"), name: "staging", port: 5231 };
 
 const only = process.env.E2E_APPS?.split(",");
 const APPS = only ? ALL.filter((a) => only.includes(a.name)) : ALL;
 const withAgent = !only || only.includes("agent");
+const withStaging = !only || only.includes("staging");
 
 // --ignore-lock: in the foreground, even where Astro would detect a coding agent
 // and start a background server that Playwright couldn't stop.
@@ -89,7 +92,7 @@ export default defineConfig({
   projects: [
     ...APPS.map((app) => ({
       name: app.name,
-      testIgnore: "agent.spec.js",
+      testIgnore: ["agent.spec.js", "build.spec.js"],
       use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${app.port}`, app },
     })),
     ...(withAgent
@@ -98,6 +101,15 @@ export default defineConfig({
             name: "agent",
             testMatch: "agent.spec.js",
             use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${AGENT.port}`, app: AGENT },
+          },
+        ]
+      : []),
+    ...(withStaging
+      ? [
+          {
+            name: "staging",
+            testMatch: "build.spec.js",
+            use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${STAGING.port}`, app: STAGING },
           },
         ]
       : []),
@@ -120,6 +132,17 @@ export default defineConfig({
             // The spotnote-mcp that agent.spec.js starts; and "vim" as the editor, so
             // opening a file says "no editor" instead of launching one.
             env: { SPOTNOTE_PORT: String(AGENT.mcpPort), LAUNCH_EDITOR: "vim" },
+          },
+        ]
+      : []),
+    ...(withStaging
+      ? [
+          {
+            command:
+              "pnpm --filter spotnote-examples-react19 exec sh -c " +
+              `"vite build --mode staging && vite preview --port ${STAGING.port} --strictPort"`,
+            url: `http://localhost:${STAGING.port}`,
+            reuseExistingServer: !process.env.CI,
           },
         ]
       : []),

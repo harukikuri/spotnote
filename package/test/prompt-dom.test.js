@@ -7,7 +7,7 @@ import { Window } from "happy-dom";
 const window = new Window();
 globalThis.document = window.document;
 globalThis.getComputedStyle = (el) => window.getComputedStyle(el);
-const { occInfo, resolveRef, buildPrompt } = await import("../src/client/prompt.js");
+const { occInfo, resolveRef, buildPrompt, setCommit } = await import("../src/client/prompt.js");
 
 beforeEach(() => {
   document.body.innerHTML = `
@@ -91,4 +91,17 @@ test("buildPrompt names the line that uses a component here, from the uses the p
 
 test("buildPrompt without the line that uses it: the nearest other owner's element", () => {
   assert.match(buildPrompt(pick(), "x"), /\n- rendered inside: pages\/Products\.jsx:10:7 \(Products\)\n/);
+});
+
+test("buildPrompt names the commit a deployed build is made from", () => {
+  assert.doesNotMatch(buildPrompt(pick(), "x"), /commit/);
+  setCommit("abc1234");
+  try {
+    assert.match(
+      buildPrompt(pick(), "x"),
+      /- line: 4, column: 9\n- commit: abc1234 \(.*git show abc1234:components\/Card\.jsx\)\n/,
+    );
+  } finally {
+    setCommit(null);
+  }
 });

@@ -111,6 +111,22 @@ test("runs on the dev server only: not in builds, nor under Vitest", () => {
   }
 });
 
+test("build: also runs in builds in those modes, and gives the page the commit they're made from", () => {
+  const [main, client] = spotnote({ build: ["staging", "preview"] });
+  assert.equal(main.apply({}, { command: "build", mode: "staging" }), true);
+  assert.equal(client.apply({}, { command: "build", mode: "preview" }), true);
+  assert.equal(main.apply({}, { command: "build", mode: "production" }), false);
+  assert.equal(main.apply({}, { command: "serve", mode: "development" }), true);
+
+  const load = (command) => {
+    const [p] = spotnote({ build: ["staging"] });
+    p.configResolved({ root, plugins: [], command });
+    return p.load(p.resolveId("virtual:spotnote-client"));
+  };
+  assert.match(load("build"), /"root":"","port":\d+,.*"commit":"[0-9a-f]{7}"/); // no path from the machine that built it
+  assert.match(load("serve"), /"commit":null/); // the dev server serves your checkout itself
+});
+
 test("pages hear whether spotnote-mcp is up, and can ask", async () => {
   for (let i = 0; i < 50 && !server.sent.length; i++) await new Promise((r) => setTimeout(r, 10));
   assert.deepEqual(server.sent, [["spotnote:mcp", { up: true }]]);

@@ -1,5 +1,6 @@
 // Spotnote — a self-contained Vite plugin. Add it once and it:
-//   1. stamps `data-spotnote="file:line:col"` on host JSX elements (dev only),
+//   1. stamps `data-spotnote="file:line:col"` on host JSX elements (dev only,
+//      and builds in a `build` mode),
 //   2. auto-injects the browser picker client into the page.
 // No manual Babel wiring, no client import in your entry.
 //
@@ -9,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { existsSync, statSync } from "node:fs";
+import { execSync } from "node:child_process";
 import MagicString from "magic-string";
 import { createFilter } from "vite";
 
@@ -294,17 +296,38 @@ function repoRoot(dir) {
   }
 }
 
-// Dev only: production builds are untouched. Not under Vitest either, which
-// runs a dev server too: stamps would change tests' DOM and snapshots, and
-// the spotnote-mcp check would keep the test run from exiting.
-const apply = (_, { command }) => command === "serve" && !process.env.VITEST;
+// The commit a build is made from, for prompts: the location is from that
+// commit, and the agent's checkout may have moved on. From Git, or from the
+// CI's environment when it builds without the repository's history.
+function headCommit(dir) {
+  try {
+    return execSync("git rev-parse HEAD", { cwd: dir, stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim()
+      .slice(0, 7);
+  } catch {
+    const env = process.env;
+    const sha = env.GITHUB_SHA || env.VERCEL_GIT_COMMIT_SHA || env.CF_PAGES_COMMIT_SHA || env.COMMIT_REF;
+    return sha ? sha.slice(0, 7) : null;
+  }
+}
 
 // Options:
 //   exclude: files not to stamp (globs from the Vite root, or RegExps), such as
 //            a scene whose <line> is React Three Fiber's, not SVG's
 //   port:    spotnote-mcp's port, instead of SPOTNOTE_PORT or 4848 (see mcp/)
-export default function spotnote({ exclude, port } = {}) {
+//   build:   modes to also run in `vite build` for (["staging"]: `vite build
+//            --mode staging`), for a staging or preview deploy
+export default function spotnote({ exclude, port, build = [] } = {}) {
+  // Dev only, but for builds in a `build` mode: production builds are
+  // untouched. Not under Vitest either, which runs a dev server too: stamps
+  // would change tests' DOM and snapshots, and the spotnote-mcp check would
+  // keep the test run from exiting.
+  const apply = (_, { command, mode }) =>
+    (command === "serve" || (command === "build" && build.includes(mode))) && !process.env.VITEST;
   const mcpPort = port ?? (Number(process.env.SPOTNOTE_PORT) || 4848);
+  let building = false;
+  let commit = null; // in a build, the commit it's made from
   let stamps = () => true; // whether a file is stamped: everything but `exclude`
   let transformSync;
   let root = process.cwd();
@@ -323,6 +346,8 @@ export default function spotnote({ exclude, port } = {}) {
       top = repoRoot(root);
       stamps = createFilter(null, exclude, { resolve: root });
       jsx = jsxFramework(config.plugins);
+      building = config.command === "build";
+      if (building) commit = headCommit(root);
     },
     // Tell pages whether spotnote-mcp is running, so they connect to it only
     // then: a page retrying a closed port would fill its console with errors.
@@ -386,9 +411,11 @@ export default function spotnote({ exclude, port } = {}) {
     resolveId(id) {
       if (id === VIRTUAL) return RESOLVED;
     },
+    // In a build, no root: it only names the app to spotnote-mcp, which a
+    // deployed page doesn't reach, and it's a path on the machine that built it.
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root, port: mcpPort, about: ABOUT })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit })});`;
       }
     },
 

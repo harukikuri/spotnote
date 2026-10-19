@@ -105,7 +105,7 @@ SvelteKit, React Router and SolidStart have a `vite.config` of their own: add it
 **Done.** You don't import anything in your app code.
 
 <Callout type="info" title="Production builds and tests are untouched">
-  The plugin only runs during `vite dev`. `vite build` doesn't include it, and neither do Vitest runs, so your tests' DOM and snapshots stay the same.
+  The plugin only runs during `vite dev`. `vite build` doesn't include it (unless you turn on a [staging build](/guides/staging)), and neither do Vitest runs, so your tests' DOM and snapshots stay the same.
 </Callout>
 
 ## Next

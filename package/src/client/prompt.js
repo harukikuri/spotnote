@@ -72,6 +72,13 @@ function usedAt(el) {
   return inside;
 }
 
+// In a build (a staging or preview deploy), the commit it's made from: the
+// stamps are from then, and the agent's checkout may have moved on.
+let commit = null;
+export function setCommit(c) {
+  commit = c;
+}
+
 // `target`: one element, or several for a note on more than one (each gets its
 // own "## Target i of n" section, in the order they were picked). `raw` is the
 // node actually clicked on the first.
@@ -118,6 +125,9 @@ function targetSection(el, heading, raw) {
     heading,
     `- file: ${l.file}`,
     `- line: ${l.line}, column: ${l.column}`,
+    commit
+      ? `- commit: ${commit} (the deployed build: if the file has changed since, compare with git show ${commit}:${l.file})`
+      : null,
     usedAt(el),
     `- element: <${tag}${id}${cls}>`,
     text ? `- text: "${text}"` : null,

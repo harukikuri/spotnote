@@ -13,7 +13,7 @@ import { connectRemote } from "./remote.js";
 import { renderMarkdown } from "./markdown.js";
 import { createLayer, closeTopLayer } from "./layers.js";
 import { confirmOver } from "./confirm.js";
-import { parseLoc, occInfo, refKey, resolveRef, buildPrompt, savedPrompt } from "./prompt.js";
+import { parseLoc, occInfo, refKey, resolveRef, buildPrompt, savedPrompt, setCommit } from "./prompt.js";
 import { agentName, agentLabel, thinkingMsg } from "./conversation.js";
 import { openFile, hideTip } from "./open-file.js";
 import { enablePanelDrag, applyPanelSize, enablePanelResize, nudgePanel } from "./panel-frame.js";
@@ -157,10 +157,11 @@ const controller = {
   },
 };
 
-export function initInspector({ jsx = null, root = "", port = 4848, about = null } = {}) {
+export function initInspector({ jsx = null, root = "", port = 4848, about = null, commit = null } = {}) {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   jsxFramework = jsx;
+  setCommit(commit);
   controller.about = about;
   applyLook(getSettings());
   onSettings(applyLook);

@@ -46,6 +46,7 @@ jobs:
           - react-router8
           - solidstart1
           - solidstart2
+          - staging # React 19 as a staging build (the `build` option)
     steps:
       - uses: actions/checkout@v4
 

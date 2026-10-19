@@ -7,5 +7,6 @@ export default defineConfig({
   // serve the picker client from package/src.
   server: { fs: { allow: ["../../.."] } },
   // spotnote's stamp runs as an order:"pre" transform, so array order doesn't matter.
-  plugins: [spotnote(), react()],
+  // `vite build --mode staging` keeps it in the build (e2e/build.spec.js).
+  plugins: [spotnote({ build: ["staging"] }), react()],
 });
