@@ -114,6 +114,20 @@ https://github.com/user-attachments/assets/c8957083-ac69-4adc-ada5-8db10f38c976
 
 _On a [staging build](https://spotnote-weld.vercel.app/guides/staging): the designer writes a note and pastes it to the team chat, and **the developer's agent goes straight to the file and line**._
 
+## Webhook
+
+Send each note to a URL of yours as it's written: to post it to your team's chat or issue tracker, without the copy and paste.
+
+```ts
+spotnote({ build: ["staging"], webhook: "https://feedback.example.com/spotnote" })
+```
+
+Each note arrives as JSON, with its text, page, file and line, commit, and prompt. See [Webhook](https://spotnote-weld.vercel.app/guides/webhook).
+
+<!-- The demo video goes here: drop docs/public/webhook-demo.mp4 into this file in GitHub's editor. -->
+
+_On a staging build with a webhook: press Enter, and **the note lands in your team's chat**, with its file and line._
+
 ## Docs
 
 Full documentation is [here](https://spotnote-weld.vercel.app)

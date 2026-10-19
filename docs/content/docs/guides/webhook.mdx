@@ -5,6 +5,8 @@ description: Send each note to a URL of yours as it's written, to post it to you
 
 Spotnote can send each note to a URL of yours as it's sent (`Enter`, a new note or a rewritten one): on the dev server, and in [staging builds](/guides/staging), where it saves reviewers the copy and paste.
 
+<Video src="/webhook-demo.mp4" label="Spotnote demo with a webhook: a note sent on the staging site appears in the team chat by itself">On a staging build with a webhook: press `Enter`, and **the note lands in your team's chat**, with its file and line.</Video>
+
 ## Set up
 
 ```ts title="vite.config.ts"
@@ -24,7 +26,8 @@ The page sends a `POST` whose body is JSON. It's sent as `text/plain`, so your e
     "text": "Make the padding bigger",
     "page": "https://stg.acme-shop.com/",
     "targets": [{ "file": "src/components/ProductCard.jsx", "line": 7, "column": 5, "instance": 1 }],
-    "prompt": "## Request\nMake the padding bigger\n\n## Target\n…"
+    "commit": "3f38973",
+    "prompt": "## Request\nMake the padding bigger\n\n## Target\n- file: src/components/ProductCard.jsx\n- line: 7, column: 5\n- commit: 3f38973 (…)\n…"
   }
 }
 ```
@@ -35,6 +38,7 @@ The page sends a `POST` whose body is JSON. It's sent as `text/plain`, so your e
 | `note.key` | The note's id: the same in both events. |
 | `note.page` | The page it was written on. |
 | `note.targets` | The elements it's on: file, line, column, and which of the elements rendered from that line. |
+| `note.commit` | In a [build](/guides/staging), the commit it's made from: to link to the line as it was. `null` on the dev server. |
 | `note.prompt` | The prompt Spotnote copies for it. See [Prompt Format](/reference/prompt-format). |
 
 ## Post to Slack, GitHub and the like
@@ -52,7 +56,7 @@ http.createServer((req, res) => {
     await fetch(process.env.SLACK_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: '```\n' + note.prompt + '\n```' }),
+      body: JSON.stringify({ text: `*${note.text}*\n\`\`\`\n${note.prompt}\n\`\`\`` }),
     });
     res.end();
   });

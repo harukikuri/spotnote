@@ -58,6 +58,7 @@ const panelLayer = createLayer({ close: () => closePanel() }); // stacking + Esc
 let remote = null; // the link to spotnote-mcp (remote.js)
 let launcher = null;
 let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
+let builtFrom = null; // in a build, the commit it's made from (the plugin says)
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
 const pins = new Map(); // refKey (loc@index) -> { loc, index, more, note, url, marker, extra }
@@ -170,6 +171,7 @@ export function initInspector({
   window.__spotnote = true;
   jsxFramework = jsx;
   setCommit(commit);
+  builtFrom = commit;
   setWebhook(webhook);
   controller.about = about;
   applyLook(getSettings());
@@ -1069,6 +1071,7 @@ function forWebhook(key, p, prompt) {
     text: p.note,
     page: location.origin + p.url,
     targets: targetsOf(p).map((t) => ({ ...parseLoc(t.loc), instance: t.index + 1 })),
+    commit: builtFrom,
     prompt,
   };
 }

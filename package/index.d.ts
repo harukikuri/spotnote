@@ -23,7 +23,8 @@ export interface SpotnoteOptions {
    * A URL that gets each note as it's sent (Enter, new or rewritten): a POST
    * whose body is JSON, sent as `text/plain` so no CORS setup is needed:
    * `{ event: "note.add" | "note.update", sentAt, note: { key, text, page,
-   * targets: [{ file, line, column, instance }], prompt } }`. The page holds
+   * targets: [{ file, line, column, instance }], commit, prompt } }`, where
+   * `commit` is the commit a build is made from (null on the dev server). The page holds
    * the URL, so point it at your own endpoint, not a secret one.
    */
   webhook?: string;

@@ -45,6 +45,7 @@ test("each note sent goes to the webhook: added, then rewritten", async ({ page,
     expect(added.body.event).toBe("note.add");
     expect(added.body.note).toMatchObject({ text: "Make the title bigger", page: expect.stringContaining("/") });
     expect(added.body.note.targets[0]).toMatchObject({ file: app.file, instance: 1 });
+    expect(added.body.note.commit).toBe(execSync("git rev-parse HEAD").toString().slice(0, 7));
     expect(added.body.note.prompt).toContain("## Request\nMake the title bigger");
 
     await page.locator(".sn-pin").click();

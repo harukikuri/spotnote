@@ -4,7 +4,9 @@
 // the answer then, and needn't.
 //
 //   { "event": "note.add" | "note.update", "sentAt": ISO time,
-//     "note": { key, text, page, targets: [{ file, line, column, instance }], prompt } }
+//     "note": { key, text, page, targets: [{ file, line, column, instance }], commit, prompt } }
+//
+// commit: in a build, the commit it's made from; null on the dev server.
 let url = null;
 
 export function setWebhook(u) {
