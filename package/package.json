@@ -1,6 +1,6 @@
 {
   "name": "spotnote",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "description": "Click a UI element in your Vite dev server, write a note, and copy an AI-agent-ready prompt with the exact source location.",
   "license": "MIT",
