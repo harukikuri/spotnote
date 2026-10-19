@@ -5,7 +5,10 @@ const config = {
   reactStrictMode: true,
   // Pages that moved, so old links still land.
   async redirects() {
-    return [{ source: '/troubleshooting', destination: '/faq', permanent: true }];
+    return [
+      { source: '/troubleshooting', destination: '/faq', permanent: true },
+      { source: '/playground', destination: '/try', permanent: true }, // the page about it is gone
+    ];
   },
   // The playground (playground/, built into public/try/) is a page of its own.
   async rewrites() {
