@@ -99,7 +99,9 @@ function targetSection(el, heading, raw) {
   const tag = el.tagName.toLowerCase();
   const cls = typeof el.className === "string" && el.className.trim() ? ` class="${el.className.trim()}"` : "";
   const id = el.id ? ` id="${el.id}"` : "";
-  const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60);
+  // innerText, not textContent: it breaks between blocks ("Aero Runner $120",
+  // not "Aero Runner$120"), and leaves out what's hidden.
+  const text = (el.innerText || "").trim().replace(/\s+/g, " ").slice(0, 60);
   const cs = getComputedStyle(el);
   const round = (v) => v.replace(/(\d+\.\d{2})\d+/g, "$1"); // trim fractional px
   const styles = [
@@ -132,7 +134,8 @@ function targetSection(el, heading, raw) {
     `- element: <${tag}${id}${cls}>`,
     text ? `- text: "${text}"` : null,
     occ.total > 1
-      ? `- instance: ${occ.index + 1} of ${occ.total} rendered from this line (by DOM order) — target the one matching the text above`
+      ? `- instance: ${occ.index + 1} of ${occ.total} rendered from this line (by DOM order)` +
+        (text ? " — target the one matching the text above" : "")
       : null,
     rawUnstamped
       ? `- note: the clicked <${raw.tagName.toLowerCase()}> has no source stamp (likely from a dependency or injected HTML); this is the nearest stamped ancestor`

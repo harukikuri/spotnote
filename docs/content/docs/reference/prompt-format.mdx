@@ -50,8 +50,8 @@ Under `## Target`, one line per item:
 | `used at` | The line that uses the element's component here (`<Card>` in `pages/Products.jsx`), when the element is written inside a component. A component used in several places changes everywhere when its own file does, and only here when this line does. | When the element's component is used from another component |
 | `rendered inside` | Instead of `used at`, when that line can't be found (the component is imported under another name): the nearest element of the component around it. Close to the line, not on it. | When `used at` can't be found |
 | `element` | Tag name, plus `id` and `class` when the element has them. | Always |
-| `text` | The element's text, whitespace collapsed, cut at 60 characters. | When the element has text |
-| `instance` | Which of the elements rendered from this line you picked, counted in DOM order. | When the line rendered more than one element |
+| `text` | The element's visible text, as the page shows it: a space between blocks, whitespace collapsed, cut at 60 characters. | When the element has text |
+| `instance` | Which of the elements rendered from this line you picked, counted in DOM order. With a `text` line, it asks the agent to target the one with that text. | When the line rendered more than one element |
 | `note` | Says the element you clicked has no stamp, and this target is its nearest stamped ancestor. | When you clicked an unstamped element |
 
 ### Source path

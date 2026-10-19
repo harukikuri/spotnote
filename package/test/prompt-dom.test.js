@@ -105,3 +105,19 @@ test("buildPrompt names the commit a deployed build is made from", () => {
     setCommit(null);
   }
 });
+
+test("buildPrompt breaks the text between blocks, and names an instance by its text only when it has one", () => {
+  document.body.innerHTML = `
+    <div data-spotnote="Card.jsx:4:5" class="card"><h3>Aero Runner</h3><p>$120</p></div>
+    <div data-spotnote="Card.jsx:4:5" class="card"><h3>Trail Pack</h3><p>$89</p></div>
+    <hr data-spotnote="List.jsx:9:7" /><hr data-spotnote="List.jsx:9:7" />`;
+  const card = buildPrompt(document.querySelector(".card"), "x");
+  assert.match(card, /- text: "Aero Runner \$120"/);
+  assert.match(
+    card,
+    /- instance: 1 of 2 rendered from this line \(by DOM order\) — target the one matching the text above/,
+  );
+  const rule = buildPrompt(document.querySelectorAll("hr")[1], "x");
+  assert.doesNotMatch(rule, /- text: /);
+  assert.match(rule, /- instance: 2 of 2 rendered from this line \(by DOM order\)\n/);
+});
