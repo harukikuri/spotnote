@@ -26,7 +26,8 @@ version. Both packages always get the same one.
 
 1. Set `"version"` in `package/package.json` and `mcp/package.json`.
 2. `node scripts/readme.mjs`: npm's page shows `package/README.md`, a copy of
-   the root README (with absolute image paths) made by that script.
+   the root README (with absolute image paths) made by that script. The
+   release's CI checks it, and won't publish a stale one.
 3. `pnpm lint && pnpm test`.
 4. Commit as `release: vX.Y.Z` (the two `package.json` files, and
    `package/README.md` if it changed), and push `main`.
