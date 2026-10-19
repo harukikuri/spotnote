@@ -4,12 +4,9 @@ export const docs = defineDocs({
   dir: 'content/docs',
   docs: {
     // `headline`: shown as the page's big title, with `title` (still the
-    // sidebar name) moved above it like a breadcrumb. `strong`: words of the
-    // description to show in bold under the title (the description stays
-    // plain text, for search and link previews). Used by the home page.
+    // sidebar name) moved above it like a breadcrumb. Used by the home page.
     schema: frontmatterSchema.extend({
       headline: frontmatterSchema.shape.title.optional(),
-      strong: frontmatterSchema.shape.title.optional(),
     }),
   },
 });

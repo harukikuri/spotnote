@@ -22,25 +22,12 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
         <p className="text-sm font-medium text-fd-primary">{page.data.title}</p>
       )}
       <DocsTitle className="font-medium">{page.data.headline ?? page.data.title}</DocsTitle>
-      <DocsDescription>{emphasize(page.data.description, page.data.strong)}</DocsDescription>
+      <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <Mdx components={getMDXComponents()} />
       </DocsBody>
       <Footer />
     </DocsPage>
-  );
-}
-
-// The description, with its `strong` words (frontmatter) in bold.
-function emphasize(text?: string, strong?: string) {
-  const at = strong && text ? text.indexOf(strong) : -1;
-  if (!text || !strong || at < 0) return text;
-  return (
-    <>
-      {text.slice(0, at)}
-      <strong className="font-semibold text-fd-foreground">{strong}</strong>
-      {text.slice(at + strong.length)}
-    </>
   );
 }
 
