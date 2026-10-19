@@ -1,6 +1,6 @@
 {
   "name": "spotnote-mcp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "type": "module",
   "description": "MCP server for Spotnote: lets a local coding agent pick up the notes you write on your running app, ask you questions, and mark them done.",
   "license": "MIT",
