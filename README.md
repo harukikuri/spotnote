@@ -108,7 +108,9 @@ spotnote({ build: ["staging"] })
 
 <br />
 
-<!-- The demo video goes here: drop docs/public/staging-demo.mp4 into this file in GitHub's editor. -->
+
+https://github.com/user-attachments/assets/c8957083-ac69-4adc-ada5-8db10f38c976
+
 
 _On a [staging build](https://spotnote-weld.vercel.app/guides/staging): the designer writes a note and pastes it to the team chat, and **the developer's agent goes straight to the file and line**._
 
