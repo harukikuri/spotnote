@@ -111,7 +111,8 @@ pnpm --filter @spotnote/docs dev              # http://localhost:3000
 
 ## Release
 
-1. Set the same version in `package/package.json` and `mcp/package.json`, commit, push.
+1. Set the same version in `package/package.json` and `mcp/package.json`, run
+   `node scripts/readme.mjs` (npm's README: a copy of the root one), commit, push.
 2. Tag it: `git tag v0.2.0 && git push origin v0.2.0`.
 
 The `Release` workflow (`.github/workflows/release.yml`) then runs CI, Test and

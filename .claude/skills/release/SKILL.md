@@ -25,8 +25,11 @@ version. Both packages always get the same one.
 ## 3. Bump, commit, push
 
 1. Set `"version"` in `package/package.json` and `mcp/package.json`.
-2. `pnpm lint && pnpm test`.
-3. Commit as `release: vX.Y.Z` (just the two files), and push `main`.
+2. `node scripts/readme.mjs`: npm's page shows `package/README.md`, a copy of
+   the root README (with absolute image paths) made by that script.
+3. `pnpm lint && pnpm test`.
+4. Commit as `release: vX.Y.Z` (the two `package.json` files, and
+   `package/README.md` if it changed), and push `main`.
 
 ## 4. Wait for main to pass
 
