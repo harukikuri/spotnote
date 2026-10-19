@@ -18,6 +18,10 @@
 
 
 
+https://github.com/user-attachments/assets/eb1bdb07-1660-48cd-b1fe-b9650e7d110d
+
+
+
 ## Features
 
 - **Exact spot.** Your UI feedback points to the exact file, line and column in your source code, so your agent doesn't have to search for it.
