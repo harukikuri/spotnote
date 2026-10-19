@@ -5,6 +5,14 @@ description: Let designers and reviewers write notes on a staging or preview dep
 
 Spotnote runs only in `vite dev` by default. With the `build` option, it also runs in builds you deploy for review, such as a staging or preview environment. Anyone who opens it can write notes, and each prompt names the file, the line and the commit the build was made from.
 
+## How it works
+
+<video src="/staging-demo.mp4" autoPlay muted loop playsInline className="my-6 w-full rounded-lg border border-fd-border shadow-sm" />
+
+1. **The reviewer** opens the staging site, clicks an element, writes the note and presses `Enter`. The prompt is on their clipboard.
+2. They paste it where your team tracks feedback: an issue, a pull request, a chat thread.
+3. **The developer** gives it to their agent, which goes straight to that file and line.
+
 <Callout type="warn" title="Not for production">
   A build with Spotnote shows your source paths and component names to everyone who can open it. Turn it on only for builds that aren't public.
 </Callout>
@@ -36,11 +44,7 @@ Your production build (`vite build`, mode `production`) stays without Spotnote: 
 </Step>
 </Steps>
 
-## From the reviewer to the agent
-
-1. **The reviewer** opens the staging site, clicks an element, writes the note and presses `Enter`. The prompt is on their clipboard.
-2. They paste it where your team tracks feedback: an issue, a pull request, a chat thread.
-3. **The developer** gives it to their agent.
+## The commit in the prompt
 
 The prompt has one more line than in dev, under the location:
 
