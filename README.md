@@ -124,7 +124,11 @@ spotnote({ build: ["staging"], webhook: "https://feedback.example.com/spotnote" 
 
 Each note arrives as JSON, with its text, page, file and line, commit, and prompt. See [Webhook](https://spotnote-weld.vercel.app/guides/webhook).
 
-<!-- The demo video goes here: drop docs/public/webhook-demo.mp4 into this file in GitHub's editor. -->
+
+
+https://github.com/user-attachments/assets/5ad45dc5-7aec-4b44-99f1-290fcc4b5f3f
+
+
 
 _On a staging build with a webhook: press Enter, and **the note lands in your team's chat**, with its file and line._
 
