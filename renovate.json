@@ -31,6 +31,13 @@
       "enabled": false
     },
     {
+      "description": "Apps that stay on an older minor of Vue (3.2, 3.4): patch updates only.",
+      "matchFileNames": ["examples/vue/vue3_2/**", "examples/vue/vue3_4/**"],
+      "matchPackageNames": ["vue"],
+      "matchUpdateTypes": ["minor"],
+      "enabled": false
+    },
+    {
       "description": "The newest Svelte stays on Vite 7 (Vite 8 has its React, Vue, Solid and Astro apps): a new Svelte major opens a PR, a new Vite major doesn't.",
       "matchFileNames": ["examples/svelte/svelte5/**"],
       "matchPackageNames": ["vite", "@sveltejs/vite-plugin-svelte"],
