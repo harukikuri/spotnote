@@ -1,11 +1,16 @@
 // Renders each video at twice its size, then scales it down to 1920 × 1080:
 // text that moves then glides instead of stepping a pixel at a time.
 //
-//   pnpm render              out/demo.mp4 and out/demo-solo.mp4
+//   pnpm render              every video (VIDEOS below)
 //   pnpm render Solo         just that one
 import { execFileSync } from "node:child_process";
 
-const VIDEOS = { Demo: "out/demo.mp4", Solo: "out/demo-solo.mp4" };
+const VIDEOS = {
+  Demo: "out/demo.mp4",
+  Solo: "out/demo-solo.mp4",
+  QuickClick: "out/quick-start-click.mp4",
+  QuickNote: "out/quick-start-note.mp4",
+};
 const ids = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(VIDEOS);
 const run = (...args) => execFileSync("remotion", args, { stdio: "inherit" });
 
