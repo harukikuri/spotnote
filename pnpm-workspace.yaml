@@ -3,6 +3,7 @@ packages:
   - mcp
   - examples/*/*
   - docs
+  - demo
   - e2e
 onlyBuiltDependencies:
   - esbuild
