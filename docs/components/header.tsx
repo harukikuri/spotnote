@@ -27,6 +27,13 @@ export function Header() {
         </Link>
         <div className="flex-1" />
         <nav className="flex items-center gap-3">
+          {/* The playground is a page of its own (playground/, at /try), not a docs page. */}
+          <a
+            href="/try"
+            className="inline-flex h-8 items-center rounded-md bg-[var(--sn-yellow)] px-3 text-sm font-medium text-[var(--sn-ink)] transition-opacity hover:opacity-85"
+          >
+            Try it
+          </a>
           <FullSearchTrigger />
           <a
             href="https://github.com/harukikuri/spotnote"

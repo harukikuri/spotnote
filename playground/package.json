@@ -1,0 +1,19 @@
+{
+  "name": "spotnote-playground",
+  "private": true,
+  "type": "module",
+  "description": "The docs' playground: a small shop, built with Spotnote in it (the build option), served at /try from docs/public/try/.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode playground"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "spotnote": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.4"
+  }
+}

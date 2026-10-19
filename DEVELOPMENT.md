@@ -1,11 +1,15 @@
 # Development
 
-Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with five parts:
+Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with seven parts:
 
 - `package/` — the plugin + browser picker (published as `spotnote`; ships raw source)
 - `mcp/` — the MCP server agents start (published as `spotnote-mcp`)
 - `examples/` — framework demo apps that consume the plugin
 - `docs/` — the documentation site (Fumadocs / Next.js)
+- `playground/` — the docs' playground at `/try`: a small shop built with
+  Spotnote in it (the `build` option) into `docs/public/try/` by the docs' `dev` and `build`
+- `demo/` — the demo videos (Remotion); `pnpm --filter spotnote-demo run refresh`
+  rebuilds them after a UI change
 - `e2e/` — browser tests (Playwright) against every example app, and one with a
   real spotnote-mcp and an MCP client playing the agent (`agent.spec.js`)
 

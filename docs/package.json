@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "pnpm --filter spotnote-playground build && next dev",
+    "build": "pnpm --filter spotnote-playground build && next build",
     "start": "next start",
     "postinstall": "fumadocs-mdx"
   },

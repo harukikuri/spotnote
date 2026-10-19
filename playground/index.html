@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acme — Spotnote Playground</title>
+  </head>
+  <body>
+    <!-- Plain HTML, outside the app: nothing here is stamped, so while Spotnote
+         is selecting, a click on "Back to docs" still follows the link. -->
+    <div class="banner">
+      <span>
+        <b>Spotnote Playground</b>: open the launcher at the bottom left, click an element, write what should
+        change, and press Enter. The prompt is on your clipboard.
+      </span>
+      <a href="/">Back to docs</a>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

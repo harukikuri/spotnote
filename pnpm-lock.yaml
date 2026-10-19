@@ -488,6 +488,25 @@ importers:
         specifier: ^20.14.6
         version: 20.14.6
 
+  playground:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
+      spotnote:
+        specifier: workspace:*
+        version: link:../package
+    devDependencies:
+      '@vitejs/plugin-react':
+        specifier: ^6.1.2
+        version: 6.1.2(vite@8.3.4(@types/node@25.9.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+      vite:
+        specifier: ^8.3.4
+        version: 8.3.4(@types/node@25.9.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)
+
 packages:
 
   '@alloc/quick-lru@5.2.0':
