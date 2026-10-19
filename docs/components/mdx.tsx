@@ -27,6 +27,7 @@ import { Framework } from './framework';
 import { LauncherIcon } from './launcher-icon';
 import { PinIcon } from './pin-icon';
 import { PanelButton, LauncherItem, SendButton } from './ui-buttons';
+import { Video } from './video';
 
 const tabIcons: Record<string, ReactNode> = {
   npm: <SiNpm />,
@@ -73,6 +74,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     PanelButton,
     LauncherItem,
     SendButton,
+    Video,
     ...components,
   };
 }
