@@ -33,6 +33,7 @@ https://github.com/user-attachments/assets/eb1bdb07-1660-48cd-b1fe-b9650e7d110d
 ## Requirements
 
 - Vite 5 or later
+- Node 22 or later
 
 ## Install
 

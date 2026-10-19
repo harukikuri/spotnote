@@ -25,6 +25,9 @@
     "src",
     "index.d.ts"
   ],
+  "engines": {
+    "node": ">=22"
+  },
   "peerDependencies": {
     "vite": ">=5"
   },

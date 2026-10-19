@@ -1,5 +1,6 @@
 # Every push to main, every pull request and every release: the unit tests, with
-# their coverage. The browser tests are in e2e.yml.
+# their coverage, and again on the oldest Node supported. The browser tests are
+# in e2e.yml.
 name: Test
 
 on:
@@ -35,3 +36,18 @@ jobs:
           files: coverage/lcov.info
           flags: unit
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # The same tests on the oldest Node the packages support (engines: >=22).
+  unit-oldest-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version from packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
