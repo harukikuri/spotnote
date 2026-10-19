@@ -1,16 +1,17 @@
 // A team chat app (Slack-like, but nobody's brand): channels on the left, the
 // channel's messages, and the message box. A message can carry a code block,
-// as a pasted prompt does.
+// as a pasted prompt does. `at`: where the window is (CHAT by default);
+// `compact`: no channel list, for a narrow window.
 import { CHAT } from "../layout.js";
 import { PM } from "../script.js";
 import { Window } from "../mac/Window.jsx";
 
 const CHANNELS = ["general", "design-feedback", "frontend", "releases"];
 
-export function Chat({ front, me, channel, messages, draft, selected, style }) {
+export function Chat({ front, me, channel, messages, draft, selected, style, at = CHAT, compact }) {
   return (
     <Window
-      {...CHAT}
+      {...at}
       front={front}
       style={{ background: "#3f0e40", ...style }}
       bar={<span style={{ color: "#fff", fontSize: 13, fontWeight: 600, marginLeft: 6 }}>Acme</span>}
@@ -18,7 +19,15 @@ export function Chat({ front, me, channel, messages, draft, selected, style }) {
       <div
         style={{ position: "absolute", inset: 0, display: "flex", fontFamily: "-apple-system, system-ui, sans-serif" }}
       >
-        <aside style={{ width: 230, color: "rgba(255,255,255,.75)", fontSize: 14, padding: "10px 0" }}>
+        <aside
+          style={{
+            display: compact ? "none" : undefined,
+            width: 230,
+            color: "rgba(255,255,255,.75)",
+            fontSize: 14,
+            padding: "10px 0",
+          }}
+        >
           <div style={{ padding: "4px 16px 10px", fontSize: 12, opacity: 0.8 }}>Channels</div>
           {CHANNELS.map((c) => (
             <div
@@ -93,17 +102,43 @@ export function Chat({ front, me, channel, messages, draft, selected, style }) {
   );
 }
 
-function Message({ who, time, text, code, selected, opacity = 1 }) {
+// `rise`: how far below its place it is, while it comes in.
+function Message({ who, time, text, code, lines, selected, opacity = 1, rise = 0 }) {
   return (
-    <div style={{ display: "flex", gap: 10, padding: "8px 20px", opacity, color: "#1d1c1d" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        padding: "8px 20px",
+        opacity,
+        transform: `translateY(${rise}px)`,
+        color: "#1d1c1d",
+      }}
+    >
       <Avatar person={who} size={36} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 15 }}>
           <b>{who.name}</b>
+          {who.app && (
+            <span
+              style={{
+                marginLeft: 6,
+                padding: "1px 4px",
+                borderRadius: 3,
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#616061",
+                background: "#e8e8e8",
+                verticalAlign: 2,
+              }}
+            >
+              APP
+            </span>
+          )}
           <span style={{ marginLeft: 8, fontSize: 12, color: "#616061" }}>{time}</span>
         </div>
         {text && <div style={{ fontSize: 15, lineHeight: "22px" }}>{text}</div>}
-        {code && <Code text={code} selected={selected} />}
+        {code && <Code text={code} lines={lines} selected={selected} />}
       </div>
     </div>
   );
@@ -151,23 +186,29 @@ function Composer({ channel, draft }) {
 
 const caret = <span style={{ borderLeft: "1.5px solid #1d1c1d", marginRight: -1.5 }} />;
 
-function Code({ text, selected }) {
+// `lines`: show only that many, then "Show more", as the chat does for a long one.
+function Code({ text, selected, lines }) {
+  const all = text.split("\n");
+  const cut = lines && all.length > lines;
   return (
-    <pre
-      style={{
-        margin: "6px 0 0",
-        padding: "8px 10px",
-        borderRadius: 6,
-        border: "1px solid #ddd",
-        background: selected ? "#cfe3fb" : "#f8f8f8",
-        font: "12px/16px Menlo, monospace",
-        color: "#1d1c1d",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}
-    >
-      {text}
-    </pre>
+    <>
+      <pre
+        style={{
+          margin: "6px 0 0",
+          padding: "8px 10px",
+          borderRadius: 6,
+          border: "1px solid #ddd",
+          background: selected ? "#cfe3fb" : "#f8f8f8",
+          font: "12px/16px Menlo, monospace",
+          color: "#1d1c1d",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+        }}
+      >
+        {cut ? all.slice(0, lines).join("\n") : text}
+      </pre>
+      {cut && <div style={{ marginTop: 4, fontSize: 13, color: "#1264a3" }}>Show more</div>}
+    </>
   );
 }
 
@@ -187,7 +228,7 @@ export function Avatar({ person, size }) {
         flexShrink: 0,
       }}
     >
-      {person.initials}
+      {person.icon ? <img src={person.icon} alt="" width={size * 0.7} height={size * 0.7} /> : person.initials}
     </span>
   );
 }

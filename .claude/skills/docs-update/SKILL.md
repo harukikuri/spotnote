@@ -68,10 +68,10 @@ image the change is visible in. Retake those; leave the rest.
 
 ## 5. Rebuild the demo videos
 
-Four videos are made from code, in `demo/` (Remotion), with Spotnote's UI taken
+Five videos are made from code, in `demo/` (Remotion), with Spotnote's UI taken
 from the real client: `solo-demo.mp4` (the home page), `staging-demo.mp4`
-(Staging Builds) and the Quick Start's `quick-start-click.mp4` and
-`quick-start-note.mp4`. Rebuild them when a change shows in them: the launcher, the
+(Staging Builds), `webhook-demo.mp4` (Webhook) and the Quick Start's
+`quick-start-click.mp4` and `quick-start-note.mp4`. Rebuild them when a change shows in them: the launcher, the
 hover outline and label, the note panel, pins, or the prompt's wording.
 
 1. `pnpm --filter spotnote-demo run refresh` (about 3 minutes). It runs the
@@ -83,14 +83,15 @@ hover outline and label, the note panel, pins, or the prompt's wording.
    and run it again.
 3. Look at the frames that show the change:
    `npx remotion still src/index.jsx Solo out/f.png --frame=<n>` (in `demo/`;
-   `Demo` for the staging video, `QuickClick` and `QuickNote` for the Quick
-   Start's). The timings are at the top of `src/Solo.jsx`, `src/Demo.jsx` and
-   `src/QuickStart.jsx`.
+   `Demo` for the staging video, `Webhook`, and `QuickClick` and `QuickNote`
+   for the Quick Start's). The timings are at the top of each one's file in
+   `src/`.
 4. If the prompt's wording changed, update `demo/src/script.js` to match: the
    videos type and paste it as written there.
-5. The README shows the staging video too (Staging builds), as an upload on
-   GitHub: tell the user to drop the new `demo/out/demo.mp4` into the README in
-   GitHub's editor, in place of the old one.
+5. The README shows the staging and webhook videos too, as uploads on GitHub:
+   tell the user to drop the new `demo/out/demo.mp4` (Staging builds) or
+   `demo/out/demo-webhook.mp4` (Webhook) into the README in GitHub's editor, in
+   place of the old one.
 
 Every render changes the files' bytes, even when nothing shows a change: if
 the videos don't show the change, `git checkout docs/public/*-demo.mp4`.

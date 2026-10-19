@@ -8,6 +8,7 @@ import { execFileSync } from "node:child_process";
 const VIDEOS = {
   Demo: "out/demo.mp4",
   Solo: "out/demo-solo.mp4",
+  Webhook: "out/demo-webhook.mp4",
   QuickClick: "out/quick-start-click.mp4",
   QuickNote: "out/quick-start-note.mp4",
 };

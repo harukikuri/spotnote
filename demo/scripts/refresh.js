@@ -15,6 +15,7 @@ const PORT = 5300;
 const DOCS = {
   "out/demo.mp4": "../docs/public/staging-demo.mp4",
   "out/demo-solo.mp4": "../docs/public/solo-demo.mp4",
+  "out/demo-webhook.mp4": "../docs/public/webhook-demo.mp4",
   "out/quick-start-click.mp4": "../docs/public/quick-start-click.mp4",
   "out/quick-start-note.mp4": "../docs/public/quick-start-note.mp4",
 };
