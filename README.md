@@ -90,8 +90,6 @@ claude mcp add --scope user spotnote -- npx -y spotnote-mcp
 
 Then ask your agent: `Watch my Spotnote notes.` Codex, Cursor and Gemini CLI.
 
-<br />
-
 https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
 
 _With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
@@ -105,8 +103,6 @@ spotnote({ build: ["staging"] })
 ```
 
 `vite build --mode staging` then includes Spotnote, and `vite build` still doesn't. Each prompt also names the commit the build was made from. See [Staging Builds](https://spotnote-weld.vercel.app/guides/staging).
-
-<br />
 
 
 https://github.com/user-attachments/assets/c8957083-ac69-4adc-ada5-8db10f38c976
