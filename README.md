@@ -96,6 +96,22 @@ https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
 
 _With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
 
+## Staging builds
+
+Let designers and reviewers write notes on a staging or preview deploy, and paste them to your team:
+
+```ts
+spotnote({ build: ["staging"] })
+```
+
+`vite build --mode staging` then includes Spotnote, and `vite build` still doesn't. Each prompt also names the commit the build was made from. See [Staging Builds](https://spotnote-weld.vercel.app/guides/staging).
+
+<br />
+
+<!-- The demo video goes here: drop docs/public/staging-demo.mp4 into this file in GitHub's editor. -->
+
+_On a [staging build](https://spotnote-weld.vercel.app/guides/staging): the designer writes a note and pastes it to the team chat, and **the developer's agent goes straight to the file and line**._
+
 ## Docs
 
 Full documentation is [here](https://spotnote-weld.vercel.app)
