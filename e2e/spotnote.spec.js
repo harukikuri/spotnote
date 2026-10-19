@@ -347,6 +347,23 @@ test("the panel resizes from its corner, and every panel keeps the size", async 
   expect([small.width, small.height]).toEqual([260, 140]);
 });
 
+test("in the narrowest edit panel, the chip's file:line never draws over the tag name", async ({ page, app }) => {
+  const panel = await openPanel(page, app);
+  const g = await panel.locator(".sn-resize").boundingBox();
+  const box = await panel.boundingBox();
+  await drag(page, { x: g.x + g.width / 2, y: g.y + g.height / 2 }, { x: box.x + 10, y: box.y + 10 }); // 260 wide
+  await panel.locator("[data-spotnote-input]").fill("Make the title bigger");
+  await page.keyboard.press("Enter");
+  await page.locator(".sn-pin").click(); // its edit panel: Copy and Delete too, so less room for the chip
+  await settled(page.locator(".sn-panel"));
+
+  const [tag, loc, chip] = await Promise.all(
+    [".sn-chip-el b", ".sn-loc", ".sn-chip"].map((s) => page.locator(`.sn-panel ${s}`).boundingBox()),
+  );
+  expect(loc.x).toBeGreaterThanOrEqual(tag.x + tag.width);
+  expect(loc.x + loc.width).toBeLessThanOrEqual(chip.x + chip.width);
+});
+
 test("a click away from an unsent note shakes the panel instead of closing it", async ({ page, app }) => {
   const panel = await openPanel(page, app);
   await panel.locator("[data-spotnote-input]").fill("Not sent yet");

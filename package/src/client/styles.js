@@ -241,10 +241,11 @@ export const CSS = [
   `.sn-tip{position:fixed;z-index:2147483647;width:max-content;max-width:220px;padding:6px 8px;border-radius:6px;background:var(--sn-pop);color:var(--sn-glass-text);border:1px solid var(--sn-glass-border);` +
     `font:400 11px/15px ${T.font};pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.25);animation:sn-fade .12s ease-out}`,
   // The panel header's file:line: a button that opens it in your editor.
-  `.sn-loc{all:unset;display:inline-flex;align-items:center;align-self:center;flex-shrink:0;cursor:pointer;color:${T.textMuted};font:11px ${T.mono};border-radius:4px}`,
+  `.sn-loc{all:unset;display:inline-flex;align-items:center;align-self:center;min-width:0;cursor:pointer;color:${T.textMuted};font:11px ${T.mono};border-radius:4px}`,
   `.sn-loc:hover{color:${T.text}}`,
   // Dotted like the file links in the agent's messages; solid on hover.
-  ".sn-loc span>span:last-child{text-decoration:underline dotted;text-underline-offset:2px}",
+  ".sn-loc span>span:last-child{text-decoration:underline dotted;text-underline-offset:2px;overflow:hidden;text-overflow:ellipsis}",
+  ".sn-loc>span{flex-shrink:1!important;min-width:0}", // fileTag() says flex-shrink:0 inline
   ".sn-loc:hover span>span:last-child{text-decoration-style:solid}",
   `.sn-loc:focus-visible{outline:2px solid ${T.accent};outline-offset:2px}`,
   // The panel header's chips: one per element on the note.
@@ -252,9 +253,13 @@ export const CSS = [
   `.sn-chip{display:inline-flex;align-items:center;gap:4px;max-width:100%;min-width:0;height:26px;padding:0 10px;border-radius:6px;` +
     `background:var(--sn-hover);border:1px solid ${T.borderSubtle};cursor:pointer}`,
   `.sn-chip-base{border-color:${T.border}}`,
-  `.sn-chip-el{display:inline-flex;align-items:baseline;min-width:0;color:${T.text};font-size:12px}`,
-  ".sn-chip-el b{font-weight:600;font-size:13px}",
-  `.sn-chip-cls{color:${T.textMuted};min-width:0;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`,
+  // In a narrow header (an edit panel has more buttons), what gives is, in
+  // turn: the class, then the file name. The tag name never shrinks: the chip
+  // lays out its parts itself (display:contents), so the file:line can't draw
+  // over it.
+  `.sn-chip-el{display:contents;color:${T.text};font-size:12px}`,
+  ".sn-chip-el b{flex:none;font-weight:600;font-size:13px}",
+  `.sn-chip-cls{color:${T.textMuted};min-width:0;max-width:96px;margin-left:-4px;flex-shrink:1000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`,
   `.sn-chip-rm{all:unset;display:inline-flex;cursor:pointer;color:${T.textMuted};margin-left:2px;border-radius:4px}`,
   `.sn-chip-rm:hover{color:${T.text}}`,
   ".sn-chip-rm svg{width:12px;height:12px}",
