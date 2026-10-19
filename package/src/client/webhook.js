@@ -8,6 +8,7 @@
 //
 // commit: in a build, the commit it's made from; null on the dev server.
 let url = null;
+let warned = false; // say it once: a webhook that's down would fail every note
 
 export function setWebhook(u) {
   url = u;
@@ -21,5 +22,8 @@ export function postNote(event, note) {
     keepalive: true, // still sent if the page goes away right after
     headers: { "Content-Type": "text/plain;charset=UTF-8" },
     body: JSON.stringify({ event, sentAt: new Date().toISOString(), note }),
-  }).catch((e) => console.warn(`[spotnote] couldn't send the note to the webhook: ${e.message}`));
+  }).catch((e) => {
+    if (!warned) console.warn(`[spotnote] couldn't send notes to the webhook (${url}): ${e.message}`);
+    warned = true;
+  });
 }
