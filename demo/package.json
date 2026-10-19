@@ -2,10 +2,10 @@
   "name": "spotnote-demo",
   "private": true,
   "type": "module",
-  "description": "The demo video, made with Remotion: a macOS desktop with a browser, a chat app and a terminal, all drawn in React.",
+  "description": "The demo videos, made with Remotion: a macOS desktop with a browser, a chat app and a terminal, all drawn in React.",
   "scripts": {
     "studio": "remotion studio src/index.jsx",
-    "render": "remotion render src/index.jsx Demo out/demo-2x.mp4 --scale=2 && remotion ffmpeg -y -v error -i out/demo-2x.mp4 -vf scale=1920:1080:flags=lanczos -c:v libx264 -crf 16 -pix_fmt yuv420p -movflags +faststart out/demo.mp4",
+    "render": "node scripts/render.js",
     "capture": "node scripts/capture.js"
   },
   "dependencies": {

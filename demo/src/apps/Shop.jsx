@@ -1,6 +1,6 @@
 // The app under review: a small shop, laid out from GRID so Spotnote's overlay
-// can find its cards. It's the staging build, and says so: a striped banner
-// with the commit it's built from.
+// can find its cards. `staging`: the staging build, which says so in a striped
+// banner with the commit it's built from. `padding`: the cards' (it changes).
 import { card, GRID, VIEWPORT } from "../layout.js";
 import { COMMIT } from "../script.js";
 
@@ -13,7 +13,7 @@ const PRODUCTS = [
   { name: "Rain Shell", price: "$148", tint: ["#d4f1f4", "#1d9aa8"] },
 ];
 
-export function Shop() {
+export function Shop({ staging, padding = 16 }) {
   return (
     <div
       style={{
@@ -27,6 +27,7 @@ export function Shop() {
     >
       <div
         style={{
+          visibility: staging ? "visible" : "hidden",
           height: 28,
           display: "flex",
           alignItems: "center",
@@ -68,13 +69,13 @@ export function Shop() {
         <div style={{ fontSize: 14, color: "#777", marginTop: 4 }}>Fresh gear for the season.</div>
       </div>
       {PRODUCTS.map((p, i) => (
-        <Card key={p.name} {...card(i)} product={p} />
+        <Card key={p.name} {...card(i)} product={p} padding={padding} />
       ))}
     </div>
   );
 }
 
-function Card({ x, y, w, h, product }) {
+function Card({ x, y, w, h, product, padding }) {
   return (
     <div
       className="card"
@@ -84,7 +85,7 @@ function Card({ x, y, w, h, product }) {
         top: y,
         width: w,
         height: h,
-        padding: 16,
+        padding,
         borderRadius: 14,
         background: "#fff",
         boxShadow: "0 1px 2px rgba(0,0,0,.06), 0 0 0 1px #eee",

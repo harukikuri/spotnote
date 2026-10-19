@@ -3,14 +3,13 @@
 import { MENU_BAR, SCREEN } from "../layout.js";
 
 const WALLPAPERS = {
-  designer:
+  light:
     "radial-gradient(120% 90% at 15% 10%, #f7c9a8 0%, transparent 55%), radial-gradient(110% 90% at 90% 90%, #9db7f5 0%, transparent 60%), linear-gradient(160deg, #e9b6c9, #a7b9ef)",
-  developer:
-    "radial-gradient(120% 90% at 20% 0%, #33415c 0%, transparent 60%), radial-gradient(100% 80% at 90% 100%, #1d6f6a 0%, transparent 60%), linear-gradient(160deg, #1b2033, #0f3b3f)",
+  dark: "radial-gradient(120% 90% at 20% 0%, #33415c 0%, transparent 60%), radial-gradient(100% 80% at 90% 100%, #1d6f6a 0%, transparent 60%), linear-gradient(160deg, #1b2033, #0f3b3f)",
 };
 
 export function Desktop({ wallpaper, app, menus, time, children }) {
-  const dark = wallpaper === "developer";
+  const dark = wallpaper === "dark";
   return (
     <div
       style={{
