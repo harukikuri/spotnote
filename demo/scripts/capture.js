@@ -7,7 +7,9 @@
 //   pnpm --filter spotnote-demo capture
 //
 // The stylesheet isn't copied: the video imports it from package/src/client.
+import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
 const APP = process.env.URL || "http://localhost:5300/";
@@ -67,12 +69,15 @@ const t = {
 for (const [k, v] of Object.entries(t))
   if (/Home\.jsx|[^-]left: \d/.test(v)) console.warn(`[capture] ${k}: a value wasn't replaced`);
 
+const out = fileURLToPath(new URL("../src/spotnote/snapshots.js", import.meta.url));
 writeFileSync(
-  new URL("../src/spotnote/snapshots.js", import.meta.url),
+  out,
   "// Spotnote's real UI, from scripts/capture.js. Don't edit: run `pnpm capture` again.\n" +
     Object.entries(t)
       .map(([k, v]) => `export const ${k} = ${JSON.stringify(v)};`)
       .join("\n") +
     "\n",
 );
+// Formatted as the repository formats it, so an unchanged UI changes nothing.
+execFileSync("npx", ["biome", "format", "--write", out], { stdio: "ignore" });
 console.log("[capture] wrote src/spotnote/snapshots.js");

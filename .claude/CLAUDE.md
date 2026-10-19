@@ -4,7 +4,7 @@
 
 - `/release` (`.claude/skills/release/`) cuts a new version: bump, CI, tag, npm.
 - `/docs-update` (`.claude/skills/docs-update/`) brings `docs/` up to date after a
-  change users see: pages, renamed-heading links, screenshots, the docs build.
+  change users see: pages, renamed-heading links, screenshots, demo videos, the docs build.
 - `/examples-repro` turns a bug report into a failing E2E test in the example apps,
   before the fix.
 - `/examples-sync`: after editing `examples/`, what depends on their markup

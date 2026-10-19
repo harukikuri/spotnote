@@ -1,6 +1,6 @@
 ---
 name: docs-update
-description: Update the Spotnote docs site (docs/) after a change users can see. Finds the pages a code change touches, fixes links to renamed headings, retakes screenshots, and checks the docs build. Use after changing the UI, the prompt, the plugin options or the MCP tools, or when the user asks to update the docs.
+description: Update the Spotnote docs site (docs/) after a change users can see. Finds the pages a code change touches, fixes links to renamed headings, retakes screenshots, rebuilds the demo videos, and checks the docs build. Use after changing the UI, the prompt, the plugin options or the MCP tools, or when the user asks to update the docs.
 ---
 
 # Update the docs
@@ -65,10 +65,37 @@ image the change is visible in. Retake those; leave the rest.
 4. Look at the result. Set the `<img>`'s `width` to the one the script prints,
    and update its `alt` if what it shows changed.
 
-Videos (`*.mp4`) are recorded by hand: if one shows the change, tell the user
-rather than retaking it.
+## 5. Rebuild the demo videos
 
-## 5. Check
+Two videos are made from code, in `demo/` (Remotion), with Spotnote's UI taken
+from the real client: `solo-demo.mp4` (the home page) and `staging-demo.mp4`
+(Staging Builds). Rebuild them when a change shows in them: the launcher, the
+hover outline and label, the note panel, pins, or the prompt's wording.
+
+1. `pnpm --filter spotnote-demo run refresh` (about 2½ minutes). It runs the
+   React example on port 5300, captures the UI into `demo/src/spotnote/snapshots.js`,
+   renders both videos and copies them into `docs/public/`. (Not `pnpm update`:
+   that's pnpm's own command, and it updates dependencies.)
+2. If the capture warns `a value wasn't replaced`, the client's markup moved
+   under a placeholder: fix the patterns at the end of `demo/scripts/capture.js`,
+   and run it again.
+3. Look at the frames that show the change:
+   `npx remotion still src/index.jsx Solo out/f.png --frame=<n>` (in `demo/`;
+   `Demo` for the staging video). The timings are at the top of `src/Solo.jsx`
+   and `src/Demo.jsx`.
+4. If the prompt's wording changed, update `demo/src/script.js` to match: the
+   videos type and paste it as written there.
+5. The README shows the staging video too (Staging builds), as an upload on
+   GitHub: tell the user to drop the new `demo/out/demo.mp4` into the README in
+   GitHub's editor, in place of the old one.
+
+Every render changes the files' bytes, even when nothing shows a change: if
+the videos don't show the change, `git checkout docs/public/*-demo.mp4`.
+
+The other videos (`demo.mp4` on the MCP page, `quick-start-*.mp4`) are recorded
+by hand: if one shows the change, tell the user rather than retaking it.
+
+## 6. Check
 
 ```bash
 pnpm --filter @spotnote/docs build

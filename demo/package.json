@@ -6,7 +6,8 @@
   "scripts": {
     "studio": "remotion studio src/index.jsx",
     "render": "node scripts/render.js",
-    "capture": "node scripts/capture.js"
+    "capture": "node scripts/capture.js",
+    "refresh": "node scripts/refresh.js"
   },
   "dependencies": {
     "@remotion/cli": "4.0.534",
