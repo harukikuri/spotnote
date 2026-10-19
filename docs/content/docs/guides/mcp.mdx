@@ -3,6 +3,12 @@ title: Connect Your Agent (MCP)
 description: About 1 minute to set up. Then write notes in the browser, and your agent picks them up.
 ---
 
+## How it works
+
+<Diagram name="mcp" width={974} height={152} alt="Your app sends your note to spotnote-mcp over HTTP; your agent gets it with watch_notes over MCP, and answers with resolve_note; the reply goes back to your app." />
+
+Your agent starts spotnote-mcp, a small server on your machine. Your app sends it each note you write, and your agent, watching, gets it through the [MCP tools](#mcp-tools). The agent's answer goes back the same way, and shows on the note.
+
 ## Set up
 
 <Steps>
