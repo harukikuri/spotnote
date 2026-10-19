@@ -12,6 +12,7 @@ export default function spotnote(options?: {
   exclude?: FilterPattern;
   port?: number;
   build?: string[];
+  webhook?: string;
 }): Plugin[];
 ```
 
@@ -58,6 +59,16 @@ spotnote({ build: ['staging', 'preview'] })
 `vite build --mode staging` then includes it, and `vite build` (mode `production`) still doesn't. Never list your production mode.
 
 Prompts then name the commit the build is made from. See [Staging Builds](/guides/staging).
+
+### `webhook`
+
+A URL that gets each note as it's sent, as JSON in a `POST`: on the dev server and in builds.
+
+```ts title="vite.config.ts"
+spotnote({ webhook: 'https://feedback.example.com/spotnote' })
+```
+
+What it sends, and how to post it to your team's chat: see [Webhook](/guides/webhook).
 
 ## Plugin order
 

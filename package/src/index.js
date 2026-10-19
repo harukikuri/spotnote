@@ -318,7 +318,8 @@ function headCommit(dir) {
 //   port:    spotnote-mcp's port, instead of SPOTNOTE_PORT or 4848 (see mcp/)
 //   build:   modes to also run in `vite build` for (["staging"]: `vite build
 //            --mode staging`), for a staging or preview deploy
-export default function spotnote({ exclude, port, build = [] } = {}) {
+//   webhook: a URL that gets each note as it's sent (client/webhook.js)
+export default function spotnote({ exclude, port, build = [], webhook } = {}) {
   // Dev only, but for builds in a `build` mode: production builds are
   // untouched. Not under Vitest either, which runs a dev server too: stamps
   // would change tests' DOM and snapshots, and the spotnote-mcp check would
@@ -415,7 +416,7 @@ export default function spotnote({ exclude, port, build = [] } = {}) {
     // deployed page doesn't reach, and it's a path on the machine that built it.
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit, webhook: webhook ?? null })});`;
       }
     },
 

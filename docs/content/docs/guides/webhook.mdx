@@ -1,0 +1,64 @@
+---
+title: Webhook
+description: Send each note to a URL of yours as it's written, to post it to your team's chat or issue tracker.
+---
+
+Spotnote can send each note to a URL of yours as it's sent (`Enter`, a new note or a rewritten one): on the dev server, and in [staging builds](/guides/staging), where it saves reviewers the copy and paste.
+
+## Set up
+
+```ts title="vite.config.ts"
+spotnote({ build: ['staging'], webhook: 'https://feedback.example.com/spotnote' })
+```
+
+## What it sends
+
+The page sends a `POST` whose body is JSON. It's sent as `text/plain`, so your endpoint needs no CORS setup: parse the body as JSON.
+
+```json
+{
+  "event": "note.add",
+  "sentAt": "2026-10-19T10:24:00.000Z",
+  "note": {
+    "key": "src/components/ProductCard.jsx:7:5@0",
+    "text": "Make the padding bigger",
+    "page": "https://stg.acme-shop.com/",
+    "targets": [{ "file": "src/components/ProductCard.jsx", "line": 7, "column": 5, "instance": 1 }],
+    "prompt": "## Request\nMake the padding bigger\n\n## Target\n…"
+  }
+}
+```
+
+| Field | Content |
+| --- | --- |
+| `event` | `note.add` for a new note, `note.update` when it's rewritten. |
+| `note.key` | The note's id: the same in both events. |
+| `note.page` | The page it was written on. |
+| `note.targets` | The elements it's on: file, line, column, and which of the elements rendered from that line. |
+| `note.prompt` | The prompt Spotnote copies for it. See [Prompt Format](/reference/prompt-format). |
+
+## Post to Slack, GitHub and the like
+
+To post notes to a chat or an issue tracker, point the URL at a small endpoint of yours that does, and keep their keys there: the page holds the URL. For Slack, a sketch:
+
+```js title="relay.mjs"
+import http from 'node:http';
+
+http.createServer((req, res) => {
+  let body = '';
+  req.on('data', (chunk) => (body += chunk));
+  req.on('end', async () => {
+    const { note } = JSON.parse(body);
+    await fetch(process.env.SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: '```\n' + note.prompt + '\n```' }),
+    });
+    res.end();
+  });
+}).listen(8787);
+```
+
+## Next
+
+[Plugin API](/reference/plugin-api#webhook): every option.

@@ -99,6 +99,13 @@ test("port: the page and the spotnote-mcp check use the port option over SPOTNOT
   }
 });
 
+test("webhook: the page gets the URL to send notes to", () => {
+  const [p] = spotnote({ webhook: "https://example.com/notes" });
+  p.configResolved({ root, plugins: [] });
+  assert.match(p.load(p.resolveId("virtual:spotnote-client")), /"webhook":"https:\/\/example\.com\/notes"/);
+  assert.match(plugin().load(p.resolveId("virtual:spotnote-client")), /"webhook":null/);
+});
+
 test("runs on the dev server only: not in builds, nor under Vitest", () => {
   const [{ apply }] = spotnote();
   assert.equal(apply({}, { command: "serve" }), true);

@@ -62,7 +62,7 @@ const ALL = [
 // With an agent: one app is enough, the client is the same in every framework.
 const AGENT = { ...ALL.find((a) => a.name === "react19"), name: "agent", port: 5230, mcpPort: 4998 };
 // A staging build (the `build` option), served by `vite preview`: again one app.
-const STAGING = { ...ALL.find((a) => a.name === "react19"), name: "staging", port: 5231 };
+const STAGING = { ...ALL.find((a) => a.name === "react19"), name: "staging", port: 5231, webhookPort: 4997 };
 
 const only = process.env.E2E_APPS?.split(",");
 const APPS = only ? ALL.filter((a) => only.includes(a.name)) : ALL;
@@ -143,6 +143,8 @@ export default defineConfig({
               `"vite build --mode staging && vite preview --port ${STAGING.port} --strictPort"`,
             url: `http://localhost:${STAGING.port}`,
             reuseExistingServer: !process.env.CI,
+            // Built in: build.spec.js listens there for the notes.
+            env: { SPOTNOTE_WEBHOOK: `http://127.0.0.1:${STAGING.webhookPort}/notes` },
           },
         ]
       : []),

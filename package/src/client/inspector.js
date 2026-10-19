@@ -14,6 +14,7 @@ import { renderMarkdown } from "./markdown.js";
 import { createLayer, closeTopLayer } from "./layers.js";
 import { confirmOver } from "./confirm.js";
 import { parseLoc, occInfo, refKey, resolveRef, buildPrompt, savedPrompt, setCommit } from "./prompt.js";
+import { postNote, setWebhook } from "./webhook.js";
 import { agentName, agentLabel, thinkingMsg } from "./conversation.js";
 import { openFile, hideTip } from "./open-file.js";
 import { enablePanelDrag, applyPanelSize, enablePanelResize, nudgePanel } from "./panel-frame.js";
@@ -157,11 +158,19 @@ const controller = {
   },
 };
 
-export function initInspector({ jsx = null, root = "", port = 4848, about = null, commit = null } = {}) {
+export function initInspector({
+  jsx = null,
+  root = "",
+  port = 4848,
+  about = null,
+  commit = null,
+  webhook = null,
+} = {}) {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   jsxFramework = jsx;
   setCommit(commit);
+  setWebhook(webhook);
   controller.about = about;
   applyLook(getSettings());
   onSettings(applyLook);
@@ -866,6 +875,8 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       console.log("[spotnote] copied prompt:\n" + prompt);
     }
     save(note); // leave a marker on each element
+    const k = refKey(panelPrimary.loc, panelPrimary.index);
+    postNote(isEdit ? "note.update" : "note.add", forWebhook(k, pins.get(k), prompt));
     closePanel(); // selection mode stays on while the launcher is open
     launcher?.flash(); // ✓ on the launcher core
   }
@@ -1049,6 +1060,17 @@ function savePins() {
   } catch {
     /* ignore quota / serialization errors */
   }
+}
+
+// A note as the webhook gets it (see webhook.js).
+function forWebhook(key, p, prompt) {
+  return {
+    key,
+    text: p.note,
+    page: location.origin + p.url,
+    targets: targetsOf(p).map((t) => ({ ...parseLoc(t.loc), instance: t.index + 1 })),
+    prompt,
+  };
 }
 
 // A note as spotnote-mcp gets it.

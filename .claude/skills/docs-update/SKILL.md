@@ -21,6 +21,7 @@ Start from what changed (`git diff`, or the commits since the docs last changed)
 | `client/settings-menu.js`, `client/settings.js` | `guides/settings.mdx` |
 | `client/prompt.js` | `reference/prompt-format.mdx` |
 | `client/open-file.js` | `guides/settings.mdx` (Open files in) |
+| `client/webhook.js`, the `webhook` option | `guides/webhook.mdx`, `reference/plugin-api.mdx` |
 | `client/launcher.js` | `getting-started/quick-start.mdx`, `guides/picking-elements.mdx` |
 | `src/index.js` options, warnings | `reference/plugin-api.mdx` |
 | `src/plugin.cjs`, stamping per framework | `reference/framework-support.mdx`, `concepts.mdx` |
