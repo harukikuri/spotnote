@@ -1,6 +1,7 @@
 // The app under review: a small shop, laid out from GRID so Spotnote's overlay
-// can find its cards. `staging`: the staging build, which says so in a striped
-// banner with the commit it's built from. `padding`: the cards' (it changes).
+// can find its cards (they stay put either way). `staging`: the staging build,
+// which says so in a striped banner, with the commit it's built from, above the
+// header. `padding`: the cards' (it changes).
 import { card, GRID, VIEWPORT } from "../layout.js";
 import { COMMIT } from "../script.js";
 
@@ -25,26 +26,27 @@ export function Shop({ staging, padding = 16 }) {
         color: "#111",
       }}
     >
-      <div
-        style={{
-          visibility: staging ? "visible" : "hidden",
-          height: 28,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          fontSize: 12.5,
-          fontWeight: 700,
-          letterSpacing: 0.4,
-          color: "#fff",
-          background: "repeating-linear-gradient(135deg, #e8590c 0 14px, #d9480f 14px 28px)",
-        }}
-      >
-        STAGING
-        <span style={{ fontWeight: 500, opacity: 0.9, letterSpacing: 0 }}>
-          Not the live site · build {COMMIT} from main
-        </span>
-      </div>
+      {staging && (
+        <div
+          style={{
+            height: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            fontSize: 12.5,
+            fontWeight: 700,
+            letterSpacing: 0.4,
+            color: "#fff",
+            background: "repeating-linear-gradient(135deg, #e8590c 0 14px, #d9480f 14px 28px)",
+          }}
+        >
+          STAGING
+          <span style={{ fontWeight: 500, opacity: 0.9, letterSpacing: 0 }}>
+            Not the live site · build {COMMIT} from main
+          </span>
+        </div>
+      )}
       <header
         style={{
           height: 64,
