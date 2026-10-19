@@ -20,7 +20,7 @@
 
 ## Features
 
-- **No more guessing.** Your UI feedback points to the exact file, line and column in your source code, so your agent doesn't have to search for it.
+- **Exact spot.** Your UI feedback points to the exact file, line and column in your source code, so your agent doesn't have to search for it.
 - **Any Vite framework.** React, Vue, Svelte, Solid, Astro, and so on.
 - **Zero imports.** Nothing to import in your app code.
 - **Production stays clean.** Spotnote runs only in `vite dev`, and in [staging builds](https://spotnote-weld.vercel.app/guides/staging) you turn it on for.
