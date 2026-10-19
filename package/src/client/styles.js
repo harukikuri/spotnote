@@ -303,7 +303,8 @@ export const CSS = [
   `.snl[data-open="true"][data-paused="false"] .snl-core{background:${T.accent};color:${T.accentInk};border-color:transparent;` +
     `box-shadow:0 0 0 6px rgba(${T.accentRgb},.38),0 10px 28px rgba(0,0,0,.28)}`,
   ".snl-check{opacity:0;transform:scale(.4)}",
-  ".snl-done .snl-plus,.snl-done .snl-logo{opacity:0}",
+  // .snl first: as specific as the open launcher's × above, which it must hide.
+  ".snl .snl-done .snl-plus,.snl .snl-done .snl-logo{opacity:0}",
   ".snl-done .snl-check{opacity:1;transform:none}",
   `.snl-track{position:absolute;pointer-events:none;overflow:visible;transform:rotate(var(--start));transition:transform .6s ${SPRING}}`,
   // A zero-length dash still paints its round cap, so it's hidden while closed.

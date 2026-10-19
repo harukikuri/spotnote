@@ -11,9 +11,6 @@ import { useLayoutEffect, useRef } from "react";
 import { CSS } from "../../../package/src/client/styles.js";
 import * as snap from "./snapshots.js";
 
-// The client shows the ✓ over the × for a moment after copying (both stay
-// visible: the open launcher's × outranks .snl-done); the video shows the ✓.
-const FIX = ".snl-done .snl-plus{opacity:0!important}";
 // What applyLook (package/src/client/ui.js) sets for the yellow accent, light theme.
 const LOOK = {
   "--sn-accent": "#ffd84d",
@@ -30,7 +27,7 @@ export function Spotnote({ steps, frame, fps }) {
   const host = useRef(null);
   useLayoutEffect(() => {
     const root = host.current.shadowRoot ?? host.current.attachShadow({ mode: "open" });
-    root.innerHTML = `<style>${CSS}${FIX}</style>`;
+    root.innerHTML = `<style>${CSS}</style>`;
     const started = new Map(); // animation -> the frame its step came at
     const seek = (now) => {
       for (const [a, at] of started) a.currentTime = ((now - at) * 1000) / fps;

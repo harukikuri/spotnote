@@ -33,6 +33,18 @@ test("a note leaves a numbered pin and copies a prompt with the exact spot", asy
   expect(prompt).toContain("## Current computed styles");
 });
 
+test("after a note is copied, the launcher shows its ✓ alone, then its × again", async ({ page, app }) => {
+  await openLauncher(page);
+  await writeNote(page, page.locator(app.title).first(), "Make the title bigger");
+  const core = page.locator(".snl-core");
+  await expect(core).toHaveClass(/snl-done/);
+  const opacity = (icon) => core.locator(icon).evaluate((el) => getComputedStyle(el).opacity);
+  await expect.poll(() => opacity(".snl-plus")).toBe("0"); // not drawn under the ✓
+  expect(await opacity(".snl-check")).toBe("1");
+  await expect(core).not.toHaveClass(/snl-done/); // after 1.2 s
+  await expect.poll(() => opacity(".snl-plus")).toBe("1");
+});
+
 test("a repeated element is named by its instance", async ({ page, app }) => {
   await openLauncher(page);
   await writeNote(page, page.locator(app.repeated).nth(1), "Shorter title");
