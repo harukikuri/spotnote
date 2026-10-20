@@ -44,13 +44,13 @@ line.
 
 ## 3. Does Spotnote itself need a change?
 
-- JSX: `jsxFramework()` in `package/src/index.js` tells React from Solid by Vite
+- JSX: `jsxFramework()` in `package/src/index.ts` tells React from Solid by Vite
   plugin name, for the framework mark in the UI. A new JSX framework shows as
   "JSX" until it's added there and in `FRAMEWORKS` / the icons in
   `package/src/client/icons.js`.
 - Another file type or compiler (not JSX, `.vue`, `.svelte` or `.astro`), or a
   new major whose compiler gives another AST: stamping is new work in
-  `package/src/index.js`. Stop and plan it with the user first.
+  `package/src/index.ts`. Stop and plan it with the user first.
 - A compiler Spotnote parses (Vue, Svelte, Astro): add the new app to its loop
   in `package/test/stamp.test.js`.
 

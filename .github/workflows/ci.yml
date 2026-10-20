@@ -60,6 +60,8 @@ jobs:
             (cd "$p" && pnpm run --if-present build && pnpm pack --pack-destination "$RUNNER_TEMP/pack-$p")
           done
           tar -tzf "$RUNNER_TEMP"/pack-mcp/*.tgz | grep -q package/dist/cli.js
+          tar -tzf "$RUNNER_TEMP"/pack-package/*.tgz | grep -q package/dist/index.d.ts
+          tar -tzf "$RUNNER_TEMP"/pack-package/*.tgz | grep -q package/dist/client/inspector.js
 
       - name: Docs build
         run: pnpm --filter @spotnote/docs build

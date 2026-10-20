@@ -26,19 +26,17 @@
     "directory": "package"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "typecheck": "tsc -p . --noEmit",
+    "build": "tsc -p ."
   },
-  "main": "src/index.js",
-  "types": "index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "default": "./src/index.js"
-    }
+    ".": "./src/index.ts"
   },
   "files": [
-    "src",
-    "index.d.ts"
+    "dist"
   ],
   "engines": {
     "node": ">=22"
@@ -68,6 +66,18 @@
     "magic-string": "^0.30.0"
   },
   "devDependencies": {
-    "happy-dom": "^20.14.6"
+    "@types/babel__core": "^7.20.5",
+    "happy-dom": "^20.14.6",
+    "vite": "^8.3.4"
+  },
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
   }
 }

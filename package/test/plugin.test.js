@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const mcp = http.createServer((_, res) => res.end(JSON.stringify({ spotnote: 1 })));
 await new Promise((r) => mcp.listen(0, "127.0.0.1", r));
 process.env.SPOTNOTE_PORT = String(mcp.address().port);
-const { default: spotnote } = await import("../src/index.js");
+const { default: spotnote } = await import("../src/index.ts");
 
 const repo = path.resolve(fileURLToPath(import.meta.url), "../../..");
 const root = path.join(repo, "examples/react/react19");
@@ -147,9 +147,9 @@ test("open: finds the file from the app root, then the repository root", async (
     status: 200,
     body: { file: path.join(root, "vite.config.js") },
   });
-  assert.deepEqual(await open({ path: "package/src/index.js", resolve: 1 }), {
+  assert.deepEqual(await open({ path: "package/src/index.ts", resolve: 1 }), {
     status: 200,
-    body: { file: path.join(repo, "package/src/index.js") },
+    body: { file: path.join(repo, "package/src/index.ts") },
   });
 });
 

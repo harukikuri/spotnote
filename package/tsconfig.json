@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // The browser client is still JavaScript: copied to dist/client as it is.
+    "allowJs": true
+  },
+  "include": ["src"]
+}

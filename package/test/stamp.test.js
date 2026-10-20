@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
-import spotnote from "../src/index.js";
+import spotnote from "../src/index.ts";
 
 const repo = path.resolve(fileURLToPath(import.meta.url), "../../..");
 const examples = path.join(repo, "examples");

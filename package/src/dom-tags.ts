@@ -16,4 +16,4 @@ feMergeNode feMorphology feOffset fePointLight feSpecularLighting feSpotLight fe
 foreignObject g image line linearGradient marker mask metadata mpath path pattern polygon polyline
 radialGradient rect set stop switch symbol text textPath tspan use view`;
 
-module.exports = new Set(`${HTML} ${SVG}`.split(/\s+/));
+export const DOM_TAGS = new Set(`${HTML} ${SVG}`.split(/\s+/));

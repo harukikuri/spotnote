@@ -38,8 +38,9 @@ one job per example app, side by side; the docs link its latest run) and
 
 Plugin layout (`package/`):
 
-- `src/index.js` — the Vite plugin `spotnote()`: stamping, client injection, MCP status
-- `src/plugin.cjs` — the Babel visitor that stamps `data-spotnote` in JSX
+- `src/index.ts` — the Vite plugin `spotnote()`: stamping, client injection, MCP status
+- `src/plugin.ts` — the Babel visitor that stamps `data-spotnote` in JSX
+- `src/dom-tags.ts` — the HTML and SVG tag names the JSX pass stamps
 - `src/client/` — the browser picker, auto-injected in dev:
   - `inspector.js` — picking, note panel, pins, HMR re-bind
   - `prompt.js` — source locations and the prompt built from them
@@ -57,6 +58,9 @@ Plugin layout (`package/`):
   - `settings.js` — accent, theme and editor, per browser
   - `markdown.js` — the Markdown subset for the agent's messages
   - `confirm.js` — the "are you sure?" dialog over a panel
+
+The plugin is TypeScript like `mcp/` (below); the client is still JavaScript,
+which the build copies to `dist/client/`.
 
 MCP layout (`mcp/`):
 

@@ -11,21 +11,23 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { existsSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
-import MagicString from "magic-string";
-import { createFilter } from "vite";
+import type { BabelFileResult } from "@babel/core";
+import launchEditor from "launch-editor";
+import guessEditor from "launch-editor/guess.js";
+import MagicString, { type SourceMap } from "magic-string";
+import { createFilter, type FilterPattern, type Plugin } from "vite";
+import babelVisitor, { type Use } from "./plugin.ts"; // the JSX-stamping Babel plugin
 
 const require = createRequire(import.meta.url);
-const pkg = require("../package.json");
+const pkg: { version: string; repository: { url: string } } = require("../package.json");
 // For the Settings footer: "Spotnote v0.0.0" and a link to the repository.
 const ABOUT = { version: pkg.version, repo: pkg.repository.url.replace(/^git\+/, "").replace(/\.git$/, "") };
-const launchEditor = require("launch-editor");
-const guessEditor = require("launch-editor/guess.js");
 // What launch-editor falls back to without a GUI editor: it would open inside
 // the dev server's terminal, where it can't run. Better to say "no editor".
 const TERMINAL_EDITORS = new Set(["vi", "vim", "nvim", "nano", "emacs", "pico", "ed", "micro", "hx", "helix"]);
 // Editors that also open from a URL: used when their command-line tool isn't
 // installed (VS Code's `code` often isn't), so the page opens the URL instead.
-const EDITOR_SCHEMES = {
+const EDITOR_SCHEMES: Record<string, string> = {
   code: "vscode",
   "code-insiders": "vscode-insiders",
   cursor: "cursor",
@@ -34,25 +36,24 @@ const EDITOR_SCHEMES = {
 };
 
 // Can `cmd` be run? (An absolute path that exists, or a name found on PATH.)
-function runnable(cmd) {
+function runnable(cmd: string): boolean {
   if (path.isAbsolute(cmd)) return existsSync(cmd);
   const exts = process.platform === "win32" ? ["", ".exe", ".cmd", ".bat"] : [""];
   return (process.env.PATH || "")
     .split(path.delimiter)
     .some((dir) => exts.some((ext) => existsSync(path.join(dir, cmd + ext))));
 }
-const babelVisitor = require("./plugin.cjs"); // the JSX-stamping Babel plugin
 const clientEntry = fileURLToPath(new URL("./client/inspector.js", import.meta.url));
 
 const VIRTUAL = "virtual:spotnote-client";
 const RESOLVED = "\0" + VIRTUAL;
 
-const warnedParse = new Set(); // files we couldn't parse (warn once each)
+const warnedParse = new Set<string>(); // files we couldn't parse (warn once each)
 
 // A file we couldn't parse goes to the framework's own compiler unstamped,
 // which reports a real syntax error itself: say once why its elements can't
 // be picked.
-function skipped(file, root) {
+function skipped(file: string, root: string): undefined {
   if (warnedParse.has(file)) return;
   warnedParse.add(file);
   console.warn(
@@ -64,29 +65,43 @@ function skipped(file, root) {
 // none of its own. Each is loaded lazily, once per app root (a test run stamps
 // apps on different versions), and is null when the app doesn't have it: that
 // file type then just isn't stamped.
-function perRoot(load) {
-  const cache = new Map(); // root -> Promise
+function perRoot<T>(load: (root: string) => Promise<T>): (root: string) => Promise<T | null> {
+  const cache = new Map<string, Promise<T | null>>();
   return (root) => {
-    if (!cache.has(root))
-      cache.set(
-        root,
-        load(root).catch(() => null),
-      );
-    return cache.get(root);
+    let got = cache.get(root);
+    if (!got) cache.set(root, (got = load(root).catch(() => null)));
+    return got;
   };
 }
-const appImport = async (root, pkg) =>
+// The compilers' modules, untyped here: each reader below names the few
+// fields it uses.
+const appImport = async (root: string, pkg: string): Promise<Record<string, unknown>> =>
   import(pathToFileURL(createRequire(path.join(root, "index.js")).resolve(pkg)).href);
+
+// What a stamper returns: the stamped code and its source map.
+type Stamped = { code: string; map: SourceMap };
 
 // Vue SFCs aren't JSX, so Babel can't reach them. Instead we parse the SFC with
 // the app's own `vue/compiler-sfc` and splice `data-spotnote` onto each native
 // template element.
-const getVueParse = perRoot(async (root) => (await appImport(root, "vue/compiler-sfc")).parse);
+type VueNode = {
+  type: number;
+  tagType?: number;
+  tag?: string;
+  loc?: { start: { offset: number; line: number; column: number } };
+  props?: { type: number; name?: string }[];
+  children?: VueNode[];
+};
+type VueParse = (
+  code: string,
+  options: { filename: string },
+) => { descriptor: { template?: { ast?: VueNode } | null }; errors: unknown[] };
+const getVueParse = perRoot(async (root) => (await appImport(root, "vue/compiler-sfc")).parse as VueParse);
 
 // Walk the template AST and stamp every native host element (tagType 0). Element
 // `loc.start.offset` is absolute in the SFC source, so we splice back-to-front
 // (offsets stay valid) and only insert within a line (line numbers preserved).
-function stampVueTemplate(code, file, base, parse, used) {
+function stampVueTemplate(code: string, file: string, base: string, parse: VueParse, used: Use[]): Stamped | undefined {
   const { descriptor, errors } = parse(code, { filename: file });
   if (errors.length) throw errors[0];
   if (!descriptor.template?.ast) return;
@@ -95,11 +110,11 @@ function stampVueTemplate(code, file, base, parse, used) {
   const name = path.basename(file, path.extname(file));
   const s = new MagicString(code);
   let touched = false;
-  const visit = (node) => {
+  const visit = (node: VueNode | undefined) => {
     if (!node) return;
     // NodeTypes.ELEMENT === 1, ElementTypes.ELEMENT === 0 (a real DOM tag).
-    // ElementTypes.COMPONENT === 1: where a component is used (see plugin.cjs).
-    if (node.type === 1 && node.tagType === 1 && node.loc)
+    // ElementTypes.COMPONENT === 1: where a component is used (see plugin.ts).
+    if (node.type === 1 && node.tagType === 1 && node.tag && node.loc)
       used.push([node.tag, node.loc.start.line, node.loc.start.column]);
     if (node.type === 1 && node.tagType === 0 && node.tag && node.loc) {
       const already = (node.props || []).some((p) => p.type === 6 && p.name === "data-spotnote");
@@ -122,15 +137,20 @@ function stampVueTemplate(code, file, base, parse, used) {
 
 // Svelte, like Vue, isn't JSX — parse with the app's own `svelte/compiler` and
 // splice `data-spotnote` onto native markup elements.
+type SvelteNode = { type: string; name?: string; start?: number; attributes?: ({ name?: string } | null)[] };
+type SvelteParse = (
+  code: string,
+  options: { filename: string; modern: boolean },
+) => { fragment?: unknown; html?: unknown };
 const getSvelteParse = perRoot(async (root) => {
   const m = await appImport(root, "svelte/compiler");
   // svelte/compiler is CJS — importing the file by path exposes `parse` on the
   // interop default, not as a named export.
-  return m.parse || m.default?.parse || null;
+  return (m.parse || (m.default as { parse?: unknown } | undefined)?.parse || null) as SvelteParse | null;
 });
 
 // Offset → { line, column }, both 1-based like the JSX/Vue stamps.
-function offsetToLineCol(code, offset) {
+function offsetToLineCol(code: string, offset: number): { line: number; column: number } {
   let line = 1;
   let column = 1;
   for (let i = 0; i < offset && i < code.length; i++) {
@@ -145,21 +165,23 @@ function offsetToLineCol(code, offset) {
 }
 
 // Generic tree walk over the parsed markup (we don't care about node kinds
-// except native elements).
-function walkAst(node, visit) {
+// except native elements). N: the fields the caller reads off a node with a
+// string `type`, as its parser makes them.
+function walkAst<N>(node: unknown, visit: (node: N) => void): void {
   if (!node || typeof node !== "object") return;
   if (Array.isArray(node)) {
     for (const n of node) walkAst(n, visit);
     return;
   }
-  if (typeof node.type === "string") visit(node);
-  for (const key in node) {
+  const record = node as Record<string, unknown>;
+  if (typeof record.type === "string") visit(node as N);
+  for (const key in record) {
     if (key === "parent") continue;
-    walkAst(node[key], visit);
+    walkAst(record[key], visit);
   }
 }
 
-function stampSvelte(code, file, base, parse, used) {
+function stampSvelte(code: string, file: string, base: string, parse: SvelteParse, used: Use[]): Stamped | undefined {
   // Svelte 4 reads <script> as JavaScript and <style> as CSS, so TypeScript or
   // SCSS there makes it throw. Only the markup is walked: parse a copy with
   // their contents blanked (same length and lines), and splice into the code.
@@ -170,7 +192,7 @@ function stampSvelte(code, file, base, parse, used) {
   const ast = parse(markupOnly, { filename: file, modern: true });
   // Braces in an attribute value are an expression in Svelte: write them as
   // character references, so a path like src/{x}/ stays text.
-  const text = (v) => v.replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
+  const text = (v: string) => v.replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
   const rel = text(path.relative(base, file).replace(/\\/g, "/") || file);
   const name = text(path.basename(file, path.extname(file)));
   const s = new MagicString(code);
@@ -182,12 +204,12 @@ function stampSvelte(code, file, base, parse, used) {
   // is an Element named "svelte:element") → skipped.
   const markup = ast.fragment ?? ast.html;
   const isTag = ast.fragment
-    ? (n) => n.type === "RegularElement"
-    : (n) => n.type === "Element" && !n.name.includes(":");
-  walkAst(markup, (node) => {
-    if ((node.type === "Component" || node.type === "InlineComponent") && typeof node.start === "number") {
+    ? (n: SvelteNode) => n.type === "RegularElement"
+    : (n: SvelteNode) => n.type === "Element" && !n.name?.includes(":");
+  walkAst<SvelteNode>(markup, (node) => {
+    if ((node.type === "Component" || node.type === "InlineComponent") && node.name && typeof node.start === "number") {
       const { line, column } = offsetToLineCol(code, node.start);
-      used.push([node.name, line, column]); // where a component is used (see plugin.cjs)
+      used.push([node.name, line, column]); // where a component is used (see plugin.ts)
     }
     if (!node.name || !isTag(node)) return;
     if (typeof node.start !== "number") return;
@@ -209,24 +231,37 @@ function stampSvelte(code, file, base, parse, used) {
 // markup. Astro 7 has `@astrojs/compiler-rs`, Astro 5 and 6 `@astrojs/compiler`:
 // each gives its own AST, so each gets a reader that lists the elements as
 // { tag, start, stamped } (start: the offset of its "<" in the code).
-const getAstroElements = perRoot(async (root) => {
+type AstroElement = { tag: string; start: number; stamped: boolean };
+type ElementsOf = (code: string) => Promise<AstroElement[]>;
+const getAstroElements = perRoot(async (root): Promise<ElementsOf> => {
   const astroPkg = createRequire(path.join(root, "index.js")).resolve("astro/package.json");
   const astroRequire = createRequire(astroPkg);
-  const load = async (pkg) => (await import(pathToFileURL(astroRequire.resolve(pkg)).href)).parse;
+  const load = async (pkg: string): Promise<unknown> =>
+    (await import(pathToFileURL(astroRequire.resolve(pkg)).href)).parse;
   // The compiler this Astro declares: another one may be installed next to it.
-  if (require(astroPkg).dependencies?.["@astrojs/compiler-rs"]) {
-    const parse = await load("@astrojs/compiler-rs");
+  const astro: { dependencies?: Record<string, string> } = require(astroPkg);
+  if (astro.dependencies?.["@astrojs/compiler-rs"]) {
+    const parse = (await load("@astrojs/compiler-rs")) as (code: string) => { ast: unknown };
     return async (code) => rsElements(parse(code).ast);
   }
-  const parse = await load("@astrojs/compiler");
+  const parse = (await load("@astrojs/compiler")) as (
+    code: string,
+    options: { position: boolean },
+  ) => Promise<{ ast: unknown }>;
   return async (code) => goElements(code, (await parse(code, { position: true })).ast);
 });
 
 // Astro 7: elements are JSXElements (in the markup and inside {expressions}
 // alike), with UTF-16 offsets, like JavaScript strings.
-function rsElements(ast) {
-  const found = [];
-  walkAst(ast?.body, (node) => {
+type RsNode = {
+  type: string;
+  start: number;
+  name?: { type: string; name: string };
+  attributes: { name?: { name?: string } }[];
+};
+function rsElements(ast: unknown): AstroElement[] {
+  const found: AstroElement[] = [];
+  walkAst<RsNode>((ast as { body?: unknown } | null)?.body, (node) => {
     if (node.type !== "JSXOpeningElement" || node.name?.type !== "JSXIdentifier") return;
     const stamped = node.attributes.some((a) => a.name?.name === "data-spotnote");
     found.push({ tag: node.name.name, start: node.start, stamped });
@@ -238,11 +273,17 @@ function rsElements(ast) {
 // are "component"). Their offsets count UTF-8 bytes, so the start comes from the
 // line and column, which count characters. <html> comes without a position: it
 // isn't stamped.
-function goElements(code, ast) {
+type GoNode = {
+  type: string;
+  name: string;
+  position?: { start: { line: number; column: number } };
+  attributes: { name: string }[];
+};
+function goElements(code: string, ast: unknown): AstroElement[] {
   const lineStarts = [0];
   for (let i = 0; i < code.length; i++) if (code[i] === "\n") lineStarts.push(i + 1);
-  const found = [];
-  walkAst(ast, (node) => {
+  const found: AstroElement[] = [];
+  walkAst<GoNode>(ast, (node) => {
     if (!["element", "custom-element", "component"].includes(node.type) || !node.position) return;
     const { line, column } = node.position.start;
     const stamped = node.attributes.some((a) => a.name === "data-spotnote");
@@ -255,7 +296,13 @@ function goElements(code, ast) {
 // have an attribute, and <slot>, which isn't an element in the page.
 const ASTRO_SKIP = new Set(["script", "style", "slot"]);
 
-async function stampAstro(code, file, base, elementsOf, used) {
+async function stampAstro(
+  code: string,
+  file: string,
+  base: string,
+  elementsOf: ElementsOf,
+  used: Use[],
+): Promise<Stamped> {
   const elements = await elementsOf(code);
   const rel = path.relative(base, file).replace(/\\/g, "/") || file;
   const name = path.basename(file, path.extname(file));
@@ -276,12 +323,12 @@ async function stampAstro(code, file, base, elementsOf, used) {
 
 // Hands the page where each component is used in a file: [name, line, column]
 // for every <Component> in it, which the prompt reads (client/prompt.js).
-const usesScript = (rel, used) =>
+const usesScript = (rel: string, used: Use[]) =>
   `\n(globalThis.__spotnoteUses ??= {})[${JSON.stringify(rel)}] = ${JSON.stringify(used)};`;
 
 // Which framework compiles .jsx/.tsx here, from the plugins in the config —
 // the extension alone can't tell React from Solid. null = none or both.
-function jsxFramework(plugins) {
+function jsxFramework(plugins: readonly Plugin[]): "react" | "solid" | null {
   const names = plugins.map((p) => p.name || "");
   const react = names.some((n) => n.startsWith("vite:react"));
   const solid = names.includes("solid");
@@ -289,7 +336,7 @@ function jsxFramework(plugins) {
 }
 
 // The Git repository's root around `dir`, or `dir` itself outside one.
-function repoRoot(dir) {
+function repoRoot(dir: string): string {
   for (let d = dir; ; d = path.dirname(d)) {
     if (existsSync(path.join(d, ".git"))) return d;
     if (path.dirname(d) === d) return dir;
@@ -299,7 +346,7 @@ function repoRoot(dir) {
 // The commit a build is made from, for prompts: the location is from that
 // commit, and the agent's checkout may have moved on. From Git, or from the
 // CI's environment when it builds without the repository's history.
-function headCommit(dir) {
+function headCommit(dir: string): string | null {
   try {
     return execSync("git rev-parse HEAD", { cwd: dir, stdio: ["ignore", "pipe", "ignore"] })
       .toString()
@@ -312,30 +359,68 @@ function headCommit(dir) {
   }
 }
 
-// Options:
-//   exclude: files not to stamp (globs from the Vite root, or RegExps), such as
-//            a scene whose <line> is React Three Fiber's, not SVG's
-//   port:    spotnote-mcp's port, instead of SPOTNOTE_PORT or 4848 (see mcp/)
-//   build:   modes to also run in `vite build` for (["staging"]: `vite build
-//            --mode staging`), for a staging or preview deploy
-//   webhook: a URL that gets each note as it's sent (client/webhook.js)
-export default function spotnote({ exclude, port, build = [], webhook } = {}) {
+export interface SpotnoteOptions {
+  /**
+   * Files not to stamp: globs relative to the Vite root, or RegExps matched
+   * against the absolute path. For a file whose lowercase JSX isn't the DOM
+   * and shares a tag name with it, such as React Three Fiber's `<line>`.
+   */
+  exclude?: FilterPattern;
+  /**
+   * spotnote-mcp's port. Defaults to `SPOTNOTE_PORT`, then 4848. Set the
+   * same port in your agent's `SPOTNOTE_PORT`.
+   */
+  port?: number;
+  /**
+   * Modes to also run in `vite build` for, such as `["staging"]` for
+   * `vite build --mode staging`: a staging or preview deploy that reviewers
+   * write notes on. Prompts then name the commit the build is made from. The
+   * build shows source paths: never list your production mode.
+   */
+  build?: string[];
+  /**
+   * A URL that gets each note as it's sent (Enter, new or rewritten): a POST
+   * whose body is JSON, sent as `text/plain` so no CORS setup is needed:
+   * `{ event: "note.add" | "note.update", sentAt, note: { key, text, page,
+   * targets: [{ file, line, column, instance }], commit, prompt } }`, where
+   * `commit` is the commit a build is made from (null on the dev server). The page holds
+   * the URL, so point it at your own endpoint, not a secret one (client/webhook.js).
+   */
+  webhook?: string;
+}
+
+/**
+ * Spotnote — a dev-only Vite plugin.
+ *
+ * Stamps `data-spotnote="file:line:column"` onto host elements (JSX via a Babel
+ * pass, `.vue` templates via `vue/compiler-sfc`, `.svelte` markup via
+ * `svelte/compiler`, `.astro` markup via Astro's compiler) and auto-injects the browser
+ * picker client. It runs only on the dev server (and in builds in a `build` mode),
+ * so production builds and Vitest runs are untouched.
+ *
+ * Add it once to your Vite `plugins`; the options are optional.
+ *
+ * @example
+ * import spotnote from "spotnote";
+ * export default defineConfig({ plugins: [react(), spotnote()] });
+ */
+export default function spotnote({ exclude, port, build = [], webhook }: SpotnoteOptions = {}): Plugin[] {
   // Dev only, but for builds in a `build` mode: production builds are
   // untouched. Not under Vitest either, which runs a dev server too: stamps
   // would change tests' DOM and snapshots, and the spotnote-mcp check would
   // keep the test run from exiting.
-  const apply = (_, { command, mode }) =>
+  const apply: Plugin["apply"] = (_, { command, mode }) =>
     (command === "serve" || (command === "build" && build.includes(mode))) && !process.env.VITEST;
   const mcpPort = port ?? (Number(process.env.SPOTNOTE_PORT) || 4848);
   let building = false;
-  let commit = null; // in a build, the commit it's made from
-  let stamps = () => true; // whether a file is stamped: everything but `exclude`
-  let transformSync;
+  let commit: string | null = null; // in a build, the commit it's made from
+  let stamps: (id: string) => boolean = () => true; // whether a file is stamped: everything but `exclude`
+  let transformSync: typeof import("@babel/core").transformSync;
   let root = process.cwd();
   let top = root; // the repository's root: stamped paths are relative to it
-  let jsx = null;
-  const uses = new Map(); // file -> where components are used in it, for the client plugin below
-  const main = {
+  let jsx: "react" | "solid" | null = null;
+  const uses = new Map<string, Use[]>(); // file -> where components are used in it, for the client plugin below
+  const main: Plugin = {
     name: "spotnote",
     apply,
     enforce: "pre", // stamp before the framework compiler processes the JSX
@@ -358,7 +443,7 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
         const now = await fetch(`http://127.0.0.1:${mcpPort}/health`)
           .then((r) => r.json())
           .then(
-            (j) => j.spotnote === 1,
+            (j: { spotnote?: unknown }) => j.spotnote === 1,
             () => false,
           );
         if (now !== up) server.ws.send("spotnote:mcp", { up: (up = now) });
@@ -378,8 +463,8 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
       //   isn't installed: the page opens scheme://file/…) · 404 { error: "missing" }
       //   · 409 { error: "no-editor" }
       server.middlewares.use("/__spotnote/open", (req, res) => {
-        const q = new URL(req.url, "http://x").searchParams;
-        const reply = (status, body) => {
+        const q = new URL(req.url ?? "", "http://x").searchParams;
+        const reply = (status: number, body: Record<string, string>) => {
           res.statusCode = status;
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify(body));
@@ -399,7 +484,7 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
         launchEditor(
           at,
           editor,
-          (_, err) => err && server.config.logger.warn(`[spotnote] couldn't open ${at}: ${err}`),
+          (_, err) => void (err && server.config.logger.warn(`[spotnote] couldn't open ${at}: ${err}`)),
         );
         reply(200, { file, editor: path.basename(editor) });
       });
@@ -431,11 +516,11 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
         if (!stamps(file)) return;
 
         if (/\.(jsx|tsx)$/.test(file)) {
-          let res;
+          let res: BabelFileResult | null;
           try {
             res = transformSync(code, {
               filename: file,
-              root: top, // what stamped paths are relative to (plugin.cjs)
+              root: top, // what stamped paths are relative to (plugin.ts)
               plugins: [babelVisitor],
               // Parse permissively so common app syntax (decorators, import
               // attributes, `using`) doesn't trip our standalone pass.
@@ -450,7 +535,7 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
             return skipped(file, root); // syntax our config doesn't enable
           }
           if (!res || res.code == null) return;
-          uses.set(file, res.metadata.spotnoteUses ?? []);
+          uses.set(file, (res.metadata as { spotnoteUses?: Use[] }).spotnoteUses ?? []);
           return { code: res.code, map: res.map };
         }
 
@@ -459,7 +544,7 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
         if (file.endsWith(".vue") && !id.includes("?")) {
           const parse = await getVueParse(root);
           if (!parse) return;
-          const used = [];
+          const used: Use[] = [];
           uses.set(file, used);
           try {
             return stampVueTemplate(code, file, top, parse, used);
@@ -472,7 +557,7 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
         if (file.endsWith(".svelte") && !id.includes("?")) {
           const parse = await getSvelteParse(root);
           if (!parse) return;
-          const used = [];
+          const used: Use[] = [];
           uses.set(file, used);
           try {
             return stampSvelte(code, file, top, parse, used);
@@ -500,14 +585,15 @@ export default function spotnote({ exclude, port, build = [], webhook } = {}) {
   // and other SSR frameworks don't serve one. Runs after the framework compiler,
   // when even a .vue or .svelte file is JavaScript. The import goes at the end
   // (imports are hoisted), so no line moves and the source map stays as it is.
-  const client = {
+  const client: Plugin = {
     name: "spotnote:client",
     apply,
     enforce: "post",
     transform(code, id, options) {
       if (options?.ssr || id.includes("node_modules") || !/\.(jsx|tsx|vue|svelte)$/.test(id)) return;
       const rel = path.relative(top, id).replace(/\\/g, "/");
-      const used = uses.has(id) ? usesScript(rel, uses.get(id)) : "";
+      const got = uses.get(id);
+      const used = got ? usesScript(rel, got) : "";
       return { code: `${code}\nimport ${JSON.stringify(VIRTUAL)};${used}`, map: null };
     },
   };
