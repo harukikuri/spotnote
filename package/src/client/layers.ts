@@ -15,20 +15,30 @@
 // menus), and that's all it does: the click doesn't pick an element or follow
 // a link. Spotnote's own UI (a pin, the launcher) isn't "outside": pressing it
 // leaves the menus open.
-import { uiRoot } from "./ui.js";
+import { uiRoot } from "./ui.ts";
 
-// Layers take the top z-indices, the topmost layer the highest; everything
-// else of ours sits below (see the stacking note in ui.js).
-const TOP = 2147483647;
-
-const stack = []; // bottom → top
-
-function restack() {
-  stack.forEach((l, i) => (l.el.style.zIndex = String(TOP - (stack.length - 1 - i))));
+export interface Layer {
+  el: HTMLElement | null;
+  hit: EventTarget | null;
+  close: () => void;
+  lightDismiss: boolean;
+  show(el: HTMLElement, hit?: EventTarget): void;
+  swap(el: HTMLElement, hit?: EventTarget): void;
+  hide(): void;
 }
 
-export function createLayer({ close, lightDismiss = false }) {
-  const layer = {
+// Layers take the top z-indices, the topmost layer the highest; everything
+// else of ours sits below (see the stacking note in ui.ts).
+const TOP = 2147483647;
+
+const stack: Layer[] = []; // bottom → top
+
+function restack() {
+  stack.forEach((l, i) => l.el && (l.el.style.zIndex = String(TOP - (stack.length - 1 - i))));
+}
+
+export function createLayer({ close, lightDismiss = false }: { close: () => void; lightDismiss?: boolean }): Layer {
+  const layer: Layer = {
     el: null,
     hit: null,
     close,
@@ -49,14 +59,14 @@ export function createLayer({ close, lightDismiss = false }) {
       const i = stack.indexOf(layer);
       if (i < 0) return;
       stack.splice(i, 1);
-      layer.el.style.zIndex = "";
+      if (layer.el) layer.el.style.zIndex = "";
       restack();
     },
   };
   return layer;
 }
 
-export function closeTopLayer() {
+export function closeTopLayer(): boolean {
   const top = stack.at(-1);
   if (!top) return false;
   top.close();
@@ -69,9 +79,9 @@ addEventListener(
   (e) => {
     swallowClick = false;
     const path = e.composedPath();
-    const pressed = stack.findLast((l) => path.includes(l.hit));
+    const pressed = stack.findLast((l) => l.hit && path.includes(l.hit));
     if (pressed) {
-      if (pressed !== stack.at(-1)) pressed.show(pressed.el, pressed.hit); // to the top
+      if (pressed !== stack.at(-1) && pressed.el) pressed.show(pressed.el, pressed.hit ?? pressed.el); // to the top
       return;
     }
     const menus = stack.filter((l) => l.lightDismiss);

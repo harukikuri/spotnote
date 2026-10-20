@@ -1,8 +1,9 @@
 // Where an element is written, and the prompt that hands it to an agent. Reads
 // only the data-spotnote stamps already in the DOM, so it's framework-agnostic.
+import type { Pin } from "./types.ts";
 
 // "src/App.jsx:12:4" -> {file, line, column}  (split from the RIGHT: path may contain ':')
-export function parseLoc(s) {
+export function parseLoc(s: string): { file: string; line: number; column: number } {
   const i = s.lastIndexOf(":");
   const j = s.lastIndexOf(":", i - 1);
   return { file: s.slice(0, j), line: Number(s.slice(j + 1, i)), column: Number(s.slice(i + 1)) };
@@ -10,17 +11,17 @@ export function parseLoc(s) {
 
 // Identity for a picked element: data-spotnote + occurrence index among same-loc
 // siblings, so identical .map() items (e.g. <li>) can be told apart.
-export function occInfo(el) {
-  const loc = el.getAttribute("data-spotnote");
+export function occInfo(el: Element): { loc: string; index: number; total: number } {
+  const loc = el.getAttribute("data-spotnote") ?? "";
   const same = [...document.querySelectorAll(`[data-spotnote="${loc}"]`)];
   const index = same.indexOf(el);
   return { loc, index: index < 0 ? 0 : index, total: same.length };
 }
-export function refKey(loc, index) {
+export function refKey(loc: string, index: number): string {
   return `${loc}@${index}`;
 }
-export function resolveRef(loc, index) {
-  return document.querySelectorAll(`[data-spotnote="${loc}"]`)[index] || null;
+export function resolveRef(loc: string, index: number): HTMLElement | null {
+  return document.querySelectorAll<HTMLElement>(`[data-spotnote="${loc}"]`)[index] || null;
 }
 
 // A ready-to-paste prompt: request first, then precise target + context, in a
@@ -29,18 +30,14 @@ export function resolveRef(loc, index) {
 // data-spotnote stamps (outer → inner) — e.g. App > Products > ProductCard.
 // Uses the stamped component name when present, else the file's basename. Only
 // reads stamps already in the DOM, so it stays framework-agnostic.
-function sourcePath(el) {
-  const up = []; // inner → outer
-  for (let node = el; node; node = node.parentElement) {
+function sourcePath(el: Element): string[] {
+  const up: string[] = []; // inner → outer
+  for (let node: Element | null = el; node; node = node.parentElement) {
     if (node.hasAttribute("data-spotnote-ui")) continue; // skip our own overlay
     const loc = node.getAttribute("data-spotnote");
     if (!loc) continue;
     const label =
-      node.getAttribute("data-spotnote-name") ||
-      parseLoc(loc)
-        .file.split("/")
-        .pop()
-        .replace(/\.\w+$/, "");
+      node.getAttribute("data-spotnote-name") || (parseLoc(loc).file.split("/").pop() ?? "").replace(/\.\w+$/, "");
     if (up[up.length - 1] !== label) up.push(label); // dedupe consecutive same component
   }
   return up.reverse(); // outer → inner
@@ -53,11 +50,11 @@ function sourcePath(el) {
 // the nearest owner up the page that uses this component by name, right after
 // that owner's element. Without one (an import under another name, say), the
 // nearest other owner's element: close to it, but not the line.
-function usedAt(el) {
+function usedAt(el: Element): string | null {
   const name = el.getAttribute("data-spotnote-name");
   if (!name) return null;
-  const same = (tag) => tag.toLowerCase().replace(/-/g, "") === name.toLowerCase(); // <bar-chart> is BarChart in Vue
-  let inside = null;
+  const same = (tag: string) => tag.toLowerCase().replace(/-/g, "") === name.toLowerCase(); // <bar-chart> is BarChart in Vue
+  let inside: string | null = null;
   for (let node = el.parentElement; node; node = node.parentElement) {
     const loc = node.getAttribute("data-spotnote");
     const owner = node.getAttribute("data-spotnote-name");
@@ -74,17 +71,17 @@ function usedAt(el) {
 
 // In a build (a staging or preview deploy), the commit it's made from: the
 // stamps are from then, and the agent's checkout may have moved on.
-let commit = null;
-export function setCommit(c) {
+let commit: string | null = null;
+export function setCommit(c: string | null): void {
   commit = c;
 }
 
 // `target`: one element, or several for a note on more than one (each gets its
 // own "## Target i of n" section, in the order they were picked). `raw` is the
 // node actually clicked on the first.
-export function buildPrompt(target, note, raw = null) {
+export function buildPrompt(target: HTMLElement | HTMLElement[], note: string, raw: Element | null = null): string {
   const els = Array.isArray(target) ? target : [target];
-  const heading = (i) => (els.length > 1 ? `## Target ${i + 1} of ${els.length}` : "## Target");
+  const heading = (i: number) => (els.length > 1 ? `## Target ${i + 1} of ${els.length}` : "## Target");
   return [
     "## Request",
     note,
@@ -93,8 +90,8 @@ export function buildPrompt(target, note, raw = null) {
 }
 
 // One element's part of the prompt: where it is, what it is, its owners, its styles.
-function targetSection(el, heading, raw) {
-  const l = parseLoc(el.getAttribute("data-spotnote"));
+function targetSection(el: HTMLElement, heading: string, raw: Element | null): string[] {
+  const l = parseLoc(el.getAttribute("data-spotnote") ?? "");
   const occ = occInfo(el);
   const tag = el.tagName.toLowerCase();
   const cls = typeof el.className === "string" && el.className.trim() ? ` class="${el.className.trim()}"` : "";
@@ -103,7 +100,7 @@ function targetSection(el, heading, raw) {
   // not "Aero Runner$120"), and leaves out what's hidden.
   const text = (el.innerText || "").trim().replace(/\s+/g, " ").slice(0, 60);
   const cs = getComputedStyle(el);
-  const round = (v) => v.replace(/(\d+\.\d{2})\d+/g, "$1"); // trim fractional px
+  const round = (v: string) => v.replace(/(\d+\.\d{2})\d+/g, "$1"); // trim fractional px
   const styles = [
     ["padding", "padding"],
     ["margin", "margin"],
@@ -151,7 +148,7 @@ function targetSection(el, heading, raw) {
 
 // The prompt for a note whose element can't be found: the one saved when it was
 // written, flagged as possibly stale (older notes have none — rebuild the basics).
-export function savedPrompt(pin) {
+export function savedPrompt(pin: Pick<Pin, "prompt" | "loc" | "note">): string {
   const stale = "- note: this location is from when the note was written; the code has changed since, so look near it";
   if (pin.prompt) return pin.prompt.replace(/^## Target( \d+ of \d+)?\n/gm, (h) => `${h}${stale}\n`);
   const l = parseLoc(pin.loc);

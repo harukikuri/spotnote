@@ -2,22 +2,24 @@
 // - Inspect via the launcher toggle OR by holding Alt; hover highlights the
 //   nearest data-spotnote element, click opens a selection panel.
 // - Write a note; Enter saves it, drops a pin and copies a ready-to-paste prompt
-//   (see prompt.js) — or, with spotnote-mcp connected, leaves it to the agent.
+//   (see prompt.ts) — or, with spotnote-mcp connected, leaves it to the agent.
 // - After each HMR update the selection/pins re-bind by exact data-spotnote.
-import { createIconBtn, uiRoot, applyLook } from "./ui.js";
-import { T } from "./styles.js";
-import { ICONS, STATE_ICONS, FRAMEWORKS, fwIcon } from "./icons.js";
-import { mountLauncher } from "./launcher.js";
-import { getSettings, onSettings } from "./settings.js";
-import { connectRemote } from "./remote.js";
-import { renderMarkdown } from "./markdown.js";
-import { createLayer, closeTopLayer } from "./layers.js";
-import { confirmOver } from "./confirm.js";
-import { parseLoc, occInfo, refKey, resolveRef, buildPrompt, savedPrompt, setCommit } from "./prompt.js";
-import { postNote, setWebhook } from "./webhook.js";
-import { agentName, agentLabel, thinkingMsg } from "./conversation.js";
-import { openFile, hideTip } from "./open-file.js";
-import { enablePanelDrag, applyPanelSize, enablePanelResize, nudgePanel } from "./panel-frame.js";
+import { createIconBtn, uiRoot, applyLook } from "./ui.ts";
+import { T } from "./styles.ts";
+import { ICONS, STATE_ICONS, FRAMEWORKS, fwIcon } from "./icons.ts";
+import { mountLauncher } from "./launcher.ts";
+import { getSettings, onSettings } from "./settings.ts";
+import { connectRemote } from "./remote.ts";
+import { renderMarkdown } from "./markdown.ts";
+import { createLayer, closeTopLayer } from "./layers.ts";
+import { confirmOver } from "./confirm.ts";
+import { parseLoc, occInfo, refKey, resolveRef, buildPrompt, savedPrompt, setCommit } from "./prompt.ts";
+import { postNote, setWebhook } from "./webhook.ts";
+import { agentName, agentLabel, thinkingMsg } from "./conversation.ts";
+import { openFile, hideTip } from "./open-file.ts";
+import { enablePanelDrag, applyPanelSize, enablePanelResize, nudgePanel } from "./panel-frame.ts";
+import type { Remote } from "./remote.ts";
+import type { Controller, FileKind, Message, Note, NoteState, Pin, Ref } from "./types.ts";
 
 const ACTIVATE_KEY = "Alt";
 const ACCENT = T.accent;
@@ -27,47 +29,47 @@ const MONO = T.mono;
 let active = false; // effective inspect state
 let sticky = false; // toggled from the launcher
 let altHeld = false; // momentary via Alt
-let hoverBox = null;
-let hoverLabel = null;
-let hoverTarget = null; // element the hover box is currently on
-let lastPointer = null; // { x, y, own } from the latest mousemove
+let hoverBox: HTMLDivElement | null = null;
+let hoverLabel: HTMLDivElement | null = null;
+let hoverTarget: Element | null = null; // element the hover box is currently on
+let lastPointer: { x: number; y: number; own: boolean } | null = null; // from the latest mousemove
 let moveScheduled = false;
-let selectBox = null;
-let selectedEl = null;
-let selectedLoc = null;
+let selectBox: HTMLDivElement | null = null;
+let selectedEl: HTMLElement | null = null;
+let selectedLoc: string | null = null;
 let selectedIndex = 0; // occurrence index among same-loc siblings (.map() items)
-let selectedRawTarget = null; // the actual clicked node (may be unstamped, e.g. 3rd-party)
-let panel = null;
-let panelTarget = null; // element the open panel is anchored to
+let selectedRawTarget: Element | null = null; // the actual clicked node (may be unstamped, e.g. 3rd-party)
+let panel: HTMLDivElement | null = null;
+let panelTarget: HTMLElement | null = null; // element the open panel is anchored to
 let panelDragged = false; // once dragged, stop re-anchoring it to the target
-let panelSave = null; // saves an edited note when its panel closes
-let panelDraft = null; // () => true while the note has unsent text
-let panelKey = null; // the open panel's note key
-let panelRefresh = null; // redraws the open panel's conversation
-let panelMode = null; // what the open panel was built for (see noteMode)
-let panelSync = null; // updates the open panel when the agent (dis)connects
+let panelSave: (() => void) | null = null; // saves an edited note when its panel closes
+let panelDraft: (() => boolean) | null = null; // () => true while the note has unsent text
+let panelKey: string | null = null; // the open panel's note key
+let panelRefresh: (() => void) | null = null; // redraws the open panel's conversation
+let panelMode: NoteMode | "new" | null = null; // what the open panel was built for (see noteMode)
+let panelSync: (() => void) | null = null; // updates the open panel when the agent (dis)connects
 // The open note's elements: the one it's keyed by, the others added with
 // Shift-click ([{ loc, index }]), and whether they can change (not once an agent
 // has the note). Each but the clicked one gets a box of its own.
-let panelPrimary = null;
-let panelMore = [];
+let panelPrimary: Ref | null = null;
+let panelMore: Ref[] = [];
 let panelMoreLocked = false;
-let panelMoreShown = null; // redraws the header's chips
-let moreBoxes = [];
-const panelLayer = createLayer({ close: () => closePanel() }); // stacking + Esc (layers.js)
-let remote = null; // the link to spotnote-mcp (remote.js)
-let launcher = null;
-let jsxFramework = null; // "react" | "solid" | null, detected by the plugin
-let builtFrom = null; // in a build, the commit it's made from (the plugin says)
+let panelMoreShown: (() => void) | null = null; // redraws the header's chips
+let moreBoxes: (HTMLDivElement & { ref: Ref })[] = [];
+const panelLayer = createLayer({ close: () => closePanel() }); // stacking + Esc (layers.ts)
+let remote: Remote | null = null; // the link to spotnote-mcp (remote.ts)
+let launcher: ReturnType<typeof mountLauncher> | null = null;
+let jsxFramework: "react" | "solid" | null = null; // detected by the plugin
+let builtFrom: string | null = null; // in a build, the commit it's made from (the plugin says)
 const PINS_KEY = "data-spotnote-pins"; // notes persist across reloads / navigation
 const OPEN_KEY = "data-spotnote-open"; // note to auto-open after a cross-page jump
-const pins = new Map(); // refKey (loc@index) -> { loc, index, more, note, url, marker, extra }
+const pins = new Map<string, Pin>(); // refKey (loc@index) -> the note and its pins
 // A note's elements: the one it's keyed by, then any added with Shift-click
 // (`more`). Each has a pin with the same number: `marker`, then `extra`'s.
-const targetsOf = (pin) => [{ loc: pin.loc, index: pin.index }, ...(pin.more ?? [])];
-const sameRef = (a, b) => a.loc === b.loc && a.index === b.index;
+const targetsOf = (pin: Pin): Ref[] => [{ loc: pin.loc, index: pin.index }, ...(pin.more ?? [])];
+const sameRef = (a: Ref, b: Ref) => a.loc === b.loc && a.index === b.index;
 // The note an element is on: its own, or one it was added to.
-function noteKeyOf(occ) {
+function noteKeyOf(occ: Ref): string {
   const key = refKey(occ.loc, occ.index);
   if (pins.has(key)) return key;
   for (const [k, p] of pins) if (p.more?.some((t) => sameRef(t, occ))) return k;
@@ -75,26 +77,26 @@ function noteKeyOf(occ) {
 }
 let pinsVisible = true; // hidden while the launcher is minimized
 
-const changeCbs = [];
+const changeCbs: (() => void)[] = [];
 function notify() {
   for (const cb of changeCbs) cb();
 }
 
-const controller = {
+const controller: Controller = {
   toggleInspect() {
     sticky = !sticky;
     syncActive();
     notify();
   },
   // The launcher drives this: open ⇄ selecting, closed ⇄ not.
-  setInspect(on) {
+  setInspect(on: boolean) {
     sticky = on;
     syncActive();
     notify();
   },
   isInspecting: () => active,
   // Launcher minimized → hide the pins (and their panel) with it.
-  setPinsVisible(visible) {
+  setPinsVisible(visible: boolean) {
     pinsVisible = visible;
     if (!visible && panel) closePanel();
     repositionPins();
@@ -118,20 +120,20 @@ const controller = {
       }),
       state: pinState(p),
       mark: STATE_ICONS[pinState(p)], // SVG markup, or none for a plain number
-      client: p.working?.client, // the agent working on it
+      client: p.working ? p.working.client : undefined, // the agent working on it
       url: p.url,
       here: !p.url || p.url === pageUrl(), // written on the page you're on
       lost: (!p.url || p.url === pageUrl()) && !resolveRef(p.loc, p.index),
     })),
-  copyNote(key) {
+  copyNote(key: string) {
     const p = pins.get(key);
     if (p) navigator.clipboard?.writeText(savedPrompt(p)).catch(() => {});
   },
-  deleteNote(key) {
+  deleteNote(key: string) {
     deletePin(key);
     notify();
   },
-  openNote: (key) => {
+  openNote: (key: string) => {
     const p = pins.get(key);
     if (!p) return;
     const el = resolveRef(p.loc, p.index);
@@ -150,7 +152,7 @@ const controller = {
       location.href = p.url;
     }
   },
-  onChange(cb) {
+  onChange(cb: () => void) {
     changeCbs.push(cb);
     return () => {
       const i = changeCbs.indexOf(cb);
@@ -159,6 +161,16 @@ const controller = {
   },
 };
 
+// What the plugin boots the picker with (see load() in ../index.ts).
+export interface InspectorOptions {
+  jsx?: "react" | "solid" | null;
+  root?: string;
+  port?: number;
+  about?: Controller["about"];
+  commit?: string | null;
+  webhook?: string | null;
+}
+
 export function initInspector({
   jsx = null,
   root = "",
@@ -166,7 +178,7 @@ export function initInspector({
   about = null,
   commit = null,
   webhook = null,
-} = {}) {
+}: InspectorOptions = {}): void {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   jsxFramework = jsx;
@@ -198,7 +210,7 @@ export function initInspector({
     }
   });
   // Esc backs out one step at a time: the frontmost surface (the note panel or a
-  // launcher menu, see layers.js), then selection mode. It's consumed (capture)
+  // launcher menu, see layers.ts), then selection mode. It's consumed (capture)
   // so it can't cascade — but only when it did something, so a bare Esc still
   // reaches the page.
   window.addEventListener(
@@ -248,7 +260,7 @@ export function initInspector({
       panelSync?.(); // copy or not, in the open panel
     },
     onOnline(on) {
-      if (on) return remote.send({ op: "merge", notes: [...pins].map(([key, p]) => wire(key, p)) });
+      if (on) return void remote?.send({ op: "merge", notes: [...pins].map(([key, p]) => wire(key, p)) });
       // The server (and with it the agent) went away: nobody is working on anything.
       pins.forEach((pin) => (pin.working = false) || showState(pin));
       repositionPins();
@@ -262,7 +274,7 @@ export function initInspector({
     const openKey = sessionStorage.getItem(OPEN_KEY);
     if (openKey) {
       sessionStorage.removeItem(OPEN_KEY);
-      launcher.open(); // it starts closed; the jump came from its notes list
+      launcher?.open(); // it starts closed; the jump came from its notes list
       openNoteWhenReady(openKey);
     }
   } catch {
@@ -273,7 +285,7 @@ export function initInspector({
 // ── Inspect mode ──────────────────────────────────────────────────────
 let pointerBound = false;
 
-function bindPointer(on) {
+function bindPointer(on: boolean) {
   if (on === pointerBound) return;
   pointerBound = on;
   if (on) {
@@ -298,15 +310,16 @@ function refreshPointer() {
 // The crosshair comes from a stylesheet of ours, not the body's style attribute:
 // changing the page's markup before a server-rendered app hydrates is a
 // mismatch (React warns about it, after a jump from another page's note).
-let crosshair;
-function setCrosshair(on) {
+let crosshair: CSSStyleSheet | undefined;
+function setCrosshair(on: boolean) {
   if (!crosshair) {
     crosshair = new CSSStyleSheet();
     crosshair.replaceSync("body { cursor: crosshair !important; }");
   }
+  const sheet = crosshair;
   const sheets = document.adoptedStyleSheets;
-  if (on === sheets.includes(crosshair)) return;
-  document.adoptedStyleSheets = on ? [...sheets, crosshair] : sheets.filter((s) => s !== crosshair);
+  if (on === sheets.includes(sheet)) return;
+  document.adoptedStyleSheets = on ? [...sheets, sheet] : sheets.filter((s) => s !== sheet);
 }
 
 function syncActive() {
@@ -328,11 +341,11 @@ function leave() {
 }
 
 // ── Pointer -> nearest data-spotnote element ───────────────────────────────
-function targetAt(x, y) {
+function targetAt(x: number, y: number): HTMLElement | null {
   const els = document.elementsFromPoint(x, y);
   for (const el of els) {
     if (el.closest("[data-spotnote-ui]")) continue; // skip our own overlay/UI
-    const hit = el.closest("[data-spotnote]"); // walk up to nearest annotated node
+    const hit = el.closest<HTMLElement>("[data-spotnote]"); // walk up to nearest annotated node
     if (hit) return hit;
   }
   return null;
@@ -341,12 +354,12 @@ function targetAt(x, y) {
 // A click/hover on our own UI (launcher, panel, pins) must reach that UI — not
 // get resolved "through" it to a page element behind, which would swallow the
 // event and, e.g., stop the Inspect toggle from turning off.
-function overOwnUI(e) {
-  return e.target instanceof Element && e.target.closest("[data-spotnote-ui]");
+function overOwnUI(e: Event): boolean {
+  return e.target instanceof Element && !!e.target.closest("[data-spotnote-ui]");
 }
 
 // mousemove can fire several times per frame; resolve the target once per frame.
-function onMove(e) {
+function onMove(e: MouseEvent) {
   lastPointer = { x: e.clientX, y: e.clientY, own: overOwnUI(e) };
   if (moveScheduled) return;
   moveScheduled = true;
@@ -358,14 +371,14 @@ function onMove(e) {
 
 // Re-resolve the element under the last pointer position. `animate` slides the
 // box from its previous target; scroll passes false so it tracks without lag.
-function updateHover(animate) {
+function updateHover(animate: boolean) {
   if (!active || !lastPointer || lastPointer.own) return hideHover();
   const el = targetAt(lastPointer.x, lastPointer.y);
   if (!el) return hideHover();
   drawHover(el, animate);
 }
 
-function onClick(e) {
+function onClick(e: MouseEvent) {
   if (overOwnUI(e)) return; // let our own UI handle its own clicks
   const el = active ? targetAt(e.clientX, e.clientY) : null;
   if (panel) {
@@ -388,7 +401,7 @@ function onClick(e) {
 
 // The framework mark for a source file: .vue/.svelte/.astro by extension; .jsx/.tsx by
 // what the plugin found in the Vite config ("jsx" when it couldn't tell).
-function fileKind(file) {
+function fileKind(file: string): FileKind {
   if (file.endsWith(".vue")) return "vue";
   if (file.endsWith(".svelte")) return "svelte";
   if (file.endsWith(".astro")) return "astro";
@@ -396,7 +409,7 @@ function fileKind(file) {
 }
 
 // [mark] File.jsx:12 — the file part of the hover label and the panel header.
-function fileTag(file, line, color) {
+function fileTag(file: string, line: number, color?: string) {
   const kind = fileKind(file);
   const wrap = document.createElement("span");
   // margin-left: a little extra air after the tag/class, so the file reads as its own group.
@@ -435,7 +448,7 @@ function rebindSelection() {
 function mkBox() {
   const box = document.createElement("div");
   box.setAttribute("data-spotnote-ui", "");
-  // z-index: under pins (see the stacking note in ui.js).
+  // z-index: under pins (see the stacking note in ui.ts).
   box.style.cssText =
     "position:absolute;pointer-events:none;z-index:2147483640;box-sizing:border-box;border-radius:3px;" +
     `border:2px solid ${ACCENT};background:rgba(${ACCENT_RGB},0.10)`;
@@ -444,7 +457,7 @@ function mkBox() {
 
 // tag (strong) + .class (muted), written together like a selector, then
 // file:line (muted mono).
-function setLabel(labelEl, el) {
+function setLabel(labelEl: HTMLElement, el: Element) {
   labelEl.textContent = "";
   const tag = document.createElement("span");
   tag.textContent = el.tagName.toLowerCase();
@@ -459,7 +472,7 @@ function setLabel(labelEl, el) {
   }
 
   // On the accent label the mark stays in the label's ink, not brand colour.
-  const l = parseLoc(el.getAttribute("data-spotnote"));
+  const l = parseLoc(el.getAttribute("data-spotnote") ?? "");
   const loc = fileTag(l.file, l.line, "inherit");
   loc.style.opacity = "0.75";
   loc.style.fontFamily = MONO;
@@ -470,7 +483,7 @@ function setLabel(labelEl, el) {
 // Document coords — for absolute overlays that scroll with the page. During a
 // page scroll (rect.top + scrollY) is constant, so the reposition is a no-op and
 // the overlay tracks smoothly; it only recomputes for nested scroll / layout.
-function placeAbs(box, target) {
+function placeAbs(box: HTMLElement, target: Element) {
   const r = target.getBoundingClientRect();
   box.style.left = r.left + window.scrollX + "px";
   box.style.top = r.top + window.scrollY + "px";
@@ -482,8 +495,8 @@ function placeAbs(box, target) {
 // transform + size transitions, so moving across elements animates instead of
 // flickering. A hidden box snaps into place first, then fades in, so it never
 // slides in from wherever it was last shown.
-function drawHover(target, animate) {
-  if (!hoverBox) {
+function drawHover(target: Element, animate: boolean) {
+  if (!hoverBox || !hoverLabel) {
     hoverBox = document.createElement("div");
     hoverBox.className = "sn-hover";
     hoverLabel = document.createElement("div");
@@ -517,7 +530,7 @@ function hideHover() {
   hoverTarget = null;
 }
 
-function drawSelect(target) {
+function drawSelect(target: Element) {
   if (!selectBox) {
     selectBox = mkBox();
     uiRoot().append(selectBox);
@@ -541,11 +554,10 @@ function drawMoreBoxes() {
   moreBoxes.forEach((b) => b.remove());
   moreBoxes = [];
   if (!panel) return;
-  const clicked = { loc: selectedLoc, index: selectedIndex };
-  for (const ref of [panelPrimary, ...panelMore]) {
+  const clicked = { loc: selectedLoc ?? "", index: selectedIndex };
+  for (const ref of panelRefs()) {
     if (sameRef(ref, clicked)) continue;
-    const box = mkBox();
-    box.ref = ref;
+    const box = Object.assign(mkBox(), { ref });
     uiRoot().append(box);
     moreBoxes.push(box);
   }
@@ -559,50 +571,57 @@ function repositionMoreBoxes() {
   }
 }
 // One of the open note's elements, lit up from its chip in the panel.
-function boxOf(ref) {
-  return sameRef(ref, { loc: selectedLoc, index: selectedIndex })
+function boxOf(ref: Ref) {
+  return sameRef(ref, { loc: selectedLoc ?? "", index: selectedIndex })
     ? selectBox
     : moreBoxes.find((b) => sameRef(b.ref, ref));
 }
-function glow(ref, on) {
+function glow(ref: Ref, on: boolean) {
   const box = boxOf(ref);
   if (box) box.style.boxShadow = on ? `0 0 0 4px rgba(${ACCENT_RGB},0.45)` : "";
 }
 // Shift-click: put another element on the open note, or take it off again
 // (any of them, as long as one is left).
-function toggleMore(el) {
-  if (panelMoreLocked) return; // an agent has the note: its elements stay as sent
+function toggleMore(el: Element) {
+  if (panelMoreLocked || !panelPrimary) return; // an agent has the note: its elements stay as sent
   const occ = occInfo(el);
   const ref = { loc: occ.loc, index: occ.index };
   const i = panelMore.findIndex((t) => sameRef(t, ref));
   if (i >= 0) panelMore.splice(i, 1);
   else if (!sameRef(ref, panelPrimary)) panelMore.push(ref);
-  else if (panelMore.length)
-    panelPrimary = panelMore.shift(); // the next one keys the note
-  else return;
+  else {
+    const next = panelMore.shift();
+    if (!next) return;
+    panelPrimary = next; // the next one keys the note
+  }
   // Took off the element the panel opened on: select the note's first instead.
-  if (![panelPrimary, ...panelMore].some((t) => sameRef(t, { loc: selectedLoc, index: selectedIndex }))) {
+  if (!panelRefs().some((t) => sameRef(t, { loc: selectedLoc ?? "", index: selectedIndex }))) {
     selectedEl = panelTarget = resolveRef(panelPrimary.loc, panelPrimary.index);
     selectedLoc = panelPrimary.loc;
     selectedIndex = panelPrimary.index;
     selectedRawTarget = null;
-    drawSelect(selectedEl);
+    if (selectedEl) drawSelect(selectedEl);
   }
   drawMoreBoxes();
   panelMoreShown?.();
 }
-// The open note's elements, as they are on the page now.
-const panelEls = () => [panelPrimary, ...panelMore].map((t) => resolveRef(t.loc, t.index)).filter(Boolean);
+// The open note's elements: their refs, and as they are on the page now.
+const panelRefs = (): Ref[] => (panelPrimary ? [panelPrimary, ...panelMore] : []);
+const present = (e: HTMLElement | null): e is HTMLElement => e !== null;
+const panelEls = () =>
+  panelRefs()
+    .map((t) => resolveRef(t.loc, t.index))
+    .filter(present);
 
 // ── Selection panel (note input + actions) ────────────────────────────
 // An element's first class (SVG elements have no string className).
-const firstClass = (el) => (typeof el.className === "string" ? el.className.trim().split(/\s+/)[0] : "");
+const firstClass = (el: Element) => (typeof el.className === "string" ? el.className.trim().split(/\s+/)[0] : "");
 
 // One of the note's elements, as a chip: tag.class, then file:line.
 //   tag.class  lights up the element on the page (hover), and scrolls to it (click)
 //   file:line  opens it in your editor
 //   ×          takes it off the note (an added element, while you can still edit)
-function chip(el, ref, { base, removable }) {
+function chip(el: HTMLElement, ref: Ref, { base, removable }: { base: boolean; removable: boolean }) {
   const c = document.createElement("span");
   c.className = base ? "sn-chip sn-chip-base" : "sn-chip";
   c.title = "Show on the page";
@@ -625,14 +644,14 @@ function chip(el, ref, { base, removable }) {
   }
   // The whole chip (but its file:line and ×) shows its element on the page.
   c.addEventListener("click", (e) => {
-    if (e.target.closest(".sn-loc, .sn-chip-rm")) return;
+    if (e.target instanceof Element && e.target.closest(".sn-loc, .sn-chip-rm")) return;
     el.scrollIntoView({ block: "nearest", behavior: "smooth" });
     const box = boxOf(ref);
     box?.animate([{ opacity: 1 }, { opacity: 0.2 }, { opacity: 1 }], { duration: 500, iterations: 2 });
   });
   c.append(name);
 
-  const l = parseLoc(el.getAttribute("data-spotnote"));
+  const l = parseLoc(el.getAttribute("data-spotnote") ?? "");
   const loc = document.createElement("button");
   loc.type = "button";
   loc.className = "sn-loc";
@@ -660,10 +679,11 @@ function chip(el, ref, { base, removable }) {
 //   "edit"     write or change the note (also a new one, with no pin yet)
 //   "working"  an agent has it: show the conversation, no input until it answers
 //   "talking"  the agent has answered: show the conversation, the input replies
-function noteMode(pin) {
+type NoteMode = "edit" | "working" | "talking";
+function noteMode(pin: Pin | undefined): NoteMode {
   if (!pin) return "edit";
   if (pin.working) return "working";
-  return pin.thread?.length > 0 || pin.done || pin.dismissed ? "talking" : "edit";
+  return (pin.thread?.length ?? 0) > 0 || pin.done || pin.dismissed ? "talking" : "edit";
 }
 
 // Is the coding agent connected (spotnote-mcp has our notes)?
@@ -676,15 +696,16 @@ function refreshPanel() {
   const pin = pins.get(panelKey);
   if (!pin) return closePanel(); // deleted, here or in another browser
   if (noteMode(pin) === panelMode) return panelRefresh?.();
+  if (!panel || !panelTarget) return;
   const moved = panelDragged && { left: panel.style.left, top: panel.style.top };
   openPanel(panelTarget, undefined, { instant: true });
-  if (moved) {
+  if (moved && panel) {
     Object.assign(panel.style, moved);
     panelDragged = true;
   }
 }
 
-function openPanel(target, prefillNote, { instant = false } = {}) {
+function openPanel(target: HTMLElement, prefillNote?: string | null, { instant = false } = {}) {
   closePanel({ instant });
   const occ = occInfo(target);
   const key = noteKeyOf(occ); // the note it's on, maybe as one of several elements
@@ -701,7 +722,8 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   const moreChanged = () =>
     JSON.stringify([panelPrimary, ...panelMore]) !== JSON.stringify(saved ? targetsOf(saved) : []);
   // Save the note; under its new first element's key when its first was taken off.
-  const save = (note) => {
+  const save = (note: string) => {
+    if (!panelPrimary) return;
     if (refKey(panelPrimary.loc, panelPrimary.index) !== key) deletePin(key);
     upsertPin(panelPrimary, note, panelMore);
   };
@@ -719,7 +741,8 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   selectedIndex = occ.index;
   drawSelect(target);
 
-  panel = document.createElement("div");
+  const panelEl = document.createElement("div");
+  panel = panelEl;
   panel.setAttribute("data-spotnote-ui", "");
   panel.className = "sn-panel";
   if (instant) panel.style.animation = "none"; // a rebuild in place, not a new panel
@@ -736,34 +759,35 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
   header.append(chips, grip);
   panelMoreShown = () => {
     chips.textContent = "";
-    const refs = [panelPrimary, ...panelMore];
+    const refs = panelRefs();
     for (const ref of refs) {
       const el = resolveRef(ref.loc, ref.index);
       if (!el) continue; // not on this page
       const several = refs.length > 1;
       // Any can come off, but the last one.
       const removable = several && !panelMoreLocked;
-      chips.append(chip(el, ref, { base: several && sameRef(ref, panelPrimary), removable }));
+      chips.append(chip(el, ref, { base: several && ref === refs[0], removable }));
     }
   };
   panelMoreShown();
-  let copyBtn = null;
+  let copyBtn: HTMLButtonElement | null = null;
+  let copied: ReturnType<typeof setTimeout> | undefined;
   if (isEdit) {
-    copyBtn = createIconBtn({
+    const btn = (copyBtn = createIconBtn({
       svg: ICONS.copy,
       title: "Copy prompt",
       parent: header,
       onClick: () => {
-        const note = talking ? pins.get(key).note : (input.textContent || "").trim();
+        const note = talking ? pins.get(key)?.note : (input.textContent || "").trim();
         if (!note) return;
         navigator.clipboard?.writeText(buildPrompt(panelEls(), note, selectedRawTarget)).catch(() => {});
-        copyBtn.innerHTML = ICONS.check; // green tick feedback, then revert
-        clearTimeout(copyBtn._t);
-        copyBtn._t = setTimeout(() => {
-          copyBtn.innerHTML = ICONS.copy;
+        btn.innerHTML = ICONS.check; // green tick feedback, then revert
+        clearTimeout(copied);
+        copied = setTimeout(() => {
+          btn.innerHTML = ICONS.copy;
         }, 1200);
       },
-    });
+    }));
     createIconBtn({
       svg: ICONS.trash,
       title: "Remove note",
@@ -771,7 +795,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       onClick: () => askDelete(),
     });
   }
-  createIconBtn({ svg: ICONS.close, title: "Close", parent: header, onClick: closePanel });
+  createIconBtn({ svg: ICONS.close, title: "Close", parent: header, onClick: () => closePanel() });
   panel.append(header);
 
   // The conversation: your note, then the agent's and your messages.
@@ -784,7 +808,8 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       if (!pin) return;
       thread.textContent = "";
       hideTip(); // its icon may be gone
-      for (const m of [{ from: "you", text: pin.note }, ...(pin.thread ?? [])]) {
+      const opening: Partial<Message> & Pick<Message, "from" | "text"> = { from: "you", text: pin.note };
+      for (const m of [opening, ...(pin.thread ?? [])]) {
         const msg = document.createElement("div");
         msg.className = m.from === "agent" ? "sn-msg sn-msg-agent" : "sn-msg";
         const who =
@@ -839,16 +864,16 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     // the page (Esc still closes: it's handled on window, in the capture phase).
     panel.tabIndex = -1;
     panel.style.outline = "none";
-    panel.addEventListener("keydown", (e) => {
+    panelEl.addEventListener("keydown", (e) => {
       e.stopPropagation();
-      if (!e.target.closest?.("button")) e.preventDefault(); // Enter still presses Delete
+      if (!(e.target instanceof Element && e.target.closest("button"))) e.preventDefault(); // Enter still presses Delete
     });
   }
 
   // Delete asks first, over the dimmed panel.
   const askDelete = () =>
-    !panel.querySelector(".sn-confirm") &&
-    confirmOver(panel, {
+    !panelEl.querySelector(".sn-confirm") &&
+    confirmOver(panelEl, {
       title: "Delete this note?",
       body: talking ? "Its conversation with the agent goes too. This can't be undone." : "This can't be undone.",
       action: "Delete",
@@ -856,7 +881,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
         deletePin(key);
         closePanel();
       },
-      onCancel: () => (mode === "working" ? panel.focus() : input.focus()),
+      onCancel: () => (mode === "working" ? panelEl.focus() : input.focus()),
     });
 
   function doSend() {
@@ -867,7 +892,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       replyNote(key, note);
       input.textContent = "";
       updateSend();
-      panelRefresh();
+      panelRefresh?.();
       return;
     }
     const prompt = buildPrompt(panelEls(), note, selectedRawTarget);
@@ -877,8 +902,10 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       console.log("[spotnote] copied prompt:\n" + prompt);
     }
     save(note); // leave a marker on each element
-    const k = refKey(panelPrimary.loc, panelPrimary.index);
-    postNote(isEdit ? "note.update" : "note.add", forWebhook(k, pins.get(k), prompt));
+    const primary = panelPrimary ?? occ;
+    const k = refKey(primary.loc, primary.index);
+    const saved = pins.get(k);
+    if (saved) postNote(isEdit ? "note.update" : "note.add", forWebhook(k, saved, prompt));
     closePanel(); // selection mode stays on while the launcher is open
     launcher?.flash(); // ✓ on the launcher core
   }
@@ -894,7 +921,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     const copy = !agentConnected();
     if (talking) {
       input.dataset.placeholder = copy ? `Sent once ${agentName(pins.get(key))} is back…` : "Reply to the agent…";
-      panelRefresh();
+      panelRefresh?.();
     }
     send.innerHTML = `<kbd>↵</kbd>${talking ? "Reply" : isEdit ? "Save" : "Add"}${copy && !talking ? " &amp; copy" : ""}`;
     if (copyBtn) copyBtn.style.display = copy ? "flex" : "none"; // its inline display beats [hidden]
@@ -914,7 +941,7 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     panelSave = () => {
       const note = (input.textContent || "").trim();
       // Skip a note just deleted from this panel, and an emptied one.
-      if (note && pins.has(key) && (note !== pins.get(key).note || moreChanged())) save(note);
+      if (note && pins.has(key) && (note !== pins.get(key)?.note || moreChanged())) save(note);
     };
   }
 
@@ -928,24 +955,24 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
     // Esc handled by the capture-phase window listener (closes + consumes).
   });
 
-  uiRoot().append(panel);
+  uiRoot().append(panelEl);
   // On top — or, rebuilt in place, where it was in the stack.
-  if (instant) panelLayer.swap(panel);
-  else panelLayer.show(panel);
+  if (instant) panelLayer.swap(panelEl);
+  else panelLayer.show(panelEl);
   // Start the conversation at its latest message (it had no height before now).
-  const threadEl = panel.querySelector(".sn-thread");
+  const threadEl = panelEl.querySelector(".sn-thread");
   if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
-  applyPanelSize(panel);
+  applyPanelSize(panelEl);
   positionPanel(target);
   drawMoreBoxes();
-  enablePanelDrag(panel, () => (panelDragged = true));
-  enablePanelResize(panel, () => (panelDragged = true));
+  enablePanelDrag(panelEl, () => (panelDragged = true));
+  enablePanelResize(panelEl, () => (panelDragged = true));
   refreshPointer();
   setTimeout(() => {
     if (mode === "working") return panel?.focus();
     // Already in the input (clicked, or typing straight away): keep their caret
     // and selection rather than move it.
-    if (input.getRootNode().activeElement === input) return;
+    if ((input.getRootNode() as ShadowRoot).activeElement === input) return;
     input.focus();
     // With a prefilled note, drop the caret at the END so editing continues
     // naturally (browsers otherwise place it at the start).
@@ -954,14 +981,15 @@ function openPanel(target, prefillNote, { instant = false } = {}) {
       range.selectNodeContents(input);
       range.collapse(false);
       const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
   }, 50);
   setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
 }
 
-function positionPanel(target) {
+function positionPanel(target: Element) {
+  if (!panel) return;
   const r = target.getBoundingClientRect();
   // offset* = untransformed size (getBoundingClientRect shrinks mid pop-in).
   const pw = panel.offsetWidth;
@@ -981,7 +1009,7 @@ function positionPanel(target) {
 // While a panel is open, a press on the page is held back too: no focus theft
 // from the note, no text selection, no app mousedown handlers. onClick then
 // decides what the click does (switch target, close, or nudge).
-function onDocDown(e) {
+function onDocDown(e: MouseEvent) {
   if (!panel || overOwnUI(e)) return;
   e.preventDefault();
   e.stopPropagation();
@@ -1064,8 +1092,8 @@ function savePins() {
   }
 }
 
-// A note as the webhook gets it (see webhook.js).
-function forWebhook(key, p, prompt) {
+// A note as the webhook gets it (see webhook.ts).
+function forWebhook(key: string, p: Pin, prompt: string) {
   return {
     key,
     text: p.note,
@@ -1077,7 +1105,7 @@ function forWebhook(key, p, prompt) {
 }
 
 // A note as spotnote-mcp gets it.
-function wire(key, p) {
+function wire(key: string, p: Pin): Omit<Note, "working"> {
   return {
     key,
     loc: p.loc,
@@ -1094,10 +1122,15 @@ function wire(key, p) {
 }
 
 // The server's notes replace ours: same order, same pins where the key matches.
-function applySnapshot(list) {
-  const next = new Map();
+function applySnapshot(list: Note[]) {
+  const next = new Map<string, Pin>();
   for (const n of list) {
-    const pin = pins.get(n.key) ?? { marker: makePinMarker(n.key, n.loc, n.index) };
+    const pin = pins.get(n.key) ?? {
+      loc: n.loc,
+      index: n.index,
+      note: n.note,
+      marker: makePinMarker(n.key, n.loc, n.index),
+    };
     const moved = JSON.stringify(n.more ?? []) !== JSON.stringify(pin.more ?? []);
     Object.assign(pin, {
       loc: n.loc,
@@ -1131,7 +1164,7 @@ function applySnapshot(list) {
 // summary, dismisses its reason for not making the change.
 // "done", "dismissed" (the agent won't), "asked" (it's waiting on you),
 // "working" (an agent has it) or "open".
-function pinState(pin) {
+function pinState(pin: Pin): NoteState {
   if (pin.done) return "done";
   if (pin.dismissed) return "dismissed";
   if (pin.thread?.at(-1)?.from === "agent") return "asked";
@@ -1139,9 +1172,10 @@ function pinState(pin) {
 }
 
 // Your answer to the agent. Replying on a done note reopens it.
-function replyNote(key, text) {
+function replyNote(key: string, text: string) {
   const pin = pins.get(key);
-  const msg = { id: Math.random().toString(36).slice(2), from: "you", text, at: Date.now() };
+  if (!pin) return;
+  const msg: Message = { id: Math.random().toString(36).slice(2), from: "you", text, at: Date.now() };
   if (!agentConnected()) msg.pending = true; // sent with the rest of this note on reconnecting (merge)
   (pin.thread ??= []).push(msg);
   Object.assign(pin, { done: false, dismissed: false, working: false, updated: Date.now() });
@@ -1152,19 +1186,19 @@ function replyNote(key, text) {
   notify();
 }
 
-function showState(pin) {
+function showState(pin: Pin) {
   const state = pinState(pin);
   for (const m of markersOf(pin))
     for (const s of ["done", "dismissed", "asked", "working"]) m.classList.toggle(`sn-${s}`, state === s);
 }
-const markersOf = (pin) => [pin.marker, ...(pin.extra ?? []).map((x) => x.marker)];
+const markersOf = (pin: Pin) => [pin.marker, ...(pin.extra ?? []).map((x) => x.marker)];
 // A pin on each of the note's other elements (its `more`), made again from scratch.
-function syncExtra(key, pin) {
+function syncExtra(key: string, pin: Pin) {
   for (const x of pin.extra ?? []) x.marker.remove();
   pin.extra = (pin.more ?? []).map((t) => ({ ...t, marker: makePinMarker(key, t.loc, t.index) }));
 }
 function restorePins() {
-  let saved = [];
+  let saved: (Note | null)[] = [];
   try {
     saved = JSON.parse(localStorage.getItem(PINS_KEY) || "[]");
   } catch {
@@ -1173,7 +1207,7 @@ function restorePins() {
   for (const s of saved) {
     if (!s || pins.has(s.key)) continue;
     const marker = makePinMarker(s.key, s.loc, s.index);
-    const pin = {
+    const pin: Pin = {
       loc: s.loc,
       index: s.index,
       more: s.more ?? [],
@@ -1195,7 +1229,7 @@ function restorePins() {
 
 // After a cross-page jump the target element may not be mounted yet (frameworks
 // render async) — retry briefly until it appears, then open the note.
-function openNoteWhenReady(key, tries = 20) {
+function openNoteWhenReady(key: string, tries = 20) {
   const p = pins.get(key);
   if (!p) return;
   if (resolveRef(p.loc, p.index)) controller.openNote(key);
@@ -1203,7 +1237,7 @@ function openNoteWhenReady(key, tries = 20) {
 }
 
 // Build a pin's DOM marker + its reopen-on-click handler.
-function makePinMarker(key, loc, index) {
+function makePinMarker(key: string, loc: string, index: number) {
   const marker = makePinEl();
   marker.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1220,7 +1254,7 @@ function makePinMarker(key, loc, index) {
 }
 
 // `ref`: the element the note is keyed by; `more`: the others it's on.
-function upsertPin(ref, note, more = []) {
+function upsertPin(ref: Ref, note: string, more: Ref[] = []) {
   const key = refKey(ref.loc, ref.index);
   let pin = pins.get(key);
   if (!pin) {
@@ -1240,7 +1274,7 @@ function upsertPin(ref, note, more = []) {
   // Keep the last full prompt, so the note can still be copied after an edit
   // moves its element away (see savedPrompt).
   const els = targetsOf(pin).map((t) => resolveRef(t.loc, t.index));
-  if (els[0]) pin.prompt = buildPrompt(els.filter(Boolean), note, selectedRawTarget);
+  if (els[0]) pin.prompt = buildPrompt(els.filter(present), note, selectedRawTarget);
   pin.updated = Date.now();
   savePins();
   remote?.send({ op: "upsert", note: wire(key, pin) });
@@ -1248,7 +1282,7 @@ function upsertPin(ref, note, more = []) {
   notify();
 }
 
-function deletePin(key) {
+function deletePin(key: string) {
   const pin = pins.get(key);
   if (!pin) return;
   // Shrink away, then drop the node (timeout covers reduced motion / hidden pins).
@@ -1275,7 +1309,7 @@ function repositionPins() {
       { marker: pin.marker, loc: pin.loc, index: pin.index },
       ...(pin.extra ?? []),
     ]) {
-      const span = marker.firstChild;
+      const span = marker.firstChild as HTMLSpanElement;
       if (span.dataset.mark !== label) {
         span.dataset.mark = label;
         if (STATE_ICONS[state])
@@ -1302,13 +1336,13 @@ function reposition() {
   repositionPins();
   // The panel's element was re-rendered (HMR) or removed (a route change):
   // follow its replacement, or close if it's gone.
-  if (panel && !panelTarget.isConnected) {
-    const el = resolveRef(selectedLoc, selectedIndex);
+  if (panel && !panelTarget?.isConnected) {
+    const el = selectedLoc ? resolveRef(selectedLoc, selectedIndex) : null;
     if (!el) return closePanel();
     panelTarget = selectedEl = el;
     repositionSelect();
   }
-  if (panel && !panelDragged) positionPanel(panelTarget);
+  if (panel && !panelDragged && panelTarget) positionPanel(panelTarget);
 }
 
 let notifyScheduled = false;

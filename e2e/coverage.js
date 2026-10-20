@@ -15,8 +15,8 @@ export const coverage = () =>
     outputDir: "./coverage", // the HTML report: coverage/index.html
     reports: ["console-details", "v8", "lcovonly"], // lcovonly: coverage/lcov.info, for Codecov
     // Vite serves the client from /@fs/…/package/src/client/, and its source maps
-    // name each file by its basename. styles.js and icons.js are just strings.
-    entryFilter: (entry) => /\/package\/src\/client\/(?!styles\.js|icons\.js)|\/mcp\/src\//.test(entry.url),
+    // name each file by its basename. styles.ts and icons.ts are just strings.
+    entryFilter: (entry) => /\/package\/src\/client\/(?!styles\.ts|icons\.ts)|\/mcp\/src\//.test(entry.url),
     // It's called again on paths it already made (for the lcov report): keep those.
     sourcePath: (file) =>
       /(^|\/)(mcp\/src|package\/src\/client)\//.test(file)

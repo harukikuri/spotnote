@@ -1,4 +1,4 @@
-// The agent's messages in the note panel (src/client/markdown.js), against a
+// The agent's messages in the note panel (src/client/markdown.ts), against a
 // happy-dom document.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -6,7 +6,7 @@ import { Window } from "happy-dom";
 
 const window = new Window();
 globalThis.document = window.document;
-const { renderMarkdown } = await import("../src/client/markdown.js");
+const { renderMarkdown } = await import("../src/client/markdown.ts");
 
 const box = (text, onFile = () => {}) => {
   const div = document.createElement("div");

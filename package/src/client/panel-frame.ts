@@ -9,7 +9,7 @@
 // close the panel or pick an element. Eat that one click (it fires right after
 // mouseup, before any timer).
 function swallowNextClick() {
-  const eat = (e) => {
+  const eat = (e: MouseEvent) => {
     e.preventDefault();
     e.stopImmediatePropagation();
   };
@@ -17,7 +17,7 @@ function swallowNextClick() {
   setTimeout(() => window.removeEventListener("click", eat, true), 0);
 }
 
-export function enablePanelDrag(panelEl, onMoved) {
+export function enablePanelDrag(panelEl: HTMLElement, onMoved: () => void): void {
   panelEl.addEventListener("mousedown", (e) => {
     if (
       !(e.target instanceof Element) ||
@@ -33,7 +33,7 @@ export function enablePanelDrag(panelEl, onMoved) {
     const oy = r.top;
     onMoved();
     panelEl.classList.add("sn-dragging");
-    const onMove = (ev) => {
+    const onMove = (ev: MouseEvent) => {
       const left = Math.max(8, Math.min(ox + (ev.clientX - startX), window.innerWidth - panelEl.offsetWidth - 8));
       const top = Math.max(8, Math.min(oy + (ev.clientY - startY), window.innerHeight - panelEl.offsetHeight - 8));
       panelEl.style.left = left + "px";
@@ -54,22 +54,22 @@ export function enablePanelDrag(panelEl, onMoved) {
 const SIZE_KEY = "data-spotnote-panel-size";
 const MIN_W = 260;
 const MIN_H = 140;
-function savedPanelSize() {
+function savedPanelSize(): { w: number; h: number } | null {
   try {
-    const s = JSON.parse(localStorage.getItem(SIZE_KEY) || "null");
-    return s && s.w > 0 && s.h > 0 ? s : null;
+    const s: { w?: unknown; h?: unknown } | null = JSON.parse(localStorage.getItem(SIZE_KEY) || "null");
+    return s && typeof s.w === "number" && typeof s.h === "number" && s.w > 0 && s.h > 0 ? { w: s.w, h: s.h } : null;
   } catch {
     return null;
   }
 }
-export function applyPanelSize(panelEl) {
+export function applyPanelSize(panelEl: HTMLElement): void {
   const s = savedPanelSize();
   if (!s) return;
   panelEl.classList.add("sn-sized");
   panelEl.style.width = Math.max(MIN_W, Math.min(s.w, innerWidth - 16)) + "px";
   panelEl.style.height = Math.max(MIN_H, Math.min(s.h, innerHeight - 16)) + "px";
 }
-export function enablePanelResize(panelEl, onMoved) {
+export function enablePanelResize(panelEl: HTMLElement, onMoved: () => void): void {
   const grip = document.createElement("div");
   grip.className = "sn-resize";
   // hardcoded SVG: two diagonal strokes
@@ -86,7 +86,7 @@ export function enablePanelResize(panelEl, onMoved) {
     panelEl.style.left = r.left + "px";
     panelEl.style.top = r.top + "px";
     panelEl.classList.add("sn-sized");
-    const onMove = (ev) => {
+    const onMove = (ev: MouseEvent) => {
       panelEl.style.width = Math.max(MIN_W, Math.min(r.width + ev.clientX - startX, innerWidth - r.left - 8)) + "px";
       panelEl.style.height = Math.max(MIN_H, Math.min(r.height + ev.clientY - startY, innerHeight - r.top - 8)) + "px";
     };
@@ -106,7 +106,7 @@ export function enablePanelResize(panelEl, onMoved) {
 }
 
 // "You have an unsent note": a short shake (a border flash under reduced motion).
-export function nudgePanel(panel) {
+export function nudgePanel(panel: HTMLElement): void {
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const cs = getComputedStyle(panel); // keyframes need resolved colours, not var()
   panel.animate(

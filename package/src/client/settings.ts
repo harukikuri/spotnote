@@ -1,14 +1,19 @@
 // Settings from the launcher's gear menu, kept per browser in localStorage.
-//   accent: a key of ACCENTS (ui.js)
+//   accent: a key of ACCENTS (ui.ts)
 //   theme:  "system" | "light" | "dark" — Spotnote's own UI, not the page's
 //   editor: a key of EDITORS — where file links in the agent's messages open
 const KEY = "data-spotnote-settings";
-const DEFAULTS = { accent: "yellow", theme: "light", editor: "auto" };
+export interface Settings {
+  accent: string;
+  theme: "system" | "light" | "dark";
+  editor: string;
+}
+const DEFAULTS: Settings = { accent: "yellow", theme: "light", editor: "auto" };
 
 // "auto" asks the dev server to open the file in the editor that's running.
 // The others open it through the editor's own URL, straight from the browser:
 // no running editor, CLI or environment variable needed.
-export const EDITORS = {
+export const EDITORS: Record<string, { name: string; scheme?: string }> = {
   auto: { name: "Auto" },
   vscode: { name: "VS Code", scheme: "vscode" },
   cursor: { name: "Cursor", scheme: "cursor" },
@@ -18,18 +23,19 @@ export const EDITORS = {
 
 let current = { ...DEFAULTS };
 try {
-  current = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+  const saved: Partial<Settings> = JSON.parse(localStorage.getItem(KEY) || "{}");
+  current = { ...DEFAULTS, ...saved };
   if (current.accent === "cyan") current.accent = "blue"; // renamed with the palette
 } catch {
   /* ignore */
 }
-const listeners = [];
+const listeners: ((s: Settings) => void)[] = [];
 
-export function getSettings() {
+export function getSettings(): Settings {
   return current;
 }
 
-export function setSetting(name, value) {
+export function setSetting<K extends keyof Settings>(name: K, value: Settings[K]): void {
   current = { ...current, [name]: value };
   try {
     localStorage.setItem(KEY, JSON.stringify(current));
@@ -39,6 +45,6 @@ export function setSetting(name, value) {
   listeners.forEach((cb) => cb(current));
 }
 
-export function onSettings(cb) {
+export function onSettings(cb: (s: Settings) => void): void {
   listeners.push(cb);
 }

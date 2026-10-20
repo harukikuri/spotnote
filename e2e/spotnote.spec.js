@@ -118,7 +118,7 @@ test("a note from another page opens there, from the notes list", async ({ page,
   await expect(page.locator(".snl")).toHaveAttribute("data-open", "true");
 });
 
-// The launcher's Notes list (package/src/client/notes-list.js).
+// The launcher's Notes list (package/src/client/notes-list.ts).
 const openNotes = async (page) => {
   await page.locator(".snl-item").nth(1).click();
   return page.locator(".snl-notes");
@@ -305,7 +305,7 @@ test("Esc closes the panel, then pauses selecting", async ({ page, app }) => {
   expect(await cursor()).toBe("auto");
 });
 
-// The panel's frame (package/src/client/panel-frame.js).
+// The panel's frame (package/src/client/panel-frame.ts).
 async function openPanel(page, app) {
   await openLauncher(page);
   await clickEdge(page.locator(app.title).first());
@@ -410,7 +410,7 @@ test("holding Alt picks without opening the launcher", async ({ page, app }) => 
   await expect(page.locator(".sn-panel")).toContainText(`${basename(app.file)}:`);
 });
 
-// The launcher's Settings (package/src/client/settings-menu.js, settings.js).
+// The launcher's Settings (package/src/client/settings-menu.ts, settings.ts).
 const openSettings = async (page) => {
   await openLauncher(page);
   await page.locator(".snl-item").nth(2).click();

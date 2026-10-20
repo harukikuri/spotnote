@@ -1,4 +1,4 @@
-// The parts of the prompt that read the page (src/client/prompt.js), against a
+// The parts of the prompt that read the page (src/client/prompt.ts), against a
 // happy-dom document.
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
@@ -7,7 +7,7 @@ import { Window } from "happy-dom";
 const window = new Window();
 globalThis.document = window.document;
 globalThis.getComputedStyle = (el) => window.getComputedStyle(el);
-const { occInfo, resolveRef, buildPrompt, setCommit } = await import("../src/client/prompt.js");
+const { occInfo, resolveRef, buildPrompt, setCommit } = await import("../src/client/prompt.ts");
 
 beforeEach(() => {
   document.body.innerHTML = `

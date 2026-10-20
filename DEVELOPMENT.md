@@ -42,25 +42,26 @@ Plugin layout (`package/`):
 - `src/plugin.ts` — the Babel visitor that stamps `data-spotnote` in JSX
 - `src/dom-tags.ts` — the HTML and SVG tag names the JSX pass stamps
 - `src/client/` — the browser picker, auto-injected in dev:
-  - `inspector.js` — picking, note panel, pins, HMR re-bind
-  - `prompt.js` — source locations and the prompt built from them
-  - `panel-frame.js` — dragging, resizing and shaking the note panel
-  - `conversation.js` — the agent's messages in the panel
-  - `open-file.js` — file links → your editor
-  - `launcher.js` — corner button and its menu (pause · notes · settings)
-  - `notes-list.js` — the launcher's Notes popover
-  - `settings-menu.js` — the launcher's Settings popover
-  - `ui.js` — the shadow root, accents, the icon button and `el()`
-  - `styles.js` — theme tokens and the stylesheet
-  - `icons.js` — framework, note-state, agent, button and launcher icons
-  - `layers.js` — stacking of the panel, notes list and Settings; what `Esc` closes
-  - `remote.js` — the link to spotnote-mcp while it runs
-  - `settings.js` — accent, theme and editor, per browser
-  - `markdown.js` — the Markdown subset for the agent's messages
-  - `confirm.js` — the "are you sure?" dialog over a panel
+  - `inspector.ts` — picking, note panel, pins, HMR re-bind
+  - `prompt.ts` — source locations and the prompt built from them
+  - `panel-frame.ts` — dragging, resizing and shaking the note panel
+  - `conversation.ts` — the agent's messages in the panel
+  - `open-file.ts` — file links → your editor
+  - `launcher.ts` — corner button and its menu (pause · notes · settings)
+  - `notes-list.ts` — the launcher's Notes popover
+  - `settings-menu.ts` — the launcher's Settings popover
+  - `ui.ts` — the shadow root, accents, the icon button and `el()`
+  - `styles.ts` — theme tokens and the stylesheet
+  - `icons.ts` — framework, note-state, agent, button and launcher icons
+  - `layers.ts` — stacking of the panel, notes list and Settings; what `Esc` closes
+  - `remote.ts` — the link to spotnote-mcp while it runs
+  - `settings.ts` — accent, theme and editor, per browser
+  - `markdown.ts` — the Markdown subset for the agent's messages
+  - `confirm.ts` — the "are you sure?" dialog over a panel
+  - `webhook.ts` — the `webhook` option: each note, POSTed as it's sent
+  - `types.ts` — a note, its pin, and the controller the launcher drives
 
-The plugin is TypeScript like `mcp/` (below); the client is still JavaScript,
-which the build copies to `dist/client/`.
+It's TypeScript like `mcp/` (below).
 
 MCP layout (`mcp/`):
 

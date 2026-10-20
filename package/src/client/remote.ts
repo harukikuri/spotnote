@@ -4,24 +4,51 @@
 // (each failed attempt would print an error in the console).
 //
 // status: "off" (not running), "connecting", or "on" (our notes are synced).
-export function connectRemote({ root, port, onSnapshot, onOnline, onStatus }) {
+import type { McpStatus, Note } from "./types.ts";
+
+// What the page sends spotnote-mcp. A note goes as the server keeps it, but for
+// `working`, which only the server sets.
+export type Op =
+  | { op: "upsert"; note: Omit<Note, "working"> }
+  | { op: "remove"; key: string }
+  | { op: "reply"; key: string; text: string }
+  | { op: "merge"; notes: Omit<Note, "working">[] };
+
+export interface Remote {
+  status(): McpStatus;
+  send(op: Op): Promise<void>;
+}
+
+export function connectRemote({
+  root,
+  port,
+  onSnapshot,
+  onOnline,
+  onStatus,
+}: {
+  root: string;
+  port: number;
+  onSnapshot: (notes: Note[]) => void;
+  onOnline: (on: boolean) => void;
+  onStatus?: (status: McpStatus) => void;
+}): Remote {
   const base = `http://127.0.0.1:${port}`;
-  let es = null;
-  let status = "off";
-  const setStatus = (s) => s !== status && onStatus?.((status = s));
+  let es: EventSource | null = null;
+  let status: McpStatus = "off";
+  const setStatus = (s: McpStatus) => s !== status && onStatus?.((status = s));
   let lastV = -1; // snapshots can overtake each other: keep only newer ones
 
-  function apply(snap) {
+  function apply(snap: { v: number; notes: Note[] }) {
     if (snap.v <= lastV) return;
     lastV = snap.v;
     onSnapshot(snap.notes);
   }
-  function setUp(up) {
+  function setUp(up: boolean) {
     if (up && !es) {
       lastV = -1; // a new server counts from 0
       setStatus("connecting");
       es = new EventSource(`${base}/events?root=${encodeURIComponent(root)}`);
-      es.addEventListener("snapshot", (e) => online && apply(JSON.parse(e.data)));
+      es.addEventListener("snapshot", (e) => online && apply(JSON.parse((e as MessageEvent<string>).data)));
       es.onopen = () => onOnline(true);
       es.onerror = () => {
         drop();
@@ -31,13 +58,13 @@ export function connectRemote({ root, port, onSnapshot, onOnline, onStatus }) {
   }
   let online = false; // set by the caller once its offline notes are merged in
   function drop() {
-    es.close();
+    es?.close();
     es = null;
     online = false;
     setStatus("off");
     onOnline(false);
   }
-  import.meta.hot?.on("spotnote:mcp", ({ up }) => setUp(up));
+  import.meta.hot?.on("spotnote:mcp", ({ up }: { up: boolean }) => setUp(up));
   import.meta.hot?.send("spotnote:mcp?");
 
   return {

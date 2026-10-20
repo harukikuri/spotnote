@@ -43,7 +43,11 @@ function runnable(cmd: string): boolean {
     .split(path.delimiter)
     .some((dir) => exts.some((ext) => existsSync(path.join(dir, cmd + ext))));
 }
-const clientEntry = fileURLToPath(new URL("./client/inspector.js", import.meta.url));
+// The picker: TypeScript next to this file in the repository, built to
+// JavaScript in the published package.
+const clientEntry = fileURLToPath(
+  new URL(`./client/inspector.${import.meta.url.endsWith(".ts") ? "ts" : "js"}`, import.meta.url),
+);
 
 const VIRTUAL = "virtual:spotnote-client";
 const RESOLVED = "\0" + VIRTUAL;
@@ -322,7 +326,7 @@ async function stampAstro(
 }
 
 // Hands the page where each component is used in a file: [name, line, column]
-// for every <Component> in it, which the prompt reads (client/prompt.js).
+// for every <Component> in it, which the prompt reads (client/prompt.ts).
 const usesScript = (rel: string, used: Use[]) =>
   `\n(globalThis.__spotnoteUses ??= {})[${JSON.stringify(rel)}] = ${JSON.stringify(used)};`;
 
@@ -384,7 +388,7 @@ export interface SpotnoteOptions {
    * `{ event: "note.add" | "note.update", sentAt, note: { key, text, page,
    * targets: [{ file, line, column, instance }], commit, prompt } }`, where
    * `commit` is the commit a build is made from (null on the dev server). The page holds
-   * the URL, so point it at your own endpoint, not a secret one (client/webhook.js).
+   * the URL, so point it at your own endpoint, not a secret one (client/webhook.ts).
    */
   webhook?: string;
 }

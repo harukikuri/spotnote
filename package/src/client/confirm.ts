@@ -7,7 +7,16 @@
 // The action button has the focus, so Enter confirms; Cancel or a press on the
 // dimmed surface backs out. Returns `cancel`, to back out from outside.
 
-export function confirmOver(host, { title, body, action, onConfirm, onCancel }) {
+export function confirmOver(
+  host: HTMLElement,
+  {
+    title,
+    body,
+    action,
+    onConfirm,
+    onCancel,
+  }: { title: string; body?: string; action: string; onConfirm: () => void; onCancel?: () => void },
+): () => void {
   const scrim = document.createElement("div");
   scrim.className = "sn-confirm";
   const card = document.createElement("div");
@@ -26,7 +35,7 @@ export function confirmOver(host, { title, body, action, onConfirm, onCancel }) 
   }
   const btns = document.createElement("div");
   btns.className = "sn-confirm-btns";
-  const button = (cls, text, fn) => {
+  const button = (cls: string, text: string, fn: () => void) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = cls;

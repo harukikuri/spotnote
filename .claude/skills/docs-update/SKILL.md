@@ -15,14 +15,14 @@ Start from what changed (`git diff`, or the commits since the docs last changed)
 
 | Code | Page (under `docs/content/docs/`) |
 | --- | --- |
-| `client/inspector.js`: picking, `Esc`, Alt | `guides/picking-elements.mdx` |
-| `client/inspector.js`: the note panel, pins, several elements | `guides/notes.mdx` |
-| `client/notes-list.js` | `guides/notes.mdx` (Delete notes, The notes list) |
-| `client/settings-menu.js`, `client/settings.js` | `guides/settings.mdx` |
-| `client/prompt.js` | `reference/prompt-format.mdx` |
-| `client/open-file.js` | `guides/settings.mdx` (Open files in) |
-| `client/webhook.js`, the `webhook` option | `guides/webhook.mdx`, `reference/plugin-api.mdx` |
-| `client/launcher.js` | `getting-started/quick-start.mdx`, `guides/picking-elements.mdx` |
+| `client/inspector.ts`: picking, `Esc`, Alt | `guides/picking-elements.mdx` |
+| `client/inspector.ts`: the note panel, pins, several elements | `guides/notes.mdx` |
+| `client/notes-list.ts` | `guides/notes.mdx` (Delete notes, The notes list) |
+| `client/settings-menu.ts`, `client/settings.ts` | `guides/settings.mdx` |
+| `client/prompt.ts` | `reference/prompt-format.mdx` |
+| `client/open-file.ts` | `guides/settings.mdx` (Open files in) |
+| `client/webhook.ts`, the `webhook` option | `guides/webhook.mdx`, `reference/plugin-api.mdx` |
+| `client/launcher.ts` | `getting-started/quick-start.mdx`, `guides/picking-elements.mdx` |
 | `src/index.ts` options, warnings | `reference/plugin-api.mdx` |
 | `src/plugin.ts`, stamping per framework | `reference/framework-support.mdx`, `concepts.mdx` |
 | `mcp/src/tools.ts` | `guides/mcp.mdx` (MCP Tools) |

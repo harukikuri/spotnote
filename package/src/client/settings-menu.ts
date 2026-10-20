@@ -1,21 +1,28 @@
 // The launcher's Settings popover: the coding agent's status (with its own page
 // on how to connect), accent colour, theme, which editor opens files, and the
 // version.
-import { ACCENTS, el } from "./ui.js";
-import { ICONS, MENU_ICONS } from "./icons.js";
-import { getSettings, setSetting, EDITORS } from "./settings.js";
+import { ACCENTS, el } from "./ui.ts";
+import { ICONS, MENU_ICONS } from "./icons.ts";
+import { getSettings, setSetting, EDITORS, type Settings } from "./settings.ts";
+import type { Controller, McpStatus } from "./types.ts";
 
 // Fills `pop` (an empty popover). open() shows its main page; refreshStatus()
 // redraws the agent's status when it changed.
-export function createSettingsMenu(pop, ctrl) {
+export function createSettingsMenu(pop: HTMLElement, ctrl: Controller): { open(): void; refreshStatus(): void } {
   // A row of mutually exclusive choices; picking one saves it and re-renders.
-  function choices(parent, cls, name, options, render) {
+  function choices<K extends keyof Settings>(
+    parent: HTMLElement,
+    cls: string,
+    name: K,
+    options: [Settings[K], string][],
+    render: (b: HTMLButtonElement, value: Settings[K], label: string) => void,
+  ) {
     const group = el("div", cls, parent);
     group.setAttribute("role", "radiogroup");
     for (const [value, label] of options) {
       const b = el("button", "", group);
       b.setAttribute("role", "radio");
-      b.setAttribute("aria-checked", getSettings()[name] === value);
+      b.setAttribute("aria-checked", String(getSettings()[name] === value));
       render(b, value, label);
       b.addEventListener("click", () => {
         setSetting(name, value);
@@ -27,12 +34,12 @@ export function createSettingsMenu(pop, ctrl) {
   // thin rules. What a row does is behind its (?), not spelled out underneath.
   // The MCP row opens its own page, with how to connect.
   let page = "main"; // or "agent"
-  const THEMES = [
+  const THEMES: [Settings["theme"], string][] = [
     ["system", "System"],
     ["light", "Light"],
     ["dark", "Dark"],
   ];
-  function label(parent, text, help) {
+  function label(parent: HTMLElement, text: string, help?: string) {
     const l = el("span", "snl-label", parent);
     l.append(text);
     if (!help) return l;
@@ -145,19 +152,19 @@ export function createSettingsMenu(pop, ctrl) {
 
   // Whether spotnote-mcp is running and has our notes (live, while Settings is
   // open). Not connected, the agent page says what connecting gives you and how.
-  const MCP = {
+  const MCP: Record<McpStatus, [string, string]> = {
     on: ["Connected", "Your agent picks up notes as you write them, and its replies show up on the note."],
     connecting: ["Connecting…", "Syncing your notes with your agent."],
     off: ["Not connected", "Connect your coding agent to hand it notes without copy and paste."],
   };
   // Not connected: how to connect, in two steps (as in the MCP guide).
-  const MCP_STEPS = [
+  const MCP_STEPS: [string, string, string][] = [
     ["Add Spotnote to Claude Code, once:", "claude mcp add spotnote -- npx -y spotnote-mcp", "snl-cmd-shell"],
     ["In a new Claude Code session, ask:", "Watch my Spotnote notes.", "snl-cmd-ask"],
   ];
-  let mcpBox = null;
-  let mcpHelp = null;
-  let shownMcp = null;
+  let mcpBox: HTMLElement | null = null;
+  let mcpHelp: HTMLElement | null = null;
+  let shownMcp: McpStatus | null = null;
   function renderMcp() {
     const status = ctrl.mcpStatus();
     if (!mcpBox || status === shownMcp) return;
@@ -170,6 +177,7 @@ export function createSettingsMenu(pop, ctrl) {
       el("span", "snl-chev", mcpBox).innerHTML = MENU_ICONS.next; // hardcoded SVG constants
       return;
     }
+    if (!mcpHelp) return;
     mcpHelp.textContent = "";
     el("p", "snl-para", mcpHelp).textContent = MCP[status][1];
     if (status !== "off") return;

@@ -8,11 +8,11 @@
 // how long ago its step was, then written down as plain style. Each frame
 // rebuilds this from the start, so any frame renders the same on its own.
 import { useLayoutEffect, useRef } from "react";
-import { FRAMEWORKS, fwIcon } from "../../../package/src/client/icons.js";
-import { CSS } from "../../../package/src/client/styles.js";
+import { FRAMEWORKS, fwIcon } from "../../../package/src/client/icons.ts";
+import { CSS } from "../../../package/src/client/styles.ts";
 import * as snap from "./snapshots.js";
 
-// What applyLook (package/src/client/ui.js) sets for the yellow accent, light theme.
+// What applyLook (package/src/client/ui.ts) sets for the yellow accent, light theme.
 const LOOK = {
   "--sn-accent": "#ffd84d",
   "--sn-accent-rgb": "255,216,77",

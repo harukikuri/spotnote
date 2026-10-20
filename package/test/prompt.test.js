@@ -1,7 +1,7 @@
-// The DOM-free parts of the prompt (src/client/prompt.js).
+// The DOM-free parts of the prompt (src/client/prompt.ts).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseLoc, refKey, savedPrompt } from "../src/client/prompt.js";
+import { parseLoc, refKey, savedPrompt } from "../src/client/prompt.ts";
 
 test("parseLoc splits from the right, so a path may contain ':'", () => {
   assert.deepEqual(parseLoc("src/App.jsx:12:4"), { file: "src/App.jsx", line: 12, column: 4 });

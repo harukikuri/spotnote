@@ -8,24 +8,26 @@
 // Driven by a controller from the inspector:
 //   { toggleInspect, setInspect, isInspecting, setPinsVisible, notes, openNote,
 //     copyNote, deleteNote, fileKind, mcpStatus, about, onChange }
-import { uiRoot, el } from "./ui.js";
-import { LAUNCHER_ICONS } from "./icons.js";
-import { createLayer } from "./layers.js";
-import { createNotesList } from "./notes-list.js";
-import { createSettingsMenu } from "./settings-menu.js";
+import { uiRoot, el } from "./ui.ts";
+import { LAUNCHER_ICONS } from "./icons.ts";
+import { createLayer } from "./layers.ts";
+import { createNotesList } from "./notes-list.ts";
+import { createSettingsMenu } from "./settings-menu.ts";
+import type { Controller } from "./types.ts";
 
 const CORNER_KEY = "data-spotnote-launcher-corner";
 const INSET = 44; // core centre ↔ viewport edges
 // Fan start angle per corner (screen coords, y down, so +angle = clockwise).
 // The fan sweeps +90° from here, which always points into the page.
-const START = { bl: -90, br: 180, tr: 90, tl: 0 };
+type Corner = "bl" | "br" | "tr" | "tl";
+const START: Record<Corner, number> = { bl: -90, br: 180, tr: 90, tl: 0 };
 
-export function mountLauncher(ctrl) {
+export function mountLauncher(ctrl: Controller): { flash(): void; open(): void } {
   const root = el("div", "snl", uiRoot());
-  let corner = "bl";
+  let corner: Corner = "bl";
   try {
     const saved = localStorage.getItem(CORNER_KEY);
-    if (saved in START) corner = saved;
+    if (saved && saved in START) corner = saved as Corner;
   } catch {
     /* ignore */
   }
@@ -41,9 +43,9 @@ export function mountLauncher(ctrl) {
   root.append(track);
 
   // Items, in clockwise order (--i places them on the arc).
-  const item = (i, icon, tip, onClick) => {
+  const item = (i: number, icon: string, tip: string, onClick?: () => void) => {
     const b = el("button", "snl-item snl-glass", root);
-    b.style.setProperty("--i", i);
+    b.style.setProperty("--i", String(i));
     b.tabIndex = -1; // reachable only while open
     const ic = el("span", "snl-ic", b);
     ic.innerHTML = icon; // hardcoded SVG constants, not user input
@@ -60,21 +62,20 @@ export function mountLauncher(ctrl) {
   const core = el("button", "snl-core snl-glass", root);
   core.innerHTML = LAUNCHER_ICONS.mark + LAUNCHER_ICONS.plus + LAUNCHER_ICONS.check;
 
-  const popover = (cls, label) => {
+  // `item`: the button that opens it.
+  const popover = (cls: string, label: string, item: HTMLButtonElement) => {
     const p = el("div", `snl-pop ${cls} snl-glass`, root);
     p.setAttribute("role", "dialog");
     p.setAttribute("aria-label", label);
-    return p;
+    return Object.assign(p, { item });
   };
-  const notesPop = popover("snl-notes", "Notes");
-  notesPop.item = notes.b;
+  const notesPop = popover("snl-notes", "Notes", notes.b);
   const notesList = createNotesList(notesPop, ctrl, { onOpen: () => togglePop(null) });
-  const settingsPop = popover("snl-settings", "Settings");
-  settingsPop.item = gear.b;
+  const settingsPop = popover("snl-settings", "Settings", gear.b);
   const settingsMenu = createSettingsMenu(settingsPop, ctrl);
 
   // ── Geometry ──
-  function place(animate) {
+  function place(animate: boolean) {
     root.classList.toggle("snl-no-anim", !animate);
     root.style.setProperty("--x", (corner[1] === "l" ? INSET : innerWidth - INSET) + "px");
     root.style.setProperty("--y", (corner[0] === "t" ? INSET : innerHeight - INSET) + "px");
@@ -88,36 +89,36 @@ export function mountLauncher(ctrl) {
   function drawTrack() {
     const r = parseFloat(getComputedStyle(root).getPropertyValue("--r"));
     const s = r + 2;
-    track.setAttribute("width", 2 * s);
-    track.setAttribute("height", 2 * s);
+    track.setAttribute("width", String(2 * s));
+    track.setAttribute("height", String(2 * s));
     track.style.left = track.style.top = -s + "px";
-    arc.setAttribute("cx", s);
-    arc.setAttribute("cy", s);
-    arc.setAttribute("r", r);
+    arc.setAttribute("cx", String(s));
+    arc.setAttribute("cy", String(s));
+    arc.setAttribute("r", String(r));
     root.style.setProperty("--C", (2 * Math.PI * r).toFixed(2));
   }
 
   // ── State → UI ──
-  let shownSelecting = null;
+  let shownSelecting: boolean | null = null;
   let shownCount = 0;
   function render() {
     const selecting = ctrl.isInspecting();
-    root.dataset.open = open;
-    root.dataset.paused = !selecting;
+    root.dataset.open = String(open);
+    root.dataset.paused = String(!selecting);
     const label = open ? "Close Spotnote" : "Open Spotnote";
-    core.setAttribute("aria-expanded", open);
+    core.setAttribute("aria-expanded", String(open));
     core.setAttribute("aria-label", label);
     core.title = label;
     if (selecting !== shownSelecting) {
       shownSelecting = selecting;
       pause.ic.innerHTML = selecting ? LAUNCHER_ICONS.pause : LAUNCHER_ICONS.play;
       pause.t.textContent = selecting ? "Pause selecting" : "Resume selecting";
-      pause.b.setAttribute("aria-pressed", !selecting);
+      pause.b.setAttribute("aria-pressed", String(!selecting));
     }
-    root.querySelectorAll(".snl-item").forEach((b) => (b.tabIndex = open ? 0 : -1));
+    root.querySelectorAll<HTMLElement>(".snl-item").forEach((b) => (b.tabIndex = open ? 0 : -1));
     const count = ctrl.notes().length;
     if (count !== shownCount) {
-      badge.textContent = count || "";
+      badge.textContent = count ? String(count) : "";
       if (count > shownCount) {
         badge.classList.remove("snl-bump");
         badge.getBoundingClientRect(); // restart the animation
@@ -129,7 +130,7 @@ export function mountLauncher(ctrl) {
     if (settingsPop.classList.contains("snl-show")) settingsMenu.refreshStatus();
   }
 
-  function setOpen(v) {
+  function setOpen(v: boolean) {
     open = v;
     if (!v) togglePop(null);
     ctrl.setPinsVisible(v);
@@ -138,20 +139,20 @@ export function mountLauncher(ctrl) {
   }
 
   // ── Popovers: at most one open; togglePop(null) closes it ──
-  // The open one is a light-dismiss layer (layers.js): it stacks with the note
+  // The open one is a light-dismiss layer (layers.ts): it stacks with the note
   // panel, Esc closes it, and a press on the page closes it.
   const menuLayer = createLayer({ close: () => togglePop(null), lightDismiss: true });
-  function togglePop(which) {
-    let shown = null;
+  function togglePop(which: HTMLElement | null) {
+    let shown: HTMLElement | null = null;
     for (const p of [notesPop, settingsPop]) {
       const show = p === which && !p.classList.contains("snl-show");
       p.classList.toggle("snl-show", show);
       if (!show && p.classList.contains("sn-confirming")) {
         // An open question goes with it.
-        p.querySelector(".sn-confirm").remove();
+        p.querySelector(".sn-confirm")?.remove();
         p.classList.remove("sn-confirming");
       }
-      p.item.setAttribute("aria-expanded", show);
+      p.item.setAttribute("aria-expanded", String(show));
       if (show) (p === notesPop ? notesList.render : settingsMenu.open)();
       if (show) shown = p;
     }
@@ -160,7 +161,7 @@ export function mountLauncher(ctrl) {
     else menuLayer.hide();
   }
   // ── Core: click toggles; a drag moves it and snaps to the nearest corner ──
-  let drag = null;
+  let drag: { sx: number; sy: number; moved: boolean } | null = null;
   let justDragged = false;
   core.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
@@ -176,7 +177,7 @@ export function mountLauncher(ctrl) {
     root.style.setProperty("--x", e.clientX + "px");
     root.style.setProperty("--y", e.clientY + "px");
   });
-  const endDrag = (e) => {
+  const endDrag = (e: PointerEvent) => {
     if (!drag) return;
     const moved = drag.moved;
     drag = null;
@@ -202,7 +203,7 @@ export function mountLauncher(ctrl) {
   addEventListener("resize", () => place(false));
 
   // A brief ✓ on the core after a copy.
-  let flashTimer;
+  let flashTimer: ReturnType<typeof setTimeout> | undefined;
   function flash() {
     core.classList.add("snl-done");
     clearTimeout(flashTimer);

@@ -30,8 +30,7 @@ SolidStart, two majors each): pick elements through `app.title` /
   build while you work. Only syntax Node can erase (no enums, namespaces or
   parameter properties), imports name their `.ts` files, and `unknown` over
   `any`. npm gets a build: `tsc` to `dist/`, swapped in by `publishConfig` when
-  the release packs it. `mcp/` and the plugin are TypeScript; the browser
-  client (`package/src/client/`) is still JavaScript, moving over.
+  the release packs it. Both packages are TypeScript.
 - Comments say what a piece is for and why, in short plain sentences; match the
   density of the code around them.
 - A change users see updates its page in `docs/content/docs/` in the same

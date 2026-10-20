@@ -8,10 +8,15 @@
 // is shown as code anyway. File references like `router.jsx:28` become links;
 // `onFile(ref, button)` opens them.
 
+import type { FileRef } from "./open-file.ts";
+
+type OnFile = (ref: FileRef, button: HTMLButtonElement) => void;
+type Parent = HTMLElement | DocumentFragment;
+
 const FILE_REF =
   /(?<![\w/.-])((?:[\w.@-]+\/)*[\w.@-]+\.(?:jsx|tsx|js|ts|mjs|cjs|vue|svelte|astro|css|scss|sass|less|html|json|md))(?::(\d+))?(?::(\d+))?(?![\w/])/g;
 
-export function renderMarkdown(text, onFile) {
+export function renderMarkdown(text: string, onFile: OnFile): DocumentFragment {
   const out = document.createDocumentFragment();
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
   let i = 0;
@@ -20,7 +25,7 @@ export function renderMarkdown(text, onFile) {
     if (!line.trim()) {
       i++;
     } else if (line.trimStart().startsWith("```")) {
-      const code = [];
+      const code: string[] = [];
       for (i++; i < lines.length && !lines[i].trimStart().startsWith("```"); i++) code.push(lines[i]);
       i++; // the closing fence
       paint(el("pre", out), code.join("\n"));
@@ -49,7 +54,7 @@ export function renderMarkdown(text, onFile) {
   return out;
 }
 
-function el(tag, parent, cls) {
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, parent: Parent, cls?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
   parent.append(e);
@@ -58,13 +63,14 @@ function el(tag, parent, cls) {
 
 // `code` and **bold**; in plain text, bare markup becomes code and file
 // references become links. A `code` span that is just a file is a link too.
-function inline(parent, text, onFile) {
+function inline(parent: Parent, text: string, onFile: OnFile) {
   const re = /`([^`]+)`|\*\*([^*]+)\*\*/g;
   let last = 0;
-  for (let m; (m = re.exec(text)); ) {
+  for (let m: RegExpExecArray | null; (m = re.exec(text)); ) {
     prose(parent, text.slice(last, m.index), onFile);
     last = re.lastIndex;
-    if (m[1] != null) last += glued(parent, m[1].length <= 40, text.slice(last), (p) => code(p, m[1], onFile));
+    const c = m[1];
+    if (c != null) last += glued(parent, c.length <= 40, text.slice(last), (p) => code(p, c, onFile));
     else prose(el("strong", parent), m[2], onFile);
   }
   prose(parent, text.slice(last), onFile);
@@ -74,7 +80,7 @@ function inline(parent, text, onFile) {
 // and the "." or ")" right after it, leaving that alone on the next line. Keep
 // them together: `make(p)` adds the box to `p`; returns how much of `after` it took.
 const TRAILING = /^[.,;:!?)\]}"'’”]+/;
-function glued(parent, short, after, make) {
+function glued(parent: Parent, short: boolean, after: string, make: (p: Parent) => void): number {
   const tail = short ? (after.match(TRAILING)?.[0] ?? "") : ""; // a long chip may wrap inside: leave it be
   if (!tail) {
     make(parent);
@@ -87,9 +93,9 @@ function glued(parent, short, after, make) {
 }
 
 // Short code (up to 40 characters) stays on one line; longer code may wrap.
-const chip = (parent, text) => el("code", parent, text.length <= 40 ? "sn-nowrap" : "");
+const chip = (parent: Parent, text: string) => el("code", parent, text.length <= 40 ? "sn-nowrap" : "");
 
-function code(parent, text, onFile) {
+function code(parent: Parent, text: string, onFile: OnFile) {
   const c = chip(parent, text);
   if (new RegExp(`^${FILE_REF.source}$`).test(text)) files(c, text, onFile);
   else paint(c, text);
@@ -97,7 +103,7 @@ function code(parent, text, onFile) {
 
 // Markup written without backticks: <span className="x">, </a>, <Link to="/" />.
 const BARE_TAG = /<\/?[A-Za-z][\w.:-]*(?:\s+[^<>]*?)?\s*\/?>/g;
-function prose(parent, text, onFile) {
+function prose(parent: Parent, text: string, onFile: OnFile) {
   let last = 0;
   for (const m of text.matchAll(BARE_TAG)) {
     files(parent, text.slice(last, m.index), onFile);
@@ -121,20 +127,20 @@ const TOKENS = new RegExp(
     .join("|"),
   "g",
 );
-const KIND = { 1: "com", 2: "str", 4: "tag", 5: "attr", 6: "kw", 7: "num" };
-function paint(parent, text) {
+const KIND: Record<number, string> = { 1: "com", 2: "str", 4: "tag", 5: "attr", 6: "kw", 7: "num" };
+function paint(parent: Parent, text: string) {
   let last = 0;
   for (const m of text.matchAll(TOKENS)) {
     parent.append(text.slice(last, m.index));
     if (m[3] != null) parent.append(m[3]); // "<" or "</" stays plain
     const g = [1, 2, 4, 5, 6, 7].find((i) => m[i] != null);
-    el("span", parent, `sn-tk-${KIND[g]}`).textContent = m[g];
+    if (g) el("span", parent, `sn-tk-${KIND[g]}`).textContent = m[g];
     last = m.index + m[0].length;
   }
   parent.append(text.slice(last));
 }
 
-function files(parent, text, onFile) {
+function files(parent: Parent, text: string, onFile: OnFile) {
   let last = 0;
   for (const m of text.matchAll(FILE_REF)) {
     parent.append(text.slice(last, m.index));

@@ -1,11 +1,12 @@
 // Inline SVG marks: framework logos, note states, coding agents and the panel's
 // buttons. All hardcoded constants, so they're safe to set as innerHTML.
+import type { FileKind, NoteState } from "./types.ts";
 
 // Framework marks shown next to a file name. Paths from Simple Icons (CC0,
 // simpleicons.org); `jsx` is the fallback when the JSX framework is unknown.
 // `color` is the brand colour, per theme (--sn-fw-*): the dark theme uses
 // lighter shades (Solid's logo blue, not its navy), the light theme darker ones.
-const FW_PATHS = {
+const FW_PATHS: Partial<Record<FileKind, string>> = {
   react:
     "M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z",
   solid:
@@ -16,7 +17,7 @@ const FW_PATHS = {
   astro:
     "M8.358 20.162c-1.186-1.07-1.532-3.316-1.038-4.944.856 1.026 2.043 1.352 3.272 1.535 1.897.283 3.76.177 5.522-.678.202-.098.388-.229.608-.36.166.473.209.95.151 1.437-.14 1.185-.738 2.1-1.688 2.794-.38.277-.782.525-1.175.787-1.205.804-1.531 1.747-1.078 3.119l.044.148a3.158 3.158 0 0 1-1.407-1.188 3.31 3.31 0 0 1-.544-1.815c-.004-.32-.004-.642-.048-.958-.106-.769-.472-1.113-1.161-1.133-.707-.02-1.267.411-1.415 1.09-.012.053-.028.104-.045.165h.002zm-5.961-4.445s3.24-1.575 6.49-1.575l2.451-7.565c.092-.366.36-.614.662-.614.302 0 .57.248.662.614l2.45 7.565c3.85 0 6.491 1.575 6.491 1.575L16.088.727C15.93.285 15.663 0 15.303 0H8.697c-.36 0-.615.285-.784.727l-5.516 14.99z",
 };
-export const FRAMEWORKS = {
+export const FRAMEWORKS: Record<FileKind, { name: string; color: string }> = {
   react: { name: "React", color: "var(--sn-fw-react)" },
   solid: { name: "Solid", color: "var(--sn-fw-solid)" },
   vue: { name: "Vue", color: "var(--sn-fw-vue)" },
@@ -25,9 +26,10 @@ export const FRAMEWORKS = {
   jsx: { name: "JSX", color: "var(--sn-fw-jsx)" },
 };
 // An inline SVG in currentColor, so the caller picks the colour.
-export function fwIcon(kind, size = 12) {
-  const body = FW_PATHS[kind]
-    ? `<path fill="currentColor" d="${FW_PATHS[kind]}"/>`
+export function fwIcon(kind: FileKind, size = 12): string {
+  const path = FW_PATHS[kind];
+  const body = path
+    ? `<path fill="currentColor" d="${path}"/>`
     : '<path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M8 6l-6 6 6 6M16 6l6 6-6 6"/>';
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;display:block">${body}</svg>`;
 }
@@ -35,10 +37,10 @@ export function fwIcon(kind, size = 12) {
 // A note's state on its pin and in the notes list, in place of its number.
 // Drawn, not typed: glyphs like "…" sit on the text baseline, below centre.
 const mark = (
-  body,
+  body: string,
   paint = 'fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"',
 ) => `<svg width="12" height="12" viewBox="0 0 24 24" ${paint} aria-hidden="true" style="display:block">${body}</svg>`;
-export const STATE_ICONS = {
+export const STATE_ICONS: Partial<Record<NoteState, string>> = {
   done: mark('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   dismissed: mark('<path d="M6 12h12"/>'),
   asked: mark('<path d="M8.8 8.8a3.3 3.3 0 1 1 4.6 3c-1 .5-1.4 1.2-1.4 2.4"/><path d="M12 19h.01"/>'),
@@ -52,7 +54,7 @@ export const STATE_ICONS = {
 // for the mark next to "Agent" on their messages. Paths from Simple Icons (CC0);
 // `color` null = the text colour (the brand's own is black). No path (Codex:
 // OpenAI's mark isn't in Simple Icons) = the name instead of a mark.
-const AGENTS = [
+const AGENTS: { test: RegExp; name: string; color?: string | null; path?: string }[] = [
   {
     test: /claude/i,
     name: "Claude Code",
@@ -86,7 +88,7 @@ const AGENTS = [
   },
 ];
 // { name, svg } for a known agent; { name } for another; null without a name.
-export function agentMark(client) {
+export function agentMark(client: string | null | undefined): { name: string; svg?: string } | null {
   if (!client) return null;
   const a = AGENTS.find((x) => x.test.test(client));
   if (!a?.path) return { name: a?.name ?? client };
@@ -109,15 +111,15 @@ export const ICONS = {
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
 };
 
-// ── The launcher (launcher.js, notes-list.js, settings-menu.js) ──
-const svg = (attrs, body) => `<svg width="18" height="18" viewBox="0 0 24 24" ${attrs}>${body}</svg>`;
+// ── The launcher (launcher.ts, notes-list.ts, settings-menu.ts) ──
+const svg = (attrs: string, body: string) => `<svg width="18" height="18" viewBox="0 0 24 24" ${attrs}>${body}</svg>`;
 // One line style for every launcher icon (Lucide's shapes): same stroke, same
 // caps, no filled glyphs next to outlined ones.
 const LINE = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
-const S16 = (body) =>
+const S16 = (body: string) =>
   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 // The launcher's menus: theme (one icon per choice), help, chevrons.
-export const MENU_ICONS = {
+export const MENU_ICONS: Record<string, string> = {
   system: S16('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'),
   light: S16(
     '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',

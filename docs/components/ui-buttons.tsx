@@ -1,6 +1,6 @@
 // Spotnote's buttons, sized to sit inline in a sentence or a table cell, so the
 // docs show what you'll actually click. Icons and colours mirror the client
-// (package/src/client/ui.js ICONS and THEMES, launcher.js ICON), in the theme
+// (package/src/client/ui.ts ICONS and THEMES, launcher.ts ICON), in the theme
 // that matches the docs.
 import type { ReactNode } from 'react';
 
@@ -20,7 +20,7 @@ const Svg = ({ children }: { children: ReactNode }) => (
 );
 
 const ICONS = {
-  // The note panel's header (ui.js ICONS).
+  // The note panel's header (ui.ts ICONS).
   close: (
     <g {...line(2)}>
       <line x1="18" y1="6" x2="6" y2="18" />
@@ -40,7 +40,7 @@ const ICONS = {
       <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </g>
   ),
-  // The launcher's items (launcher.js ICON).
+  // The launcher's items (launcher.ts ICON).
   pause: (
     <g {...line(1.75)}>
       <rect x="6" y="4.5" width="4" height="15" rx="1" />
@@ -70,9 +70,9 @@ const NAMES = {
   settings: 'Settings',
 };
 
-// The panel's surface (ui.js THEMES: bg, border, icon).
+// The panel's surface (ui.ts THEMES: bg, border, icon).
 const PANEL = 'border border-[#e4e4e7] bg-white text-[#71717a] dark:border-[#333] dark:bg-[#1a1a1a] dark:text-[#999]';
-// The launcher's glass (ui.js .snl-glass).
+// The launcher's glass (ui.ts .snl-glass).
 const GLASS =
   'border border-black/[.08] bg-white/90 text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,.12)] ' +
   'dark:border-white/10 dark:bg-[rgba(24,24,28,.92)] dark:text-[#f2f2f3]';

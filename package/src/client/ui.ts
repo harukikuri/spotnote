@@ -1,7 +1,8 @@
 // Small UI kit (buttons + icon buttons) as plain JS. Colours are CSS variables
 // on the shadow host, so the accent and light/dark theme can change live (see
 // applyLook and the Settings menu).
-import { T, CSS } from "./styles.js";
+import { T, CSS } from "./styles.ts";
+import type { Settings } from "./settings.ts";
 
 // Accent presets for the Settings menu: the brand yellow, then system-style
 // colours at full strength, in hue order. `ink` is the text on the accent (dark,
@@ -9,7 +10,7 @@ import { T, CSS } from "./styles.js";
 // text on the light theme (≥ 4.5:1 on white).
 // `fold` is the Spotnote mark's folded corner in that colour (the mark itself
 // takes `accent`); yellow's are the brand's own (docs/public/brand/spotnote-mark-yellow.svg).
-export const ACCENTS = {
+export const ACCENTS: Record<string, { name: string; accent: string; ink: string; deep: string; fold: string }> = {
   yellow: { name: "Yellow", accent: "#ffd84d", ink: "#1a1600", deep: "#8a6a00", fold: "#d4a817" },
   orange: { name: "Orange", accent: "#ff9500", ink: "#1f1100", deep: "#b25000", fold: "#cc7700" },
   pink: { name: "Pink", accent: "#ff375f", ink: "#1f0008", deep: "#d70f45", fold: "#cc2c4c" },
@@ -22,32 +23,33 @@ export const ACCENTS = {
 // it (and ours can't leak out). The host is pinned at the document origin:
 // position:absolute children use document coords, position:fixed the viewport.
 // It hangs off <html>, not <body>, so a positioned body can't offset it.
-let shadow = null;
-export function uiRoot() {
+let shadow: ShadowRoot | null = null;
+export function uiRoot(): ShadowRoot {
   if (shadow) return shadow;
   const host = document.createElement("spotnote-root");
   host.setAttribute("data-spotnote-ui", "");
   host.style.cssText = "all:initial;position:absolute;top:0;left:0;width:0;height:0;z-index:2147483647";
-  shadow = host.attachShadow({ mode: "open" });
+  const root = host.attachShadow({ mode: "open" });
+  shadow = root;
   const style = document.createElement("style");
   style.textContent = CSS;
-  shadow.append(style);
+  root.append(style);
   document.documentElement.append(host);
   // After a hydration error in the app, React renders the whole document again
   // and drops the host: put it back, with everything still in it.
   new MutationObserver(() => {
     if (!host.isConnected) document.documentElement.append(host);
   }).observe(document.documentElement, { childList: true });
-  return shadow;
+  return root;
 }
 
 // Apply the accent preset and theme ("system" | "light" | "dark") to the host.
 const darkQuery = matchMedia("(prefers-color-scheme: dark)");
-let look = null;
-export function applyLook(next) {
-  if (!look) darkQuery.addEventListener("change", () => applyLook(look));
+let look: Settings | null = null;
+export function applyLook(next: Settings): void {
+  if (!look) darkQuery.addEventListener("change", () => look && applyLook(look));
   look = next;
-  const host = uiRoot().host;
+  const host = uiRoot().host as HTMLElement;
   const a = ACCENTS[look.accent] ?? ACCENTS.yellow;
   const theme = look.theme === "system" ? (darkQuery.matches ? "dark" : "light") : look.theme;
   host.setAttribute("data-theme", theme);
@@ -60,7 +62,19 @@ export function applyLook(next) {
   host.style.setProperty("--sn-mark-fold", a.fold);
 }
 
-export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
+export function createIconBtn({
+  svg,
+  title,
+  parent,
+  onClick,
+  size = 28,
+}: {
+  svg: string;
+  title?: string;
+  parent?: HTMLElement;
+  onClick?: (e: MouseEvent) => void;
+  size?: number;
+}): HTMLButtonElement {
   const b = document.createElement("button");
   b.setAttribute("data-spotnote-ui", "");
   if (title) b.title = title;
@@ -98,7 +112,11 @@ export function createIconBtn({ svg, title, parent, onClick, size = 28 }) {
 }
 
 // A new element with a class, appended to `parent`.
-export function el(tag, cls, parent) {
+export function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  cls?: string,
+  parent?: Element | ShadowRoot | DocumentFragment,
+): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
   if (parent) parent.append(e);

@@ -3,8 +3,8 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    // The browser client is still JavaScript: copied to dist/client as it is.
-    "allowJs": true
+    // The browser client gets Vite's `import.meta.hot`.
+    "types": ["node", "vite/client"]
   },
   "include": ["src"]
 }

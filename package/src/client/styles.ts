@@ -1,4 +1,4 @@
-// The stylesheet inside Spotnote's shadow root (see uiRoot in ui.js): the light
+// The stylesheet inside Spotnote's shadow root (see uiRoot in ui.ts): the light
 // and dark theme surfaces as --sn-* variables, and every rule the UI uses.
 
 // Colour/font tokens for inline styles: the --sn-* variables below, so they
@@ -104,7 +104,7 @@ const THEMES = {
     "code-text": "#1f2328",
   },
 };
-const vars = (o) =>
+const vars = (o: Record<string, string>) =>
   Object.entries(o)
     .map(([k, v]) => `--sn-${k}:${v}`)
     .join(";");
@@ -135,7 +135,7 @@ export const CSS = [
   // and shrinks back toward it on close.
   `.sn-panel{position:fixed;z-index:2147483647;width:300px;background:${T.bg};border:1px solid ${T.border};border-radius:10px;` +
     `box-shadow:0 12px 32px var(--sn-shadow);overflow:hidden;font-family:${T.font};animation:sn-pop-in .16s cubic-bezier(.2,0,0,1);` +
-    "display:flex;flex-direction:column;cursor:grab}", // it drags from anywhere but the input and buttons (panel-frame.js)
+    "display:flex;flex-direction:column;cursor:grab}", // it drags from anywhere but the input and buttons (panel-frame.ts)
   ".sn-panel.sn-dragging,.sn-panel.sn-dragging *{cursor:grabbing!important}",
   // Resized (width/height set): the conversation takes the room, or with none,
   // the note input does.
@@ -157,7 +157,7 @@ export const CSS = [
   `.sn-send{flex:none;display:flex;align-items:center;gap:6px;margin:0;padding:1px 4px;border:none;border-radius:5px;` +
     `background:none;color:${T.textMuted};font:12px ${T.font};cursor:pointer;transition:opacity .14s,color .14s}`,
   `.sn-send:hover{color:${T.accentText}}`,
-  // confirm.js: a question over the dimmed panel or notes list, which grows to
+  // confirm.ts: a question over the dimmed panel or notes list, which grows to
   // hold it. Every property set, so the launcher's own button styles can't leak in.
   ".sn-confirming{min-height:150px}",
   ".sn-confirm{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:12px;" +
@@ -184,7 +184,7 @@ export const CSS = [
   // Stacking, bottom to top: the hover and selection outlines, pins (they sit on
   // an element's corner), the hover label, then the layers — the note panel and
   // the launcher with its menus — which take the top z-indices in the order you
-  // last used them (layers.js).
+  // last used them (layers.ts).
   `.sn-pin{position:absolute;z-index:2147483641;cursor:pointer;width:22px;height:22px;border-radius:50%;background:${T.accent};` +
     `border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:${T.accentInk};font:600 11px/18px ${T.font};text-align:center;` +
     "animation:sn-pin-in .24s cubic-bezier(.34,1.56,.64,1);transition:box-shadow .12s ease}",
@@ -208,7 +208,7 @@ export const CSS = [
   `.sn-msg{color:${T.text};font:13px/18px ${T.font};white-space:pre-wrap;word-break:break-word}`,
   `.sn-msg-body{display:block;margin:2px 0 0 4px;padding-left:8px;border-left:2px solid ${T.border}}`,
   `.sn-msg-agent .sn-msg-body{border-left-color:${T.accent}}`,
-  // The agent's Markdown (markdown.js): compact, to fit the panel.
+  // The agent's Markdown (markdown.ts): compact, to fit the panel.
   ".sn-md{white-space:normal}",
   ".sn-md p,.sn-md ul,.sn-md ol,.sn-md pre{margin:0 0 6px}",
   ".sn-md>:last-child{margin-bottom:0}",

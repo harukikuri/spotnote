@@ -1,5 +1,5 @@
 // The launcher, sized to sit inline in a sentence. Mirrors the client's
-// `.snl-core` (package/src/client/launcher.js ICON, ui.js .snl-core rules):
+// `.snl-core` (package/src/client/launcher.ts ICON, ui.ts .snl-core rules):
 //   closed  a glass circle with the yellow Spotnote mark
 //   open    the accent (yellow) circle with its ring and a ×
 //   paused  open, but back to glass, with the ×
