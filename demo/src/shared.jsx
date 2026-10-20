@@ -4,7 +4,7 @@ import { Diff, Step, Terminal, UserPrompt } from "./apps/Terminal.jsx";
 import { card, SCREEN, VIEWPORT } from "./layout.js";
 import { Keys } from "./mac/Keys.jsx";
 import { keys, progress, typed } from "./motion.js";
-import { LOC, NOTE } from "./script.js";
+import { FRAMEWORKS, locOf, NOTE } from "./script.js";
 import { hover, launcher, panel, pin, selected } from "./spotnote/Spotnote.jsx";
 
 // The card the note is on, and where the pointer goes for it, on the desktop.
@@ -106,7 +106,8 @@ export function Caption({ f, captions }) {
 // (the launcher's ✓ shows for 1.2 s, the panel takes .12 s to close). t: the
 // frames of { launcher, card, type, enter } — open, click the card, start
 // typing, send — and `away`, when the pointer leaves the card (if it does).
-export function spotnoteSteps(f, t, vh) {
+export function spotnoteSteps(f, t, vh, fw = FRAMEWORKS.react) {
+  const LOC = locOf(fw);
   const note = typed(f, t.type, NOTE);
   const below = { x: TARGET.x, y: TARGET.y + TARGET.h + 8 };
   const steps = [
@@ -127,7 +128,7 @@ export function spotnoteSteps(f, t, vh) {
 
 // The agent in a terminal, given the pasted prompt: t holds the frames of
 // { pasteTerm, run, read, update, answer }.
-export function AgentTerminal({ f, t, prompt, front, style }) {
+export function AgentTerminal({ f, t, prompt, front, style, fw = FRAMEWORKS.react }) {
   const pasted = `[Pasted text #1 +${prompt.split("\n").length} lines]`;
   const caret = Math.floor(f / 15) % 2 === 0;
   return (
@@ -140,26 +141,16 @@ export function AgentTerminal({ f, t, prompt, front, style }) {
       style={style}
     >
       {f >= t.run && <UserPrompt text={pasted} />}
-      {f >= t.read && <Step title="Read(src/components/ProductCard.jsx)" detail="Read 24 lines" />}
+      {f >= t.read && <Step title={`Read(${fw.file})`} detail="Read 24 lines" />}
       {f >= t.update && (
-        <Step
-          title="Update(src/components/ProductCard.jsx)"
-          detail="Updated src/components/ProductCard.jsx with 1 addition and 1 removal"
-        >
-          <Diff
-            lines={[
-              [6, " ", "  return ("],
-              [7, "-", '    <div className="card" style={{ padding: 16 }}>'],
-              [7, "+", '    <div className="card" style={{ padding: 24 }}>'],
-              [8, " ", '      <img src={product.image} alt="" />'],
-            ]}
-          />
+        <Step title={`Update(${fw.file})`} detail={`Updated ${fw.file} with 1 addition and 1 removal`}>
+          <Diff lines={fw.diff} />
         </Step>
       )}
       {f >= t.answer && (
         <div style={{ marginTop: 12 }}>
-          <span style={{ color: "#e6e6e6" }}>⏺</span> The product card's padding is now 24px (it was 16px), at
-          src/components/ProductCard.jsx:7.
+          <span style={{ color: "#e6e6e6" }}>⏺</span>
+          {` The product card's padding is now 24px (it was 16px), at ${fw.file}:${fw.line}.`}
         </div>
       )}
     </Terminal>

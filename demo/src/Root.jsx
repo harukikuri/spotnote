@@ -5,7 +5,8 @@ import { SOLO_DURATION, Solo } from "./Solo.jsx";
 import { WEBHOOK_DURATION, Webhook } from "./Webhook.jsx";
 
 // Demo: a designer on a staging site, then a developer and their agent.
-// Solo: one developer on the dev server, pasting straight into their agent.
+// Solo: one developer on the dev server, pasting straight into their agent;
+// Solo-vue and Solo-svelte, the same with the card written in Vue or Svelte.
 // QuickClick, QuickNote: the Quick Start's two clips.
 // Webhook: the staging site and the team chat, side by side, the note posted.
 export function Root() {
@@ -13,6 +14,18 @@ export function Root() {
     <>
       <Composition id="Demo" component={Demo} durationInFrames={DURATION} fps={30} width={1920} height={1080} />
       <Composition id="Solo" component={Solo} durationInFrames={SOLO_DURATION} fps={30} width={1920} height={1080} />
+      {["vue", "svelte"].map((framework) => (
+        <Composition
+          key={framework}
+          id={`Solo-${framework}`}
+          component={Solo}
+          defaultProps={{ framework }}
+          durationInFrames={SOLO_DURATION}
+          fps={30}
+          width={1920}
+          height={1080}
+        />
+      ))}
       <Composition
         id="Webhook"
         component={Webhook}

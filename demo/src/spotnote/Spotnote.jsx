@@ -8,6 +8,7 @@
 // how long ago its step was, then written down as plain style. Each frame
 // rebuilds this from the start, so any frame renders the same on its own.
 import { useLayoutEffect, useRef } from "react";
+import { FRAMEWORKS, fwIcon } from "../../../package/src/client/icons.js";
 import { CSS } from "../../../package/src/client/styles.js";
 import * as snap from "./snapshots.js";
 
@@ -23,7 +24,17 @@ const LOOK = {
 
 // steps: [{ at: frame, html }], in order. Top-level elements carry data-k, so
 // a step keeps the ones it shares with the last (and their transitions run).
-export function Spotnote({ steps, frame, fps }) {
+// The captured markup shows React's icon next to the file: swap in `kind`'s.
+const pathOf = (kind) => fwIcon(kind).match(/ d="([^"]+)"/)[1];
+function asFramework(html, kind) {
+  if (kind === "react") return html;
+  return html
+    .replaceAll('title="React"', `title="${FRAMEWORKS[kind].name}"`)
+    .replaceAll("var(--sn-fw-react)", `var(--sn-fw-${kind})`)
+    .replaceAll(pathOf("react"), pathOf(kind));
+}
+
+export function Spotnote({ steps, frame, fps, framework = "react" }) {
   const host = useRef(null);
   useLayoutEffect(() => {
     const root = host.current.shadowRoot ?? host.current.attachShadow({ mode: "open" });
@@ -35,7 +46,7 @@ export function Spotnote({ steps, frame, fps }) {
     for (const { at, html } of steps) {
       if (at > frame) break;
       seek(at); // where everything is when this step changes the DOM
-      morphTop(root, html);
+      morphTop(root, asFramework(html, framework));
       host.current.getBoundingClientRect(); // apply the styles: transitions start
       for (const a of root.getAnimations()) {
         if (started.has(a)) continue;

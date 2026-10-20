@@ -9,7 +9,7 @@ import { VIEWPORT } from "./layout.js";
 import { Desktop } from "./mac/Desktop.jsx";
 import { Switcher } from "./mac/Switcher.jsx";
 import { keys } from "./motion.js";
-import { DEV_PROMPT } from "./script.js";
+import { devPrompt, FRAMEWORKS } from "./script.js";
 import {
   AgentTerminal,
   CARD_EDGE,
@@ -43,7 +43,10 @@ const T = {
 T.away = T.toBrowser; // the pointer leaves the card while away
 export const SOLO_DURATION = T.end;
 
-export function Solo() {
+// `framework`: the card is written in it (React, Vue or Svelte), so its file
+// and icon are that framework's.
+export function Solo({ framework = "react" }) {
+  const fw = FRAMEWORKS[framework];
   const f = useCurrentFrame();
   const termFront = f >= T.termFront && f < T.browserFront;
   const cx = keys(f, [
@@ -95,14 +98,15 @@ export function Solo() {
           <AgentTerminal
             f={f}
             t={T}
-            prompt={DEV_PROMPT}
+            prompt={devPrompt(fw)}
+            fw={fw}
             front={termFront}
             style={{ zIndex: termFront ? 3 : 1, opacity: f < T.toTerm ? 0 : 1 }}
           />
           <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
             <Browser front={!termFront} url="localhost:5173" title="Acme — New arrivals">
               <Shop padding={f >= T.update ? 24 : 16} />
-              <Spotnote steps={spotnoteSteps(f, T, VIEWPORT.h)} frame={f} fps={30} />
+              <Spotnote steps={spotnoteSteps(f, T, VIEWPORT.h, fw)} frame={f} fps={30} framework={fw.kind} />
             </Browser>
           </div>
         </Desktop>
