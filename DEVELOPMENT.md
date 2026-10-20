@@ -2,7 +2,7 @@
 
 Spotnote is a dev-only Vite plugin. This repo is a pnpm workspace with seven parts:
 
-- `package/` — the plugin + browser picker (published as `spotnote`; ships raw source)
+- `package/` — the plugin + browser picker (published as `spotnote`; npm gets it built to `dist/`)
 - `mcp/` — the MCP server agents start (published as `spotnote-mcp`)
 - `examples/` — framework demo apps that consume the plugin
 - `docs/` — the documentation site (Fumadocs / Next.js)

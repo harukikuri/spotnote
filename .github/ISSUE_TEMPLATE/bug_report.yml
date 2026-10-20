@@ -1,0 +1,38 @@
+name: Bug report
+description: Something in Spotnote doesn't work as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. A screenshot or the copied prompt helps.
+    validations:
+      required: true
+  - type: input
+    id: framework
+    attributes:
+      label: Framework and version
+      placeholder: React 19 / Vue 3.5 / Svelte 5 / Solid 1.9 / Astro 7 / Nuxt 4 / SvelteKit 2 …
+    validations:
+      required: true
+  - type: input
+    id: vite
+    attributes:
+      label: Vite version
+      placeholder: "8.0.0"
+    validations:
+      required: true
+  - type: input
+    id: spotnote
+    attributes:
+      label: Spotnote version
+      description: Settings in the launcher shows it, or `npm ls spotnote`.
+      placeholder: "0.4.0"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The smallest component or config that shows it, or a link to a repository.
