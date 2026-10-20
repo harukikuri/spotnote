@@ -52,6 +52,9 @@ jobs:
       # Trusted publishing: npmjs.com trusts this workflow (each package's
       # Settings → Trusted Publisher), so no token. A version already on npm is
       # skipped, so a re-run after a partial failure finishes the rest.
+      # Each package is built (TypeScript → dist/) and packed by pnpm, which
+      # swaps in its publishConfig (bin, exports… pointing at dist/), then that
+      # tarball is published.
       - name: Publish to npm
         run: |
           for p in package mcp; do
@@ -59,7 +62,9 @@ jobs:
             if npm view "$name@${GITHUB_REF_NAME#v}" version >/dev/null 2>&1; then
               echo "$name@${GITHUB_REF_NAME#v} is already published"
             else
-              (cd "$p" && npm publish --provenance --access public)
+              out="$RUNNER_TEMP/pack-$p"
+              (cd "$p" && pnpm run --if-present build && pnpm pack --pack-destination "$out")
+              npm publish "$out"/*.tgz --provenance --access public
             fi
           done
 

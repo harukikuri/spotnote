@@ -8,8 +8,8 @@ import path from "node:path";
 
 const home = mkdtempSync(path.join(tmpdir(), "spotnote-test-"));
 process.env.SPOTNOTE_HOME = home; // read when store.js loads
-const { createStore } = await import("../src/store.js");
-const { createRunner, registerTools } = await import("../src/tools.js");
+const { createStore } = await import("../src/store.ts");
+const { createRunner, registerTools } = await import("../src/tools.ts");
 
 let n = 0;
 let store, run, cwd, root;

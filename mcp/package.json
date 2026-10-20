@@ -11,13 +11,15 @@
     "directory": "mcp"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "typecheck": "tsc -p . --noEmit",
+    "build": "tsc -p ."
   },
   "bin": {
-    "spotnote-mcp": "src/cli.js"
+    "spotnote-mcp": "src/cli.ts"
   },
   "files": [
-    "src"
+    "dist"
   ],
   "engines": {
     "node": ">=22"
@@ -25,5 +27,10 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "~1.30.1",
     "zod": "^4.1.0"
+  },
+  "publishConfig": {
+    "bin": {
+      "spotnote-mcp": "dist/cli.js"
+    }
   }
 }

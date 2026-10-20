@@ -5,12 +5,24 @@
 //   relays     POST /handover — a copy with newer code wants the port (cli.js)
 // Only this machine, by a localhost name; browser calls only from a page on
 // localhost, and /rpc never from a page at all.
-import http from "node:http";
+import http, { type IncomingMessage } from "node:http";
+import type { Store } from "./store.ts";
+import type { BrowserNote, ToolResult } from "./types.ts";
+
+// Runs an agent's tool call (tools.ts): what /rpc forwards.
+export type RunTool = (
+  name: string,
+  args: unknown,
+  cwd: string,
+  signal: AbortSignal,
+  agent: string,
+  client?: string | null,
+) => Promise<ToolResult>;
 
 const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 const MAX_BODY = 1 << 20;
 
-function localOrigin(origin) {
+function localOrigin(origin: string) {
   try {
     const u = new URL(origin);
     return /^https?:$/.test(u.protocol) && LOCAL.test(u.host);
@@ -19,7 +31,8 @@ function localOrigin(origin) {
   }
 }
 
-function body(req) {
+// The request's JSON body: unknown until checked.
+function body(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (c) => {
@@ -36,10 +49,15 @@ function body(req) {
   });
 }
 
-const str = (v) => typeof v === "string";
-const validNote = (n) => n && str(n.key) && str(n.note) && str(n.loc);
+const str = (v: unknown): v is string => typeof v === "string";
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+const validNote = (n: unknown): n is BrowserNote => isObject(n) && str(n.key) && str(n.note) && str(n.loc);
 
-export function createHttpServer(store, runTool, { code, onHandover }) {
+export function createHttpServer(
+  store: Store,
+  runTool: RunTool,
+  { code, onHandover }: { code: { build: string; time: number }; onHandover: () => void },
+) {
   return http.createServer(async (req, res) => {
     const origin = req.headers.origin;
     const fromPage = origin !== undefined;
@@ -48,7 +66,7 @@ export function createHttpServer(store, runTool, { code, onHandover }) {
       return;
     }
     if (fromPage) res.setHeader("Access-Control-Allow-Origin", origin);
-    const url = new URL(req.url, "http://localhost");
+    const url = new URL(req.url ?? "/", "http://localhost");
 
     try {
       if (req.method === "OPTIONS") {
@@ -75,7 +93,7 @@ export function createHttpServer(store, runTool, { code, onHandover }) {
         req.on("close", () => (off(), clearInterval(ping)));
       } else if (req.method === "POST" && url.pathname === "/op" && fromPage) {
         const op = await body(req);
-        if (!str(op?.root)) return void res.writeHead(400).end();
+        if (!isObject(op) || !str(op.root)) return void res.writeHead(400).end();
         if (op.op === "upsert" && validNote(op.note)) store.upsert(op.root, op.note);
         else if (op.op === "remove" && str(op.key)) store.remove(op.root, op.key);
         else if (op.op === "reply" && str(op.key) && str(op.text)) store.reply(op.root, op.key, op.text);
@@ -88,7 +106,11 @@ export function createHttpServer(store, runTool, { code, onHandover }) {
         res.writeHead(204).end();
         setImmediate(onHandover); // after the reply has gone out
       } else if (req.method === "POST" && url.pathname === "/rpc" && !fromPage) {
-        const { tool, args, cwd, agent, client } = await body(req);
+        const call = await body(req);
+        if (!isObject(call) || !str(call.tool) || !str(call.cwd) || !str(call.agent))
+          return void res.writeHead(400).end();
+        const { tool, args, cwd, agent } = call;
+        const client = str(call.client) ? call.client : null;
         const abort = new AbortController();
         res.on("close", () => abort.abort()); // the relay's agent cancelled
         const r = await runTool(tool, args, cwd, abort.signal, agent, client);

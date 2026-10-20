@@ -60,15 +60,20 @@ Plugin layout (`package/`):
 
 MCP layout (`mcp/`):
 
-- `src/cli.js` — entry point (stdio); owns port 4848 or relays to the copy that does
-- `src/http.js` — the owner's HTTP server for browsers and relays
-- `src/store.js` — the notes, saved under `~/.spotnote/`
-- `src/tools.js` — the agent's tools (`watch_notes`, `reply_note`, …)
+- `src/cli.ts` — entry point (stdio); owns port 4848 or relays to the copy that does
+- `src/http.ts` — the owner's HTTP server for browsers and relays
+- `src/store.ts` — the notes, saved under `~/.spotnote/`
+- `src/tools.ts` — the agent's tools (`watch_notes`, `reply_note`, …)
+- `src/types.ts` — a note, its messages, a tool's result
+
+It's TypeScript that Node runs as is (Node 22.18 or later); `pnpm --filter
+spotnote-mcp build` makes the `dist/` that npm gets, and `pnpm typecheck`
+checks the types.
 
 To try local MCP changes, point your agent at the source instead of npm:
 
 ```bash
-claude mcp add spotnote-dev -- node /absolute/path/to/spotnote/mcp/src/cli.js
+claude mcp add spotnote-dev -- node /absolute/path/to/spotnote/mcp/src/cli.ts
 ```
 
 Examples layout (`examples/`): every major of each framework, as an app of its

@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const cli = path.resolve(fileURLToPath(import.meta.url), "../../src/cli.js");
+const cli = path.resolve(fileURLToPath(import.meta.url), "../../src/cli.ts");
 const home = mkdtempSync(path.join(tmpdir(), "spotnote-test-"));
 after(() => rmSync(home, { recursive: true, force: true }));
 

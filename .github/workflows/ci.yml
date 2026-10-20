@@ -31,6 +31,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm typecheck # tsc on the TypeScript packages
 
       # On a release tag only: npm's README (package/README.md) must be the root
       # README's copy. Not on every push, since the README is edited on GitHub
@@ -51,6 +52,14 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # What npm gets: each package built and packed as the release does.
+      - name: Packages build
+        run: |
+          for p in package mcp; do
+            (cd "$p" && pnpm run --if-present build && pnpm pack --pack-destination "$RUNNER_TEMP/pack-$p")
+          done
+          tar -tzf "$RUNNER_TEMP"/pack-mcp/*.tgz | grep -q package/dist/cli.js
 
       - name: Docs build
         run: pnpm --filter @spotnote/docs build

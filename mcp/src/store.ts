@@ -20,46 +20,55 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
+import type { App, BrowserNote, Message, Note, Target } from "./types.ts";
 
 const HOME = process.env.SPOTNOTE_HOME || path.join(homedir(), ".spotnote");
 const DIR = path.join(HOME, "apps");
 
 const id = () => Math.random().toString(36).slice(2);
-const fileOf = (root) => path.join(DIR, createHash("sha1").update(root).digest("hex").slice(0, 16) + ".json");
+// The agent session working on a note, if any.
+const holder = (n: Note) => (n.working ? n.working.agent : null);
+const fileOf = (root: string) => path.join(DIR, createHash("sha1").update(root).digest("hex").slice(0, 16) + ".json");
+
+export type Store = ReturnType<typeof createStore>;
 
 export function createStore() {
-  const apps = new Map(); // root -> { root, notes: [], deleted: { key: ms } }
-  const listeners = new Set(); // (root) => void, after every change
-  const versions = new Map(); // root -> change count, so browsers can drop out-of-order snapshots
+  const apps = new Map<string, App>(); // root -> its notes
+  const listeners = new Set<(root: string) => void>(); // after every change
+  const versions = new Map<string, number>(); // root -> change count, so browsers can drop out-of-order snapshots
 
   // Load what earlier runs saved, so the agent sees notes before a page opens.
   mkdirSync(DIR, { recursive: true });
   for (const f of readdirSync(DIR).filter((f) => f.endsWith(".json"))) {
     try {
-      const app = JSON.parse(readFileSync(path.join(DIR, f), "utf8"));
+      // Files from before deletions were kept have no `deleted`.
+      const app: Omit<App, "deleted"> & { deleted?: App["deleted"] } = JSON.parse(
+        readFileSync(path.join(DIR, f), "utf8"),
+      );
       if (typeof app.root !== "string" || !Array.isArray(app.notes)) continue;
-      app.notes.forEach((n) => (n.working = false)); // whoever had them is gone
-      apps.set(app.root, { deleted: {}, ...app });
+      for (const n of app.notes) n.working = false; // whoever had them is gone
+      apps.set(app.root, { ...app, deleted: app.deleted ?? {} });
     } catch {
       /* a corrupt file just starts empty */
     }
   }
 
-  function app(root) {
-    if (!apps.has(root)) apps.set(root, { root, notes: [], deleted: {} });
-    return apps.get(root);
+  function app(root: string): App {
+    let a = apps.get(root);
+    if (!a) apps.set(root, (a = { root, notes: [], deleted: {} }));
+    return a;
   }
 
-  const timers = new Map(); // root -> pending save
-  function save(root) {
+  const timers = new Map<string, NodeJS.Timeout>(); // root -> pending save
+  function save(root: string) {
     clearTimeout(timers.get(root));
     timers.delete(root);
     const file = fileOf(root);
-    const { notes, ...rest } = apps.get(root);
+    const { notes, ...rest } = app(root);
     writeFileSync(file + ".tmp", JSON.stringify({ ...rest, notes: notes.map(({ working, ...n }) => n) }));
     renameSync(file + ".tmp", file); // atomic: a crash never leaves half a file
   }
-  function changed(root) {
+  function changed(root: string) {
     versions.set(root, (versions.get(root) ?? 0) + 1);
     // Save shortly after, and tell the browsers and watchers now.
     clearTimeout(timers.get(root));
@@ -71,30 +80,32 @@ export function createStore() {
   }
 
   // What the browser sends: everything it knows about a note except the thread.
-  const fromBrowser = (n) => ({
+  const fromBrowser = (n: BrowserNote) => ({
     key: n.key,
     loc: n.loc,
-    index: n.index,
+    index: Number(n.index) || 0,
     more: Array.isArray(n.more)
-      ? n.more.filter((t) => typeof t?.loc === "string").map((t) => ({ loc: t.loc, index: Number(t.index) || 0 }))
+      ? n.more
+          .filter((t): t is Target => typeof t?.loc === "string")
+          .map((t) => ({ loc: t.loc, index: Number(t.index) || 0 }))
       : [],
-    url: n.url,
+    url: String(n.url ?? ""),
     note: n.note,
-    prompt: n.prompt,
+    prompt: String(n.prompt ?? ""),
   });
 
   return {
     flush: () => [...timers.keys()].forEach(save), // before exiting
     apps: () => [...apps.values()],
-    notes: (root) => app(root).notes,
-    snapshot: (root) => ({ v: versions.get(root) ?? 0, notes: app(root).notes }),
-    onChange(cb) {
+    notes: (root: string) => app(root).notes,
+    snapshot: (root: string) => ({ v: versions.get(root) ?? 0, notes: app(root).notes }),
+    onChange(cb: (root: string) => void) {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
 
     // ── From the browser ──
-    upsert(root, n) {
+    upsert(root: string, n: BrowserNote) {
       const a = app(root);
       const old = a.notes.find((x) => x.key === n.key);
       if (!old) {
@@ -124,13 +135,13 @@ export function createStore() {
       }
       changed(root);
     },
-    remove(root, key) {
+    remove(root: string, key: string) {
       const a = app(root);
       a.notes = a.notes.filter((x) => x.key !== key);
       a.deleted[key] = Date.now(); // so a stale browser can't bring it back
       changed(root);
     },
-    reply(root, key, text) {
+    reply(root: string, key: string, text: string) {
       const n = app(root).notes.find((x) => x.key === key);
       if (!n) return;
       n.thread.push({ id: id(), from: "you", text, at: Date.now() });
@@ -142,7 +153,7 @@ export function createStore() {
     },
     // Notes a browser kept while this server wasn't running: the newer copy of
     // each note wins, the other is dropped.
-    merge(root, list) {
+    merge(root: string, list: BrowserNote[]) {
       const a = app(root);
       let any = false;
       for (const n of list) {
@@ -150,9 +161,9 @@ export function createStore() {
         if ((a.deleted[n.key] ?? -1) >= updated) continue;
         const i = a.notes.findIndex((x) => x.key === n.key);
         if (i >= 0 && a.notes[i].updated >= updated) continue;
-        const thread = Array.isArray(n.thread) ? n.thread : [];
+        const thread: Message[] = Array.isArray(n.thread) ? n.thread : [];
         const asked = Number(n.asked) || updated;
-        const note = {
+        const note: Note = {
           ...fromBrowser(n),
           thread,
           done: !!n.done,
@@ -169,7 +180,7 @@ export function createStore() {
     },
 
     // ── From the agent ──
-    say(root, key, msg) {
+    say(root: string, key: string, msg: Pick<Message, "text" | "resolves" | "dismisses" | "client">) {
       const n = app(root).notes.find((x) => x.key === key);
       if (!n) return false;
       n.thread.push({ id: id(), from: "agent", at: Date.now(), ...msg });
@@ -182,17 +193,17 @@ export function createStore() {
       return true;
     },
     // An agent was handed these notes (see tools.js).
-    working(root, keys, agent, client) {
-      const fresh = app(root).notes.filter((n) => keys.includes(n.key) && n.working?.agent !== agent);
+    working(root: string, keys: string[], agent: string, client?: string | null) {
+      const fresh = app(root).notes.filter((n) => keys.includes(n.key) && holder(n) !== agent);
       if (!fresh.length) return;
-      fresh.forEach((n) => (n.working = { agent, client: client ?? null }));
+      for (const n of fresh) n.working = { agent, client: client ?? null };
       changed(root);
     },
     // The agent moved on without answering these: it's not working on them any
     // more, and a note a reply reopened goes back to how it was.
-    release(agent) {
+    release(agent: string) {
       for (const a of apps.values()) {
-        const held = a.notes.filter((n) => n.working?.agent === agent);
+        const held = a.notes.filter((n) => holder(n) === agent);
         if (!held.length) continue;
         for (const n of held) {
           n.working = false;

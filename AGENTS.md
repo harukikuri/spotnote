@@ -26,7 +26,12 @@ SolidStart, two majors each): pick elements through `app.title` /
 - Pre-1.0: change the note format, the wire format and stored data directly. No
   fallbacks for an older `spotnote-mcp` or old saved notes; `spotnote` and
   `spotnote-mcp` always ship together, at the same version.
-- Plain JavaScript, no build step: `package/` ships its source as is.
+- TypeScript that Node runs as is (type stripping, Node 22.18 or later): no
+  build while you work. Only syntax Node can erase (no enums, namespaces or
+  parameter properties), imports name their `.ts` files, and `unknown` over
+  `any`. npm gets a build: `tsc` to `dist/`, swapped in by `publishConfig` when
+  the release packs it. `mcp/` is TypeScript; `package/` is still JavaScript,
+  moving over.
 - Comments say what a piece is for and why, in short plain sentences; match the
   density of the code around them.
 - A change users see updates its page in `docs/content/docs/` in the same

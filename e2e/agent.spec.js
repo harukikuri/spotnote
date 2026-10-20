@@ -1,4 +1,4 @@
-// Spotnote with a coding agent: the real spotnote-mcp (mcp/src/cli.js) over
+// Spotnote with a coding agent: the real spotnote-mcp (mcp/src/cli.ts) over
 // stdio, driven by an MCP client playing the agent, and the page it talks to.
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,7 +21,7 @@ async function startAgent(name) {
   await client.connect(
     new StdioClientTransport({
       command: process.execPath,
-      args: [path.join(repo, "mcp/src/cli.js")],
+      args: [path.join(repo, "mcp/src/cli.ts")],
       cwd: repo, // the agent works at the repository root: the example app is inside
       env: {
         ...process.env,

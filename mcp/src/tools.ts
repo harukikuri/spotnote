@@ -2,7 +2,14 @@
 // that owns it); `registerTools` exposes them over MCP through any `call`, so a
 // relay server can forward them to the owner instead (see cli.js).
 import path from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import type { RunTool } from "./http.ts";
+import type { Store } from "./store.ts";
+import type { Message, Note, ToolResult } from "./types.ts";
+
+// A note as the agent sees it: with its app, its id and its number.
+type Seen = Note & { root: string; app: string; id: string; n: number };
 
 const BATCH_MS = 3000; // after a note arrives, wait this long for more before answering watch_notes
 // Claude Code drops an MCP tool call that sends nothing for 60s, so a watch
@@ -24,16 +31,18 @@ export const INSTRUCTIONS =
 // An app is the agent's business when it's inside the agent's folder (or the
 // agent works inside the app). Its notes' ids carry the app's path from there,
 // since two apps can have a note on the same "src/App.jsx:…".
-function inScope(root, cwd) {
+function inScope(root: string, cwd: string) {
   return root === cwd || root.startsWith(cwd + path.sep) || cwd.startsWith(root + path.sep);
 }
 
-export function createRunner(store) {
-  const delivered = new Set(); // what watch_notes already handed out (see signature)
-  const waiters = new Set();
-  store.onChange(() => waiters.forEach((wake) => wake()));
+export function createRunner(store: Store): RunTool {
+  const delivered = new Set<string>(); // what watch_notes already handed out (see signature)
+  const waiters = new Set<() => void>();
+  store.onChange(() => {
+    for (const wake of waiters) wake();
+  });
 
-  function notes(cwd) {
+  function notes(cwd: string): Seen[] {
     return store
       .apps()
       .filter((a) => inScope(a.root, cwd))
@@ -42,11 +51,11 @@ export function createRunner(store) {
         return a.notes.map((n, i) => ({ ...n, root: a.root, app, id: `${app}:${n.key}`, n: i + 1 }));
       });
   }
-  const open = (v) => !v.done && !v.dismissed;
+  const open = (v: Seen) => !v.done && !v.dismissed;
   // Open, and the agent hasn't had the last word.
-  const needsAgent = (v) => open(v) && v.thread.at(-1)?.from !== "agent";
+  const needsAgent = (v: Seen) => open(v) && v.thread.at(-1)?.from !== "agent";
   // Show the developer an agent has these, until it replies, resolves or dismisses.
-  function handOut(list, agent, client) {
+  function handOut(list: Seen[], agent: string, client?: string | null) {
     for (const root of new Set(list.map((v) => v.root)))
       store.working(
         root,
@@ -55,11 +64,11 @@ export function createRunner(store) {
         client,
       );
   }
-  const signature = (v) => `${v.root}\n${v.key}\n${v.asked}\n${v.note}\n${v.thread.length}`;
+  const signature = (v: Seen) => `${v.root}\n${v.key}\n${v.asked}\n${v.note}\n${v.thread.length}`;
 
   // Resolves once something changes, after `ms`, or when the call is cancelled.
-  function change(ms, signal) {
-    return new Promise((done) => {
+  function change(ms: number, signal?: AbortSignal) {
+    return new Promise<void>((done) => {
       const finish = () => {
         clearTimeout(timer);
         waiters.delete(finish);
@@ -72,13 +81,24 @@ export function createRunner(store) {
     });
   }
 
-  const ok = (text) => ({ text });
-  const err = (text) => ({ text, isError: true });
-  const unknown = (id) => err(`No note with id ${id}. Call list_notes for the current ids.`);
+  const ok = (text: string): ToolResult => ({ text });
+  const err = (text: string): ToolResult => ({ text, isError: true });
+  const unknown = (id: string) => err(`No note with id ${id}. Call list_notes for the current ids.`);
   const empty = "No notes yet. Write one in the browser: open the app with the Spotnote launcher and click an element.";
 
-  const tools = {
-    async watch_notes({ timeout_seconds = MAX_WAIT_S } = {}, cwd, signal, agent, client) {
+  // Each tool's arguments were checked against its inputSchema by the MCP SDK
+  // (registerTools), in this server or in the relay that forwarded them.
+  type Tool = (
+    args: Record<string, unknown>,
+    cwd: string,
+    signal: AbortSignal | undefined,
+    agent: string,
+    client?: string | null,
+  ) => ToolResult | Promise<ToolResult>;
+  const text = (v: unknown) => String(v ?? "");
+  const tools: Record<string, Tool> = {
+    async watch_notes({ timeout_seconds }, cwd, signal, agent, client) {
+      const wait = Number(timeout_seconds) || MAX_WAIT_S;
       // Watching again means the last batch is handled; whatever it left unanswered
       // isn't being worked on (see store.release).
       store.release(agent);
@@ -86,7 +106,7 @@ export function createRunner(store) {
       // agent holds never reached it (the call was cut off, or its answer was
       // rejected): hand it out again.
       for (const v of notes(cwd)) if (needsAgent(v) && !v.working) delivered.delete(signature(v));
-      const end = Date.now() + Math.min(timeout_seconds, MAX_WAIT_S) * 1000;
+      const end = Date.now() + Math.min(wait, MAX_WAIT_S) * 1000;
       const fresh = () => notes(cwd).filter((v) => needsAgent(v) && !delivered.has(signature(v)));
       while (!fresh().length && Date.now() < end && !signal?.aborted) await change(end - Date.now(), signal);
       if (!fresh().length) return ok("No new notes yet. Call watch_notes again to keep waiting.");
@@ -110,17 +130,17 @@ export function createRunner(store) {
     },
     reply_note({ id, message }, cwd, signal, agent, client) {
       const v = notes(cwd).find((x) => x.id === id);
-      if (!v || !store.say(v.root, v.key, { text: message, client })) return unknown(id);
+      if (!v || !store.say(v.root, v.key, { text: text(message), client })) return unknown(text(id));
       return ok(`Sent to the developer on note ${v.n}.`);
     },
     dismiss_note({ id, reason }, cwd, signal, agent, client) {
       const v = notes(cwd).find((x) => x.id === id);
-      if (!v || !store.say(v.root, v.key, { text: reason, dismisses: true, client })) return unknown(id);
+      if (!v || !store.say(v.root, v.key, { text: text(reason), dismisses: true, client })) return unknown(text(id));
       return ok(`Dismissed note ${v.n}.`);
     },
     resolve_note({ id, summary }, cwd, signal, agent, client) {
       const v = notes(cwd).find((x) => x.id === id);
-      if (!v || !store.say(v.root, v.key, { text: summary, resolves: true, client })) return unknown(id);
+      if (!v || !store.say(v.root, v.key, { text: text(summary), resolves: true, client })) return unknown(text(id));
       return ok(`Marked note ${v.n} done.`);
     },
   };
@@ -128,19 +148,29 @@ export function createRunner(store) {
   // `agent` tells agent sessions apart (each spotnote-mcp process has its own id);
   // `client` is the agent's own name for itself ("claude-code"), kept on what it writes.
   return async function runTool(name, args, cwd, signal, agent, client) {
-    if (!tools[name]) return err(`Unknown tool ${name}.`);
-    return tools[name](args ?? {}, cwd, signal, agent, client);
+    const tool = tools[name];
+    if (!tool) return err(`Unknown tool ${name}.`);
+    const params = typeof args === "object" && args !== null ? (args as Record<string, unknown>) : {};
+    return tool(params, cwd, signal, agent, client);
   };
 }
 
 // `call(name, args, signal)` → { text, isError? }
-export function registerTools(mcp, call) {
-  const tool = (name, config) =>
+export function registerTools(
+  mcp: McpServer,
+  call: (name: string, args: unknown, signal: AbortSignal) => Promise<ToolResult>,
+) {
+  type Config = {
+    description: string;
+    inputSchema?: Record<string, z.ZodType>;
+    annotations?: { readOnlyHint?: boolean };
+  };
+  const tool = (name: string, config: Config) =>
     // A tool without an inputSchema gets only `extra`.
-    mcp.registerTool(name, config, async (...params) => {
-      const [args, extra] = config.inputSchema ? params : [{}, params[0]];
+    mcp.registerTool(name, config, async (...params: unknown[]) => {
+      const [args, extra] = (config.inputSchema ? params : [{}, params[0]]) as [unknown, { signal: AbortSignal }];
       const r = await call(name, args, extra.signal);
-      return { content: [{ type: "text", text: r.text }], isError: !!r.isError };
+      return { content: [{ type: "text" as const, text: r.text }], isError: !!r.isError };
     });
   tool("watch_notes", {
     description:
@@ -201,8 +231,8 @@ export function registerTools(mcp, call) {
 }
 
 // A note for the agent: where its app is, its prompt, then the conversation so far.
-function format(v) {
-  const who = (m) =>
+function format(v: Seen) {
+  const who = (m: Message) =>
     m.from === "agent" ? (m.resolves ? "you (resolved)" : m.dismisses ? "you (dismissed)" : "you") : "developer";
   const convo = v.thread.length
     ? `\n\n## Conversation\n${v.thread.map((m) => `- ${who(m)}: ${m.text}`).join("\n")}`

@@ -9,8 +9,8 @@ import path from "node:path";
 
 const home = mkdtempSync(path.join(tmpdir(), "spotnote-test-"));
 process.env.SPOTNOTE_HOME = home; // read when store.js loads
-const { createStore } = await import("../src/store.js");
-const { createHttpServer } = await import("../src/http.js");
+const { createStore } = await import("../src/store.ts");
+const { createHttpServer } = await import("../src/http.ts");
 
 const root = path.join(home, "app");
 const PAGE = "http://localhost:5173";

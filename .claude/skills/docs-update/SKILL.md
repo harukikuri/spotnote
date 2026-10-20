@@ -25,8 +25,8 @@ Start from what changed (`git diff`, or the commits since the docs last changed)
 | `client/launcher.js` | `getting-started/quick-start.mdx`, `guides/picking-elements.mdx` |
 | `src/index.js` options, warnings | `reference/plugin-api.mdx` |
 | `src/plugin.cjs`, stamping per framework | `reference/framework-support.mdx`, `concepts.mdx` |
-| `mcp/src/tools.js` | `guides/mcp.mdx` (MCP Tools) |
-| `mcp/src/store.js`, localStorage keys | `reference/storage.mdx` |
+| `mcp/src/tools.ts` | `guides/mcp.mdx` (MCP Tools) |
+| `mcp/src/store.ts`, localStorage keys | `reference/storage.mdx` |
 | Something it can't do | `limitations.mdx`, `faq.mdx` |
 
 Also search for the old wording, since a name can be on more pages than the table

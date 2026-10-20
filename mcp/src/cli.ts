@@ -11,9 +11,10 @@
 // the port over and relays instead.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createStore } from "./store.js";
-import { createRunner, registerTools, INSTRUCTIONS } from "./tools.js";
-import { createHttpServer } from "./http.js";
+import { createStore, type Store } from "./store.ts";
+import { createRunner, registerTools, INSTRUCTIONS } from "./tools.ts";
+import { createHttpServer, type RunTool } from "./http.ts";
+import type { ToolResult } from "./types.ts";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
@@ -23,13 +24,14 @@ const PORT = Number(process.env.SPOTNOTE_PORT) || 4848;
 const BASE = `http://127.0.0.1:${PORT}`;
 const cwd = process.cwd(); // the agent's project: it only sees notes from apps in here
 const agent = Math.random().toString(36).slice(2); // this agent session, for "working" (see store.js)
-const log = (msg) => console.error(`[spotnote-mcp] ${msg}`); // stdout is the MCP channel
+const log = (msg: string) => console.error(`[spotnote-mcp] ${msg}`); // stdout is the MCP channel
 
 // This copy's code: a hash of its source, and when that source last changed.
+// The source is .ts in the repository, .js once built for npm.
 const CODE = (() => {
   const dir = path.dirname(fileURLToPath(import.meta.url));
   const files = readdirSync(dir)
-    .filter((f) => f.endsWith(".js"))
+    .filter((f) => /\.(js|ts)$/.test(f) && !f.endsWith(".d.ts"))
     .sort();
   const hash = createHash("sha1");
   let time = 0;
@@ -40,15 +42,16 @@ const CODE = (() => {
   return { build: hash.digest("hex").slice(0, 12), time };
 })();
 
-let owner = null; // { store, runTool, server } once this process owns the port
+// Once this process owns the port.
+let owner: { store: Store; runTool: RunTool; server: ReturnType<typeof createHttpServer> } | null = null;
 
 async function becomeOwner() {
   const store = createStore();
   const runTool = createRunner(store);
   const server = createHttpServer(store, runTool, { code: CODE, onHandover: handOver });
-  await new Promise((ok, fail) => {
+  await new Promise<void>((ok, fail) => {
     server.once("error", fail);
-    server.listen(PORT, "127.0.0.1", ok);
+    server.listen(PORT, "127.0.0.1", () => ok());
   });
   owner = { store, runTool, server };
   log(`serving browsers on ${BASE} (build ${CODE.build})`);
@@ -67,10 +70,11 @@ function handOver() {
 }
 
 // The owner's /health: { spotnote: 1, build, time }, or null if it's not ours.
-async function ownerInfo() {
+type Health = { spotnote: 1; build?: string; time?: number };
+async function ownerInfo(): Promise<Health | null> {
   try {
-    const h = await (await fetch(`${BASE}/health`)).json();
-    return h.spotnote === 1 ? h : null;
+    const h: unknown = await (await fetch(`${BASE}/health`)).json();
+    return typeof h === "object" && h !== null && (h as Health).spotnote === 1 ? (h as Health) : null;
   } catch {
     return null;
   }
@@ -85,8 +89,8 @@ function watchOwner() {
 }
 
 // Ask an owner running older code to hand over, then take the port.
-async function takeFromOlder(info) {
-  if (info.build === CODE.build || !(info.time < CODE.time)) return false;
+async function takeFromOlder(info: Health) {
+  if (info.build === CODE.build || !((info.time ?? Infinity) < CODE.time)) return false;
   await fetch(`${BASE}/handover`, { method: "POST" }).catch(() => {});
   for (let i = 0; i < 20 && !owner; i++) {
     await new Promise((r) => setTimeout(r, 150));
@@ -100,7 +104,7 @@ async function takeFromOlder(info) {
 // kept on its messages, so the note panel can show its mark.
 const client = () => mcp.server.getClientVersion()?.name ?? null;
 
-async function call(name, args, signal) {
+async function call(name: string, args: unknown, signal: AbortSignal): Promise<ToolResult> {
   if (owner) return owner.runTool(name, args, cwd, signal, agent, client());
   try {
     const res = await fetch(`${BASE}/rpc`, {
@@ -108,7 +112,7 @@ async function call(name, args, signal) {
       body: JSON.stringify({ tool: name, args, cwd, agent, client: client() }),
       signal,
     });
-    return await res.json();
+    return (await res.json()) as ToolResult; // the owner's runTool answered
   } catch {
     if (signal?.aborted) return { text: "Cancelled." };
     // The owner went away mid-call: take its place and run the call here.
@@ -126,7 +130,7 @@ async function call(name, args, signal) {
 try {
   await becomeOwner();
 } catch (e) {
-  const info = e.code === "EADDRINUSE" && (await ownerInfo());
+  const info = (e as NodeJS.ErrnoException).code === "EADDRINUSE" && (await ownerInfo());
   if (!info) {
     log(
       `port ${PORT} is taken by something else. Set SPOTNOTE_PORT to a free port (and the same in your dev server's env).`,

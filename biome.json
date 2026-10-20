@@ -29,6 +29,7 @@
         "noUnusedFunctionParameters": "off"
       },
       "suspicious": {
+        "noExplicitAny": "error",
         "noAssignInExpressions": "off",
         "useIterableCallbackReturn": "off"
       }
