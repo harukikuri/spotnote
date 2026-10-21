@@ -85,20 +85,6 @@ App > Products > ProductCard
 
 Every field is explained in [Prompt Format](https://spotnote-weld.vercel.app/reference/prompt-format).
 
-## MCP (local agent)
-
-Skip the copy and paste: your agent picks up notes as you write them.
-
-```bash
-claude mcp add --scope user spotnote -- npx -y spotnote-mcp
-```
-
-Then ask your agent: `Watch my Spotnote notes.` Codex, Cursor and Gemini CLI.
-
-https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
-
-_With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
-
 ## Webhook
 
 Send each note to a URL of yours as it's written: to post it to your team's chat or issue tracker, without the copy and paste.
