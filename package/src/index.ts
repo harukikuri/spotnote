@@ -108,13 +108,17 @@ export interface SpotnoteOptions {
    */
   webhook?: string;
   /**
-   * Send the webhook a screenshot with each note: its elements and the page
-   * around them, outlined. The body is then `multipart/form-data`: the JSON
+   * Send the webhook a screenshot with each note: its elements, outlined, and
+   * the page around them. The body is then `multipart/form-data`: the JSON
    * above as the `payload` field and the image (WebP, or PNG in Safari) as the
    * `screenshot` file. It's drawn from the DOM, so `<canvas>`, `<video>` and
    * cross-origin images without CORS come out blank.
+   *
+   * `true` for the defaults, or settings: `padding`, the px of the page around
+   * the elements (100), and `maxWidth`, how wide the image gets at most (1000;
+   * a bigger image is sent without keepalive).
    */
-  screenshot?: boolean;
+  screenshot?: boolean | { padding?: number; maxWidth?: number };
 }
 
 /**
@@ -145,6 +149,8 @@ export default function spotnote({
   // keep the test run from exiting.
   const apply: Plugin["apply"] = (_, { command, mode }) =>
     (command === "serve" || (command === "build" && build.includes(mode))) && !process.env.VITEST;
+  // The client's settings for it: null when it's off.
+  const shots = screenshot === true ? {} : screenshot || null;
   const mcpPort = port ?? (Number(process.env.SPOTNOTE_PORT) || 4848);
   let building = false;
   let commit: string | null = null; // in a build, the commit it's made from
@@ -160,7 +166,7 @@ export default function spotnote({
 
     // The client imports modern-screenshot only when it takes a screenshot:
     // found then, the dev server would optimize it and reload the page.
-    config: () => (screenshot ? { optimizeDeps: { include: ["spotnote > modern-screenshot"] } } : undefined),
+    config: () => (shots ? { optimizeDeps: { include: ["spotnote > modern-screenshot"] } } : undefined),
 
     configResolved(config) {
       root = config.root;
@@ -202,7 +208,7 @@ export default function spotnote({
     // deployed page doesn't reach, and it's a path on the machine that built it.
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit, webhook: webhook ?? null, screenshot })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit, webhook: webhook ?? null, screenshot: shots })});`;
       }
     },
 

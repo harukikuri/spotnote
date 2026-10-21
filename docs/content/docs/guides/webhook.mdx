@@ -43,7 +43,7 @@ The page sends a `POST` whose body is JSON. It's sent as `text/plain`, so your e
 
 ## Screenshots
 
-With `screenshot: true`, each note also brings a picture of what it's about: its elements, outlined, and about 100px of the page around them, at most 1000px wide.
+With `screenshot: true`, each note also brings a picture of what it's about: its elements, outlined, and 100px of the page around them, at most 1000px wide. To change those, see [`screenshot`](/reference/plugin-api#screenshot).
 
 ```ts title="vite.config.ts"
 spotnote({ build: ['staging'], webhook: 'https://feedback.example.com/spotnote', screenshot: true })

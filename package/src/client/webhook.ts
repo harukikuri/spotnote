@@ -10,30 +10,33 @@
 // The body is that JSON, sent as text/plain. With the `screenshot` option it's
 // multipart/form-data instead: the JSON as the `payload` field, and the
 // note's elements as an image file, `screenshot` (screenshot.ts).
-import { screenshot } from "./screenshot.ts";
+import { screenshot, type ScreenshotOptions } from "./screenshot.ts";
 
 let url: string | null = null;
-let withScreenshot = false;
+let shots: ScreenshotOptions | null = null; // the `screenshot` option, when it's on
 let warned = false; // say it once: a webhook that's down would fail every note
 
 // keepalive (still sent if the page goes away right after) carries 64 KB at
 // most: a body with a bigger image goes without it.
 const KEEPALIVE_MAX = 60_000;
 
-export function setWebhook(u: string | null, { screenshot = false } = {}): void {
+export function setWebhook(
+  u: string | null,
+  { screenshot = null }: { screenshot?: ScreenshotOptions | null } = {},
+): void {
   url = u;
-  withScreenshot = screenshot;
+  shots = screenshot;
 }
 
 export function postNote(event: "note.add" | "note.update", note: unknown, els: Element[] = []): void {
   if (!url) return;
   const json = JSON.stringify({ event, sentAt: new Date().toISOString(), note });
-  if (!withScreenshot) {
+  if (!shots) {
     send(json);
     return;
   }
   // The note goes either way: without the image when it can't be made or sent.
-  screenshot(els).then(
+  screenshot(els, shots).then(
     (image) => (image ? sendWithImage(json, image) : send(json)),
     (e: Error) => {
       console.warn(`[spotnote] couldn't take the note's screenshot: ${e.message}`);

@@ -4,11 +4,19 @@
 // screen, so no permission is asked; what the DOM can't redraw (<canvas>,
 // <video>, images from another origin without CORS) comes out blank.
 
-const PAD = 100; // px of the page around the elements
-const MAX_WIDTH = 1000; // px wide at most: enough to read, small enough to send
 const OUTLINE = "#ff375f";
 
-export async function screenshot(els: Element[]): Promise<Blob | null> {
+// The option's settings: px of the page around the elements, and how wide the
+// image gets at most (enough to read, small enough to send).
+export interface ScreenshotOptions {
+  padding?: number;
+  maxWidth?: number;
+}
+
+export async function screenshot(
+  els: Element[],
+  { padding = 100, maxWidth = 1000 }: ScreenshotOptions = {},
+): Promise<Blob | null> {
   if (!els.length) return null;
   // The elements' box on the page (document coordinates), with room around it.
   const boxes = els.map((el) => {
@@ -16,14 +24,14 @@ export async function screenshot(els: Element[]): Promise<Blob | null> {
     return { left: r.left + scrollX, top: r.top + scrollY, width: r.width, height: r.height };
   });
   const doc = document.documentElement;
-  const x = Math.max(0, Math.min(...boxes.map((b) => b.left)) - PAD);
-  const y = Math.max(0, Math.min(...boxes.map((b) => b.top)) - PAD);
-  const right = Math.min(doc.scrollWidth, Math.max(...boxes.map((b) => b.left + b.width)) + PAD);
-  const bottom = Math.min(doc.scrollHeight, Math.max(...boxes.map((b) => b.top + b.height)) + PAD);
+  const x = Math.max(0, Math.min(...boxes.map((b) => b.left)) - padding);
+  const y = Math.max(0, Math.min(...boxes.map((b) => b.top)) - padding);
+  const right = Math.min(doc.scrollWidth, Math.max(...boxes.map((b) => b.left + b.width)) + padding);
+  const bottom = Math.min(doc.scrollHeight, Math.max(...boxes.map((b) => b.top + b.height)) + padding);
   const width = right - x;
   const height = bottom - y;
   if (width <= 0 || height <= 0) return null;
-  const scale = Math.min(devicePixelRatio || 1, MAX_WIDTH / width);
+  const scale = Math.min(devicePixelRatio || 1, maxWidth / width);
 
   const { domToCanvas } = await import("modern-screenshot");
   // The whole page, moved so the box is at the top left, cut to the box's size.

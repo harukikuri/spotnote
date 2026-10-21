@@ -13,7 +13,7 @@ export default function spotnote(options?: {
   port?: number;
   build?: string[];
   webhook?: string;
-  screenshot?: boolean;
+  screenshot?: boolean | { padding?: number; maxWidth?: number };
 }): Plugin[];
 ```
 
@@ -77,6 +77,17 @@ Send the [webhook](#webhook) a screenshot with each note: its elements, outlined
 
 ```ts title="vite.config.ts"
 spotnote({ webhook: 'https://feedback.example.com/spotnote', screenshot: true })
+```
+
+`true` takes the defaults. Or set them:
+
+| Setting | Default | |
+| --- | --- | --- |
+| `padding` | `100` | The px of the page around the elements. |
+| `maxWidth` | `1000` | How wide the image gets at most, in px. A wider one is bigger to send: past 64 KB, a note can be lost if the page closes right after. |
+
+```ts title="vite.config.ts"
+spotnote({ webhook: 'https://feedback.example.com/spotnote', screenshot: { padding: 300, maxWidth: 1600 } })
 ```
 
 The body is then `multipart/form-data` instead of JSON: see [Screenshots](/guides/webhook#screenshots).

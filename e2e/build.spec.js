@@ -38,7 +38,8 @@ test("each note sent goes to the webhook: added, then rewritten", async ({ page,
     expect(added.body.note.targets[0]).toMatchObject({ file: app.file, instance: 1 });
     expect(added.body.note.commit).toBe(execSync("git rev-parse HEAD").toString().slice(0, 7));
     expect(added.body.note.prompt).toContain("## Request\nMake the title bigger");
-    // The screenshot: an image of the title and around it, which decodes.
+    // The screenshot: an image of the title, which decodes, at the size the
+    // staging build's settings make it (no padding, 200px wide).
     expect(added.screenshot.name).toBe("screenshot.webp");
     expect(added.screenshot.type).toBe("image/webp");
     const size = await page.evaluate(
@@ -49,8 +50,8 @@ test("each note sent goes to the webhook: added, then rewritten", async ({ page,
       [...new Uint8Array(await added.screenshot.arrayBuffer())],
     );
     const title = await page.locator(app.title).first().boundingBox();
-    expect(size[0]).toBeGreaterThan(title.width);
-    expect(size[1]).toBeGreaterThan(title.height);
+    expect(size[0]).toBe(200);
+    expect(size[1]).toBeCloseTo((title.height * 200) / title.width, -1);
 
     await page.locator(".sn-pin").click();
     await page.locator(".sn-panel [data-spotnote-input]").fill("Make the title smaller");

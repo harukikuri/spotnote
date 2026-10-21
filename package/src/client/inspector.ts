@@ -15,6 +15,7 @@ import { connectRemote } from "./remote.ts";
 import { closeTopLayer } from "./layers.ts";
 import { resolveRef, savedPrompt, setCommit } from "./prompt.ts";
 import { setWebhook } from "./webhook.ts";
+import type { ScreenshotOptions } from "./screenshot.ts";
 import { nudgePanel } from "./panel-frame.ts";
 import {
   drawHover,
@@ -132,7 +133,7 @@ export interface InspectorOptions {
   about?: Controller["about"];
   commit?: string | null;
   webhook?: string | null;
-  screenshot?: boolean;
+  screenshot?: ScreenshotOptions | null;
 }
 
 export function initInspector({
@@ -142,7 +143,7 @@ export function initInspector({
   about = null,
   commit = null,
   webhook = null,
-  screenshot = false,
+  screenshot = null,
 }: InspectorOptions = {}): void {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
