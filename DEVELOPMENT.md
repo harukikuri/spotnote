@@ -42,7 +42,11 @@ Plugin layout (`package/`):
 - `src/plugin.ts` — the Babel visitor that stamps `data-spotnote` in JSX
 - `src/dom-tags.ts` — the HTML and SVG tag names the JSX pass stamps
 - `src/client/` — the browser picker, auto-injected in dev:
-  - `inspector.ts` — picking, note panel, pins, HMR re-bind
+  - `inspector.ts` — boots the picker; selection mode, the pointer, HMR re-bind
+  - `panel.ts` — the note panel: writing a note, its chips, the conversation
+  - `pins.ts` — the notes and their pins, saved and synced with spotnote-mcp
+  - `overlay.ts` — the hover box and label, the selection box
+  - `state.ts` — what those share: the notes, the selection, the change signal
   - `prompt.ts` — source locations and the prompt built from them
   - `panel-frame.ts` — dragging, resizing and shaking the note panel
   - `conversation.ts` — the agent's messages in the panel

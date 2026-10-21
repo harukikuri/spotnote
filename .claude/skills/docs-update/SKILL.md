@@ -16,7 +16,7 @@ Start from what changed (`git diff`, or the commits since the docs last changed)
 | Code | Page (under `docs/content/docs/`) |
 | --- | --- |
 | `client/inspector.ts`: picking, `Esc`, Alt | `guides/picking-elements.mdx` |
-| `client/inspector.ts`: the note panel, pins, several elements | `guides/notes.mdx` |
+| `client/panel.ts`, `client/pins.ts`: the note panel, pins, several elements | `guides/notes.mdx` |
 | `client/notes-list.ts` | `guides/notes.mdx` (Delete notes, The notes list) |
 | `client/settings-menu.ts`, `client/settings.ts` | `guides/settings.mdx` |
 | `client/prompt.ts` | `reference/prompt-format.mdx` |
