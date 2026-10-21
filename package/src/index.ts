@@ -107,6 +107,14 @@ export interface SpotnoteOptions {
    * the URL, so point it at your own endpoint, not a secret one (client/webhook.ts).
    */
   webhook?: string;
+  /**
+   * Send the webhook a screenshot with each note: its elements and the page
+   * around them, outlined. The body is then `multipart/form-data`: the JSON
+   * above as the `payload` field and the image (WebP, or PNG in Safari) as the
+   * `screenshot` file. It's drawn from the DOM, so `<canvas>`, `<video>` and
+   * cross-origin images without CORS come out blank.
+   */
+  screenshot?: boolean;
 }
 
 /**
@@ -124,7 +132,13 @@ export interface SpotnoteOptions {
  * import spotnote from "spotnote";
  * export default defineConfig({ plugins: [react(), spotnote()] });
  */
-export default function spotnote({ exclude, port, build = [], webhook }: SpotnoteOptions = {}): Plugin[] {
+export default function spotnote({
+  exclude,
+  port,
+  build = [],
+  webhook,
+  screenshot = false,
+}: SpotnoteOptions = {}): Plugin[] {
   // Dev only, but for builds in a `build` mode: production builds are
   // untouched. Not under Vitest either, which runs a dev server too: stamps
   // would change tests' DOM and snapshots, and the spotnote-mcp check would
@@ -143,6 +157,10 @@ export default function spotnote({ exclude, port, build = [], webhook }: Spotnot
     name: "spotnote",
     apply,
     enforce: "pre", // stamp before the framework compiler processes the JSX
+
+    // The client imports modern-screenshot only when it takes a screenshot:
+    // found then, the dev server would optimize it and reload the page.
+    config: () => (screenshot ? { optimizeDeps: { include: ["spotnote > modern-screenshot"] } } : undefined),
 
     configResolved(config) {
       root = config.root;
@@ -184,7 +202,7 @@ export default function spotnote({ exclude, port, build = [], webhook }: Spotnot
     // deployed page doesn't reach, and it's a path on the machine that built it.
     load(id) {
       if (id === RESOLVED) {
-        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit, webhook: webhook ?? null })});`;
+        return `import { initInspector } from ${JSON.stringify(clientEntry)};\ninitInspector(${JSON.stringify({ jsx, root: building ? "" : root, port: mcpPort, about: ABOUT, commit, webhook: webhook ?? null, screenshot })});`;
       }
     },
 

@@ -423,7 +423,7 @@ export function openPanel(target: HTMLElement, prefillNote?: string | null, { in
     save(note); // leave a marker on each element
     const k = refKey(p.primary.loc, p.primary.index);
     const sent = pins.get(k);
-    if (sent) postNote(isEdit ? "note.update" : "note.add", forWebhook(k, sent, prompt));
+    if (sent) postNote(isEdit ? "note.update" : "note.add", forWebhook(k, sent, prompt), panelEls());
     closePanel(); // selection mode stays on while the launcher is open
     app.launcher?.flash(); // ✓ on the launcher core
   }

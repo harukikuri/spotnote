@@ -5,7 +5,7 @@ description: Send each note to a URL of yours as it's written, to post it to you
 
 Spotnote can send each note to a URL of yours as it's sent (`Enter`, a new note or a rewritten one): on the dev server, and in [staging builds](/guides/staging), where it saves reviewers the copy and paste.
 
-<Video src="/webhook-demo.mp4" label="Spotnote demo with a webhook: a note sent on the staging site appears in the team chat by itself">On a staging build with a webhook: press `Enter`, and **the note lands in your team's chat**, with its file and line.</Video>
+<Video src="/webhook-demo.mp4" label="Spotnote demo with a webhook: a note sent on the staging site appears in the team chat by itself, with a screenshot">On a staging build with a webhook: press `Enter`, and **the note lands in your team's chat**, with its file and line, and a [screenshot](#screenshots).</Video>
 
 ## Set up
 
@@ -41,27 +41,80 @@ The page sends a `POST` whose body is JSON. It's sent as `text/plain`, so your e
 | `note.commit` | In a [build](/guides/staging), the commit it's made from: to link to the line as it was. `null` on the dev server. |
 | `note.prompt` | The prompt Spotnote copies for it. See [Prompt Format](/reference/prompt-format). |
 
+## Screenshots
+
+With `screenshot: true`, each note also brings a picture of what it's about: its elements, outlined, and about 100px of the page around them, at most 1000px wide.
+
+```ts title="vite.config.ts"
+spotnote({ build: ['staging'], webhook: 'https://feedback.example.com/spotnote', screenshot: true })
+```
+
+The body is then `multipart/form-data`, still with no CORS setup needed:
+
+| Field | Content |
+| --- | --- |
+| `payload` | The JSON above, as text. |
+| `screenshot` | The image, as a file: `screenshot.webp` (`screenshot.png` from Safari). |
+
+A note can still come as plain JSON when its screenshot couldn't be taken or sent, so read both:
+
+```js
+const multipart = request.headers.get('content-type')?.startsWith('multipart/');
+const form = multipart ? await request.formData() : null;
+const { event, note } = JSON.parse(form ? form.get('payload') : await request.text());
+const screenshot = form?.get('screenshot'); // a File, or undefined
+```
+
+What to know:
+
+- It's drawn from the page's DOM, not taken from the screen, so the browser asks for nothing. What the DOM can't redraw comes out blank: `<canvas>` (WebGL, charts), `<video>`, and images from another origin without CORS.
+- It shows what's on the page, data included: think of where your endpoint keeps it.
+- Taking it adds a moment (about 0.1 to 0.5 seconds) before the note is sent.
+
+
 ## Post to Slack, GitHub and the like
 
-To post notes to a chat or an issue tracker, point the URL at a small endpoint of yours that does, and keep their keys there: the page holds the URL. For Slack, a sketch:
+To post notes to a chat or an issue tracker, point the URL at a small endpoint of yours that does, and keep their keys there: the page holds the URL. Neither Slack's nor GitHub's webhooks take Spotnote's note as it is.
 
-```js title="relay.mjs"
-import http from 'node:http';
+For Slack, a sketch as a [Cloudflare Worker](https://developers.cloudflare.com/workers/): each note's prompt goes to a channel, with its screenshot when it has one. It needs a Slack app with a bot token (scopes `chat:write` and `files:write`), invited to the channel.
 
-http.createServer((req, res) => {
-  let body = '';
-  req.on('data', (chunk) => (body += chunk));
-  req.on('end', async () => {
-    const { note } = JSON.parse(body);
-    await fetch(process.env.SLACK_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: `*${note.text}*\n\`\`\`\n${note.prompt}\n\`\`\`` }),
-    });
-    res.end();
-  });
-}).listen(8787);
+```js title="worker.js"
+export default {
+  async fetch(request, env) {
+    const multipart = request.headers.get('content-type')?.startsWith('multipart/');
+    const form = multipart ? await request.formData() : null;
+    const { note } = JSON.parse(form ? form.get('payload') : await request.text());
+    const screenshot = form?.get('screenshot');
+
+    const slack = (method, params) =>
+      fetch(`https://slack.com/api/${method}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.SLACK_BOT_TOKEN}` },
+        body: new URLSearchParams(params),
+      }).then((r) => r.json());
+    const text = '```\n' + note.prompt + '\n```'; // the prompt, with its file and line
+
+    if (!screenshot) {
+      await slack('chat.postMessage', { channel: env.SLACK_CHANNEL_ID, text });
+    } else {
+      // Slack's file upload: ask for a URL, send the file there, then share it with the text.
+      const { upload_url, file_id } = await slack('files.getUploadURLExternal', {
+        filename: screenshot.name,
+        length: String(screenshot.size),
+      });
+      await fetch(upload_url, { method: 'POST', body: screenshot });
+      await slack('files.completeUploadExternal', {
+        files: JSON.stringify([{ id: file_id, title: note.text }]),
+        channel_id: env.SLACK_CHANNEL_ID,
+        initial_comment: text,
+      });
+    }
+    return new Response(null, { status: 204 });
+  },
+};
 ```
+
+For GitHub, the endpoint would create an issue with the REST API, from `note.text` and `note.prompt`. GitHub has no API to attach an image to an issue: to show the screenshot, store it somewhere public of yours and put its URL in the issue's body.
 
 ## Next
 

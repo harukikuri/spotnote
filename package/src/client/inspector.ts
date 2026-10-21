@@ -132,6 +132,7 @@ export interface InspectorOptions {
   about?: Controller["about"];
   commit?: string | null;
   webhook?: string | null;
+  screenshot?: boolean;
 }
 
 export function initInspector({
@@ -141,13 +142,14 @@ export function initInspector({
   about = null,
   commit = null,
   webhook = null,
+  screenshot = false,
 }: InspectorOptions = {}): void {
   if (window.__spotnote) return; // already booted — guard against a double inject
   window.__spotnote = true;
   app.jsx = jsx;
   setCommit(commit);
   app.builtFrom = commit;
-  setWebhook(webhook);
+  setWebhook(webhook, { screenshot });
   controller.about = about;
   applyLook(getSettings());
   onSettings(applyLook);

@@ -62,14 +62,20 @@ export async function writeNote(page, target, text) {
 }
 
 // A webhook to send notes to (the plugin's `webhook` option): what it got, each
-// { method, url, type, body } with the body parsed, and a way to stop it.
+// { method, url, type, body, screenshot } with the body parsed (a multipart
+// one's `payload`, and its `screenshot` file), and a way to stop it.
 export async function webhookReceiver(port) {
   const got = [];
   const server = http.createServer((req, res) => {
-    let body = "";
-    req.on("data", (c) => (body += c));
-    req.on("end", () => {
-      got.push({ method: req.method, url: req.url, type: req.headers["content-type"], body: JSON.parse(body) });
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", async () => {
+      const type = req.headers["content-type"];
+      const raw = Buffer.concat(chunks);
+      const form =
+        type.startsWith("multipart/") && (await new Response(raw, { headers: { "content-type": type } }).formData());
+      const body = JSON.parse(form ? form.get("payload") : raw.toString());
+      got.push({ method: req.method, url: req.url, type, body, screenshot: form ? form.get("screenshot") : null });
       res.end();
     });
   });

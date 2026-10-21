@@ -1,6 +1,7 @@
 // The webhook demo, frame by frame (30 fps): the staging site and the team's
-// chat side by side. A note sent on the site lands in the chat by itself,
-// posted by the webhook (through a relay like the Webhook guide's).
+// chat side by side. A note sent on the site lands in the chat by itself, with
+// its screenshot (the `screenshot` option), posted by the webhook through a
+// relay like the Webhook guide's.
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import mark from "../../docs/public/brand/spotnote-mark-yellow.svg";
 import { Browser } from "./apps/Browser.jsx";
@@ -10,8 +11,8 @@ import { VIEWPORT } from "./layout.js";
 import { Cursor } from "./mac/Cursor.jsx";
 import { Desktop } from "./mac/Desktop.jsx";
 import { keys, progress } from "./motion.js";
-import { CHANNEL, DESIGNER, DEVELOPER, NOTE, PM, PROMPT } from "./script.js";
-import { CARD_EDGE, Camera, Caption, click, KeyPresses, LAUNCHER_AT, spotnoteSteps } from "./shared.jsx";
+import { CHANNEL, DESIGNER, DEVELOPER, PM, PROMPT } from "./script.js";
+import { CARD_EDGE, Camera, Caption, click, KeyPresses, LAUNCHER_AT, spotnoteSteps, TARGET } from "./shared.jsx";
 import { Spotnote } from "./spotnote/Spotnote.jsx";
 
 // When things happen.
@@ -63,9 +64,10 @@ export function Webhook() {
           id: "p",
           who: SPOTNOTE,
           time: "10:24 AM",
-          text: <b>{NOTE}</b>, // as the Webhook guide's relay posts it: the note, then the prompt
+          // As the Webhook guide's relay posts it: the prompt, then the screenshot.
           code: PROMPT,
-          lines: 8,
+          lines: 6,
+          image: <Screenshot />,
           opacity: progress(f, T.arrive, 8),
           rise: 14 * (1 - progress(f, T.arrive, 10)),
         },
@@ -146,7 +148,40 @@ function Post({ f, from, to }) {
   );
 }
 
+// The note's screenshot, as the plugin takes it: the card, outlined, and 100px
+// of the page around it, drawn from the shop itself.
+const PAD = 100;
+const SHOT = { x: TARGET.x - PAD, y: TARGET.y - PAD, w: TARGET.w + 2 * PAD, h: TARGET.h + 2 * PAD };
+const SHOT_SCALE = 0.34;
+function Screenshot() {
+  return (
+    <div style={{ position: "relative", width: SHOT.w * SHOT_SCALE, height: SHOT.h * SHOT_SCALE, overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          width: VIEWPORT.w,
+          height: VIEWPORT.h,
+          transformOrigin: "0 0",
+          transform: `scale(${SHOT_SCALE}) translate(${-SHOT.x}px, ${-SHOT.y}px)`,
+        }}
+      >
+        <Shop staging />
+        <div
+          style={{
+            position: "absolute",
+            left: TARGET.x,
+            top: TARGET.y,
+            width: TARGET.w,
+            height: TARGET.h,
+            border: "3px solid #ff375f",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 const CAPTIONS = [
   [0, T.enter, "On the staging site: click an element, write the change, press Enter"],
-  [T.enter, T.end + 8, "The webhook posts it to your team's chat, with its file and line"],
+  [T.enter, T.end + 8, "The webhook posts it to your team's chat: the prompt, with a screenshot"],
 ];

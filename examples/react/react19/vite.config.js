@@ -8,6 +8,14 @@ export default defineConfig({
   server: { fs: { allow: ["../../.."] } },
   // spotnote's stamp runs as an order:"pre" transform, so array order doesn't matter.
   // `vite build --mode staging` keeps it in the build, sending notes to
-  // SPOTNOTE_WEBHOOK if set (e2e/build.spec.js).
-  plugins: [spotnote({ build: ["staging"], webhook: process.env.SPOTNOTE_WEBHOOK }), react()],
+  // SPOTNOTE_WEBHOOK if set, with a screenshot if SPOTNOTE_SCREENSHOT is
+  // (e2e/build.spec.js).
+  plugins: [
+    spotnote({
+      build: ["staging"],
+      webhook: process.env.SPOTNOTE_WEBHOOK,
+      screenshot: !!process.env.SPOTNOTE_SCREENSHOT,
+    }),
+    react(),
+  ],
 });

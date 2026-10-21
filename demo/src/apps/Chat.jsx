@@ -1,6 +1,6 @@
 // A team chat app (Slack-like, but nobody's brand): channels on the left, the
 // channel's messages, and the message box. A message can carry a code block,
-// as a pasted prompt does. `at`: where the window is (CHAT by default);
+// as a pasted prompt does, or an image (`image`: what's in it, at its size). `at`: where the window is (CHAT by default);
 // `compact`: no channel list, for a narrow window.
 import { CHAT } from "../layout.js";
 import { PM } from "../script.js";
@@ -103,7 +103,7 @@ export function Chat({ front, me, channel, messages, draft, selected, style, at 
 }
 
 // `rise`: how far below its place it is, while it comes in.
-function Message({ who, time, text, code, lines, selected, opacity = 1, rise = 0 }) {
+function Message({ who, time, text, code, lines, image, selected, opacity = 1, rise = 0 }) {
   return (
     <div
       style={{
@@ -139,6 +139,19 @@ function Message({ who, time, text, code, lines, selected, opacity = 1, rise = 0
         </div>
         {text && <div style={{ fontSize: 15, lineHeight: "22px" }}>{text}</div>}
         {code && <Code text={code} lines={lines} selected={selected} />}
+        {image && (
+          <div
+            style={{
+              marginTop: 6,
+              width: "fit-content",
+              borderRadius: 8,
+              overflow: "hidden",
+              border: "1px solid #e1e1e1",
+            }}
+          >
+            {image}
+          </div>
+        )}
       </div>
     </div>
   );

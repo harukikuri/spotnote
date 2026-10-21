@@ -153,8 +153,8 @@ export default defineConfig({
               `"vite build --mode staging && vite preview --port ${STAGING.port} --strictPort"`,
             url: `http://localhost:${STAGING.port}`,
             reuseExistingServer: !process.env.CI,
-            // Built in: build.spec.js listens there for the notes.
-            env: { SPOTNOTE_WEBHOOK: `http://127.0.0.1:${STAGING.webhookPort}/notes` },
+            // Built in: build.spec.js listens there for the notes, with screenshots.
+            env: { SPOTNOTE_WEBHOOK: `http://127.0.0.1:${STAGING.webhookPort}/notes`, SPOTNOTE_SCREENSHOT: "1" },
           },
         ]
       : []),

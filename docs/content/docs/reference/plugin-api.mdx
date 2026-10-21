@@ -13,6 +13,7 @@ export default function spotnote(options?: {
   port?: number;
   build?: string[];
   webhook?: string;
+  screenshot?: boolean;
 }): Plugin[];
 ```
 
@@ -69,6 +70,16 @@ spotnote({ webhook: 'https://feedback.example.com/spotnote' })
 ```
 
 What it sends, and how to post it to your team's chat: see [Webhook](/guides/webhook).
+
+### `screenshot`
+
+Send the [webhook](#webhook) a screenshot with each note: its elements, outlined, and the page around them. Off by default.
+
+```ts title="vite.config.ts"
+spotnote({ webhook: 'https://feedback.example.com/spotnote', screenshot: true })
+```
+
+The body is then `multipart/form-data` instead of JSON: see [Screenshots](/guides/webhook#screenshots).
 
 ## Plugin order
 

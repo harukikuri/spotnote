@@ -123,7 +123,7 @@ Send each note to a URL of yours as it's written: to post it to your team's chat
 spotnote({ build: ["staging"], webhook: "https://feedback.example.com/spotnote" })
 ```
 
-Each note arrives as JSON, with its text, page, file and line, commit, and prompt. See [Webhook](https://spotnote-weld.vercel.app/guides/webhook).
+Each note arrives as JSON, with its text, page, file and line, commit, and prompt. Add `screenshot: true` to send a screenshot of the note's elements with it. See [Webhook](https://spotnote-weld.vercel.app/guides/webhook).
 
 
 
@@ -131,7 +131,7 @@ https://github.com/user-attachments/assets/5ad45dc5-7aec-4b44-99f1-290fcc4b5f3f
 
 
 
-_On a staging build with a webhook: press Enter, and **the note lands in your team's chat**, with its file and line._
+_On a staging build with a webhook: press Enter, and **the note lands in your team's chat**, with its file and line, and a screenshot._
 
 ## Docs
 
