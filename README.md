@@ -99,22 +99,6 @@ https://github.com/user-attachments/assets/87789868-c3e4-4eee-b340-6243ed4c4d0d
 
 _With [MCP](https://spotnote-weld.vercel.app/guides/mcp) connected: click a button, ask for a pill shape, and **Claude Code picks up the note, makes the change and replies on it**. You never leave the browser._
 
-## Staging builds
-
-Let designers and reviewers write notes on a staging or preview deploy, and paste them to your team:
-
-```ts
-spotnote({ build: ["staging"] })
-```
-
-`vite build --mode staging` then includes Spotnote, and `vite build` still doesn't. Each prompt also names the commit the build was made from. See [Staging Builds](https://spotnote-weld.vercel.app/guides/staging).
-
-
-https://github.com/user-attachments/assets/c8957083-ac69-4adc-ada5-8db10f38c976
-
-
-_On a [staging build](https://spotnote-weld.vercel.app/guides/staging): the designer writes a note and pastes it to the team chat, and **the developer's agent goes straight to the file and line**._
-
 ## Webhook
 
 Send each note to a URL of yours as it's written: to post it to your team's chat or issue tracker, without the copy and paste.
@@ -123,7 +107,7 @@ Send each note to a URL of yours as it's written: to post it to your team's chat
 spotnote({ build: ["staging"], webhook: "https://feedback.example.com/spotnote" })
 ```
 
-Each note arrives as JSON, with its text, page, file and line, commit, and prompt. Add `screenshot: true` to send a screenshot of the note's elements with it. See [Webhook](https://spotnote-weld.vercel.app/guides/webhook).
+`build: ["staging"]` keeps Spotnote in `vite build --mode staging`, for reviewers on a staging deploy (see [Staging Builds](https://spotnote-weld.vercel.app/guides/staging)). Each note arrives as JSON, with its text, page, file and line, commit, and prompt. Add `screenshot: true` to send a screenshot of the note's elements with it. See [Webhook](https://spotnote-weld.vercel.app/guides/webhook).
 
 
 
