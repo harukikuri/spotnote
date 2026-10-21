@@ -127,7 +127,11 @@ Each note arrives as JSON, with its text, page, file and line, commit, and promp
 
 
 
-https://github.com/user-attachments/assets/5ad45dc5-7aec-4b44-99f1-290fcc4b5f3f
+
+
+https://github.com/user-attachments/assets/e401dbac-df17-4762-a291-752cb8a04595
+
+
 
 
 
