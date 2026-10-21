@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "spotnote",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "description": "Click a UI element in your Vite dev server, write a note, and copy an AI-agent-ready prompt with the exact source location.",
   "keywords": [
