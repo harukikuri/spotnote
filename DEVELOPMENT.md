@@ -38,9 +38,12 @@ one job per example app, side by side; the docs link its latest run) and
 
 Plugin layout (`package/`):
 
-- `src/index.ts` — the Vite plugin `spotnote()`: stamping, client injection, MCP status
-- `src/plugin.ts` — the Babel visitor that stamps `data-spotnote` in JSX
-- `src/dom-tags.ts` — the HTML and SVG tag names the JSX pass stamps
+- `src/index.ts` — the Vite plugin `spotnote()`: its options, picking a stamper per file, client injection, MCP status
+- `src/stamp/` — one stamper per kind of file, each adding `data-spotnote` to native elements:
+  - `jsx.ts` — `.jsx`/`.tsx`, with a Babel visitor (`dom-tags.ts`: the HTML and SVG tags it stamps)
+  - `vue.ts`, `svelte.ts`, `astro.ts` — with the app's own compiler
+  - `shared.ts` — the `Stamper` shape and what they share
+- `src/open-editor.ts` — `/__spotnote/open`: file links in the page → your editor
 - `src/client/` — the browser picker, auto-injected in dev:
   - `inspector.ts` — boots the picker; selection mode, the pointer, HMR re-bind
   - `panel.ts` — the note panel: writing a note, its chips, the conversation

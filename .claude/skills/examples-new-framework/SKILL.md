@@ -49,7 +49,8 @@ line.
   "JSX" until it's added there and in `FRAMEWORKS` / the icons in
   `package/src/client/icons.ts`.
 - Another file type or compiler (not JSX, `.vue`, `.svelte` or `.astro`), or a
-  new major whose compiler gives another AST: stamping is new work in
+  new major whose compiler gives another AST: stamping is new work, a
+  stamper in `package/src/stamp/` (see `shared.ts`) added to `STAMPERS` in
   `package/src/index.ts`. Stop and plan it with the user first.
 - A compiler Spotnote parses (Vue, Svelte, Astro): add the new app to its loop
   in `package/test/stamp.test.js`.

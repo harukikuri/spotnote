@@ -17,7 +17,6 @@ const root = path.join(examples, "react/react19");
 async function stamp(rel, code, appRoot = root, keepApp = false) {
   const [plugin] = spotnote();
   plugin.configResolved({ root: appRoot, plugins: [] });
-  await plugin.buildStart();
   const out = (await plugin.transform.handler(code, path.join(appRoot, rel)))?.code;
   return keepApp ? out : out?.replaceAll(`${path.relative(repo, appRoot)}/`, "");
 }
@@ -32,7 +31,6 @@ test("paths start at the repository's root, where agents work", async () => {
 async function uses(rel, code, appRoot = root) {
   const [main, client] = spotnote();
   main.configResolved({ root: appRoot, plugins: [] });
-  await main.buildStart();
   const id = path.join(appRoot, rel);
   await main.transform.handler(code, id);
   const out = client.transform("", id, {})?.code ?? "";
@@ -67,7 +65,6 @@ test("JSX: only HTML, SVG and custom elements are stamped, not other renderers' 
 test("exclude: matching files, from the Vite root, are left unstamped", async () => {
   const [main, client] = spotnote({ exclude: ["src/scene/**", /Legacy\.vue$/] });
   main.configResolved({ root, plugins: [] });
-  await main.buildStart();
   const run = async (rel, code) => {
     const id = path.join(root, rel);
     const out = await main.transform.handler(code, id);

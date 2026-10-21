@@ -1,13 +1,11 @@
-// Babel plugin: stamp `data-spotnote="file:line:column"` onto DOM JSX elements
-// (HTML, SVG and custom elements) at compile time. Framework of record is React here, but the exact
-// same visitor works for any JSX (Solid, Preact, Next) — only the registration
-// point differs.
+// JSX (.jsx, .tsx): a Babel pass of our own stamps `data-spotnote="file:line:column"`
+// onto DOM elements (HTML, SVG and custom elements), before the framework's
+// compiler sees the file. The same visitor works for any JSX (React, Solid,
+// Preact): only the framework's own pass comes after it.
 import path from "node:path";
 import type { NodePath, PluginObj, PluginPass, types } from "@babel/core";
 import { DOM_TAGS } from "./dom-tags.ts";
-
-// Where a component is used: [name, line, column].
-export type Use = [string, number, number];
+import type { Stamper, Use } from "./shared.ts";
 
 // Derive a function's name: `function Foo(){}`, `const Foo = () =>`, or a wrapped
 // `const Foo = memo(() => {})` / `forwardRef(...)`.
@@ -31,7 +29,7 @@ function ownerComponent(nodePath: NodePath): string | null {
   return null;
 }
 
-export default ({ types: t }: { types: typeof types }): PluginObj => ({
+const babelVisitor = ({ types: t }: { types: typeof types }): PluginObj => ({
   name: "data-spotnote",
   visitor: {
     JSXOpeningElement(nodePath, state: PluginPass) {
@@ -79,3 +77,30 @@ export default ({ types: t }: { types: typeof types }): PluginObj => ({
     },
   },
 });
+
+// Babel itself is loaded on the first .jsx or .tsx file.
+let transformSync: typeof import("@babel/core").transformSync | undefined;
+
+export const jsx: Stamper = {
+  handles: (file) => /\.(jsx|tsx)$/.test(file),
+
+  async stamp(code, file, { top }, used) {
+    transformSync ??= (await import("@babel/core")).transformSync;
+    const res = transformSync(code, {
+      filename: file,
+      root: top, // what stamped paths are relative to (see the visitor)
+      plugins: [babelVisitor],
+      // Parse permissively so common app syntax (decorators, import
+      // attributes, `using`) doesn't trip our standalone pass.
+      parserOpts: {
+        plugins: ["jsx", "typescript", "decorators-legacy", "importAttributes", "explicitResourceManagement"],
+      },
+      configFile: false,
+      babelrc: false,
+      sourceMaps: true,
+    });
+    if (!res || res.code == null) return null;
+    used.push(...((res.metadata as { spotnoteUses?: Use[] }).spotnoteUses ?? []));
+    return { code: res.code, map: res.map ?? null };
+  },
+};

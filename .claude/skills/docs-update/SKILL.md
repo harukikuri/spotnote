@@ -24,7 +24,7 @@ Start from what changed (`git diff`, or the commits since the docs last changed)
 | `client/webhook.ts`, the `webhook` option | `guides/webhook.mdx`, `reference/plugin-api.mdx` |
 | `client/launcher.ts` | `getting-started/quick-start.mdx`, `guides/picking-elements.mdx` |
 | `src/index.ts` options, warnings | `reference/plugin-api.mdx` |
-| `src/plugin.ts`, stamping per framework | `reference/framework-support.mdx`, `concepts.mdx` |
+| `src/stamp/*.ts`, stamping per framework | `reference/framework-support.mdx`, `concepts.mdx` |
 | `mcp/src/tools.ts` | `guides/mcp.mdx` (MCP Tools) |
 | `mcp/src/store.ts`, localStorage keys | `reference/storage.mdx` |
 | Something it can't do | `limitations.mdx`, `faq.mdx` |
